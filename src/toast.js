@@ -17,10 +17,25 @@ function container() {
   return el;
 }
 
-export function showToast(message, { type = 'error' } = {}) {
+export function showToast(message, { type = 'error', actionLabel, onAction } = {}) {
   const el = document.createElement('div');
   el.className = `toast toast-${type}`;
-  el.textContent = message;
+
+  const msgEl = document.createElement('div');
+  msgEl.textContent = message;
+  el.appendChild(msgEl);
+
+  if (actionLabel && onAction) {
+    const actionBtn = document.createElement('button');
+    actionBtn.className = 'toast-action';
+    actionBtn.textContent = actionLabel;
+    actionBtn.addEventListener('click', () => {
+      onAction();
+      el.remove();
+    });
+    el.appendChild(actionBtn);
+  }
+
   container().appendChild(el);
   setTimeout(() => el.remove(), AUTO_DISMISS_MS);
 }

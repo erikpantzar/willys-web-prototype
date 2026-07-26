@@ -3,6 +3,7 @@ import * as api from '../api.js';
 import { parseQuantity, formatProduct } from '../format.js';
 import { pixelLoaderHtml } from '../loader.js';
 import { showToast } from '../toast.js';
+import { recordAction, performUndo } from '../undo.js';
 
 const DEBOUNCE_MS = 300;
 const RESULT_LIMIT = 15;
@@ -71,9 +72,20 @@ export function renderSearch(root) {
       if (!match) throw new Error('That result changed between search and add — try again.');
       const confirmed = await api.confirm(resolution.resolutionId, match.rank);
       const added = await api.addItem(formatProduct(confirmed, quantity), who);
+      recordAction({ type: 'add', itemId: added.id, text: added.text, who });
       card.classList.remove('picking');
       card.classList.add('added');
       card.querySelector('.result-status').textContent = `Added "${added.text}" ✓`;
+      showToast(`Added "${added.text}"`, {
+        type: 'success',
+        actionLabel: 'Undo',
+        onAction: async () => {
+          await performUndo();
+          // Refresh search results to reflect the undo
+          resultsEl.innerHTML = '';
+          input.value = '';
+        },
+      });
     } catch (err) {
       card.classList.remove('picking');
       showToast(`Could not add: ${err.message}`);

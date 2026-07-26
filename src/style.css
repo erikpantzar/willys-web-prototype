@@ -250,9 +250,30 @@ button.danger { background: var(--danger); color: white; border-color: var(--dan
   color: var(--fg);
   font-size: 0.85rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
+.toast > div {
+  flex: 1;
+}
+.toast-action {
+  font-size: 0.75rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.toast-action:active { opacity: 0.7; }
 .toast-error { border-color: var(--danger); color: var(--danger); }
+.toast-error .toast-action { color: var(--danger); border-color: var(--danger); }
 .toast-success { border-color: var(--accent); color: var(--accent-ink); }
+.toast-success .toast-action { color: var(--accent); border-color: var(--accent); }
 
 .modal-backdrop {
   position: fixed;
