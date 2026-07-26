@@ -43,8 +43,42 @@ export function renderSettings(root) {
     root.querySelector('#check-health').addEventListener('click', async () => {
       const result = root.querySelector('#health-result');
       result.textContent = 'Checking…';
-      const ok = await healthCheck();
-      result.textContent = ok ? '✓ All three backends reachable.' : '✕ Could not reach one or more backends — check the URL and your Tailscale connection.';
+      const services = await healthCheck();
+
+      const allOk = services.every((s) => s.ok);
+      let html = '';
+
+      // Per-service status
+      html += '<div class="health-services">';
+      for (const service of services) {
+        const icon = service.ok ? '✓' : '✕';
+        const className = service.ok ? 'success' : 'error';
+        const statusText = service.ok ? 'OK' : (service.kind === 'unreachable' ? 'Unreachable' : 'Error');
+        html += `<div class="health-line"><span class="${className}">${icon} ${service.service}: ${statusText}</span>`;
+        if (service.detail) {
+          html += `<span class="muted" style="display: block; margin-top: 0.2rem; margin-left: 1.2rem; font-size: 0.75rem;">${escapeHtml(service.detail)}</span>`;
+        }
+        html += `</div>`;
+      }
+      html += '</div>';
+
+      // Troubleshooting checklist if any service failed
+      if (!allOk) {
+        html += `
+          <details class="troubleshooting" open>
+            <summary>Troubleshooting checklist</summary>
+            <ul class="checklist">
+              <li>Tailscale app is open and connected on this device</li>
+              <li>Base URL matches your home server's tailnet HTTPS address (from home-server/SPEC.md)</li>
+              <li>No typos or trailing slash in the URL</li>
+              <li>Home server backends are running and healthy</li>
+              <li>Check your device's network connection</li>
+            </ul>
+          </details>
+        `;
+      }
+
+      result.innerHTML = html;
     });
   }
 }

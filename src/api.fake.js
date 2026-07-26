@@ -115,5 +115,9 @@ export async function chooseDeliveryTime(slot) {
 
 export async function healthCheck() {
   await delay(150);
-  return true;
+  return [
+    { service: 'list', ok: true, kind: 'ok', detail: null },
+    { service: 'matcher', ok: true, kind: 'ok', detail: null },
+    { service: 'agent', ok: true, kind: 'ok', detail: null },
+  ];
 }
