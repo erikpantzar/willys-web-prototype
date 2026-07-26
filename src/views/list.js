@@ -4,6 +4,7 @@ import { extractPrice, isVariableWeight, formatSum, splitParts } from '../format
 import { showToast } from '../toast.js';
 import { confirmDialog } from '../dialog.js';
 import { getWho, setWho } from '../who.js';
+import { recordAction, performUndo } from '../undo.js';
 
 export async function renderList(root) {
   root.innerHTML = `<div class="loading">Loading list…</div>`;
@@ -80,10 +81,26 @@ export async function renderList(root) {
     if (!who) return showToast('Enter your name first.');
     input.disabled = true;
     try {
-      for (const part of splitParts(text)) {
-        await api.addItem(part, who);
+      const parts = splitParts(text);
+      let lastAddedItem = null;
+      for (const part of parts) {
+        lastAddedItem = await api.addItem(part, who);
       }
-      renderList(root);
+      // Record undo for the last item added (or only item if single)
+      if (lastAddedItem) {
+        recordAction({ type: 'add', itemId: lastAddedItem.id, text: lastAddedItem.text, who });
+        renderList(root);
+        showToast(`Added "${lastAddedItem.text}"`, {
+          type: 'success',
+          actionLabel: 'Undo',
+          onAction: async () => {
+            await performUndo();
+            renderList(root);
+          },
+        });
+      } else {
+        renderList(root);
+      }
     } catch (err) {
       showToast(`Could not add: ${err.message}`);
       input.disabled = false;
@@ -92,10 +109,23 @@ export async function renderList(root) {
 
   root.querySelectorAll('[data-remove]').forEach((btn) => {
     btn.addEventListener('click', async () => {
+      const itemId = Number(btn.dataset.remove);
+      const item = items.find((i) => i.id === itemId);
       btn.disabled = true;
       try {
-        await api.removeItem(Number(btn.dataset.remove));
+        await api.removeItem(itemId);
+        if (item) {
+          recordAction({ type: 'remove', itemId, text: item.text, who: item.added_by });
+        }
         renderList(root);
+        showToast(`Removed "${item?.text || 'item'}"`, {
+          type: 'success',
+          actionLabel: 'Undo',
+          onAction: async () => {
+            await performUndo();
+            renderList(root);
+          },
+        });
       } catch (err) {
         showToast(`Could not remove: ${err.message}`);
         btn.disabled = false;
@@ -113,7 +143,16 @@ export async function renderList(root) {
       btn.disabled = true;
       try {
         await api.setQuantity(id, next);
+        recordAction({ type: 'qty', itemId: id, previousValue: current });
         renderList(root);
+        showToast(`Quantity updated to ${next}`, {
+          type: 'success',
+          actionLabel: 'Undo',
+          onAction: async () => {
+            await performUndo();
+            renderList(root);
+          },
+        });
       } catch (err) {
         showToast(`Could not update quantity: ${err.message}`);
         btn.disabled = false;
