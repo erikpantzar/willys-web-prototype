@@ -209,9 +209,27 @@ button.danger { background: var(--danger); color: white; border-color: var(--dan
   background: var(--card);
   cursor: pointer;
   transition: opacity 0.15s;
+  position: relative;
 }
 .result-card.picking { opacity: 0.5; pointer-events: none; }
 .result-card.added { border-color: var(--accent); }
+.result-card.confirmed { border-color: var(--accent); }
+.result-confirmed-badge {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.3rem;
+  background: var(--accent);
+  color: white;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
 .result-img { width: 100%; aspect-ratio: 1; object-fit: contain; background: white; border-radius: 5px; }
 .result-img.placeholder { background: var(--border); }
 .result-name { font-size: 0.8rem; margin-top: 0.35rem; }

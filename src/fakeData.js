@@ -23,6 +23,14 @@ export const CATALOG = [
   { name: 'Bananer Fairtrade', url: '/p/banan', price: '19,90', priceUnit: 'kg', size: '~140g/st, priced /kg (weight varies)', imageUrl: svgIcon('🍌', '#fbf3d8') },
 ];
 
+// Demo mode: track confirmed matches by query (normalized lowercase) → URL.
+// The real backend should return this from /search; see api.fake.js comment.
+export const demoConfirmedByQuery = new Map([
+  ['mjölk', '/p/mjolk-3'],
+  ['gurka', '/p/gurka'],
+  ['kebab', '/p/kebab'],
+]);
+
 export function seedListItems() {
   const now = Date.now();
   return [

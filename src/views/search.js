@@ -50,7 +50,8 @@ export function renderSearch(root) {
       resultsEl.innerHTML = `<div class="empty">No matches for "${escapeHtml(query)}".</div>`;
       return;
     }
-    resultsEl.innerHTML = candidates.map((c, i) => resultCard(c, i)).join('');
+    const confirmedUrl = body.confirmedUrl || null;
+    resultsEl.innerHTML = candidates.map((c, i) => resultCard(c, i, confirmedUrl)).join('');
     resultsEl.querySelectorAll('[data-pick]').forEach((card, i) => {
       card.addEventListener('click', () => addFromSearch(query, candidates[i], quantity, card));
     });
@@ -81,15 +82,18 @@ export function renderSearch(root) {
   }
 }
 
-function resultCard(c, i) {
+function resultCard(c, i, confirmedUrl) {
   const size = c.size ? `<div class="result-size">${escapeHtml(c.size)}</div>` : '';
   const price = c.price ? `<div class="result-price">${escapeHtml(c.price)} kr${c.priceUnit === 'kg' ? '/kg' : ''}</div>` : '';
   const img = c.imageUrl
     ? `<img class="result-img" src="${escapeHtml(c.imageUrl)}" loading="lazy" alt="" />`
     : `<div class="result-img placeholder"></div>`;
+  const isConfirmed = confirmedUrl && c.url && c.url === confirmedUrl;
+  const confirmedClass = isConfirmed ? ' confirmed' : '';
   return `
-    <div class="result-card" data-pick="${i}">
+    <div class="result-card${confirmedClass}" data-pick="${i}">
       ${img}
+      ${isConfirmed ? '<div class="result-confirmed-badge">✓</div>' : ''}
       <div class="result-info">
         <div class="result-name">${escapeHtml(c.text || c.name)}</div>
         ${size}
