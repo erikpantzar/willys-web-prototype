@@ -95,7 +95,11 @@ export async function resolve(query) {
   const candidates = rank(query);
   const resolutionId = nextResolutionId++;
   resolutions.set(resolutionId, { query, candidates });
-  return { cached: false, resolutionId, query, candidates };
+  // See the same note on search() above — the real /matcher/resolve endpoint
+  // should return this too so the confirmed-badge (issue #1) still works now
+  // that search.js calls resolve() instead of search() (issue #5).
+  const confirmedUrl = demoConfirmedByQuery.get(query.toLowerCase().trim()) || null;
+  return { cached: false, resolutionId, query, candidates, confirmedUrl };
 }
 
 export async function confirm(resolutionId, choice) {

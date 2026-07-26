@@ -19,12 +19,14 @@ export function renderSearch(root) {
   const resultsEl = root.querySelector('#search-results');
   let debounceTimer;
   let requestSeq = 0;
+  let currentResolution = null; // Store the latest resolve() result
 
   input.addEventListener('input', () => {
     clearTimeout(debounceTimer);
     const raw = input.value.trim();
     if (!raw) {
       resultsEl.innerHTML = '';
+      currentResolution = null;
       return;
     }
     debounceTimer = setTimeout(() => runSearch(raw), DEBOUNCE_MS);
@@ -38,9 +40,15 @@ export function renderSearch(root) {
     resultsEl.innerHTML = pixelLoaderHtml('Searching…');
     let body;
     try {
-      body = await api.search(query, RESULT_LIMIT);
+      // Call resolve() instead of search() to get a persisted resolution.
+      // This avoids the race condition where calling resolve() again on click
+      // could match a different product if the catalog changed in between.
+      // resolve() returns candidates with the same fields as search(), so we
+      // can render the grid identically and use the stored rank in confirm().
+      body = await api.resolve(query);
     } catch (err) {
       if (seq === requestSeq) resultsEl.innerHTML = `<div class="error">${escapeHtml(err.message)}</div>`;
+      currentResolution = null;
       return;
     }
     if (seq !== requestSeq) return; // a newer keystroke's search already landed
@@ -48,29 +56,29 @@ export function renderSearch(root) {
     const candidates = body.candidates || [];
     if (candidates.length === 0) {
       resultsEl.innerHTML = `<div class="empty">No matches for "${escapeHtml(query)}".</div>`;
+      currentResolution = null;
       return;
     }
+    // Store the resolution for use in addFromSearch()
+    currentResolution = body;
+
     const confirmedUrl = body.confirmedUrl || null;
     resultsEl.innerHTML = candidates.map((c, i) => resultCard(c, i, confirmedUrl)).join('');
     resultsEl.querySelectorAll('[data-pick]').forEach((card, i) => {
-      card.addEventListener('click', () => addFromSearch(query, candidates[i], quantity, card));
+      card.addEventListener('click', () => addFromSearch(candidates[i], quantity, card));
     });
   }
 
-  async function addFromSearch(query, candidate, quantity, card) {
+  async function addFromSearch(candidate, quantity, card) {
     const who = localStorage.getItem('willys.who');
     if (!who) return showToast('Set your name on the List tab first.');
+    if (!currentResolution) return showToast('Search result expired — try again.');
     card.classList.add('picking');
     try {
-      // /search doesn't persist a resolution (see item-matcher/src/server.js) —
-      // /resolve does, and re-running it for the same query hits the same
-      // catalog/cache path deterministically, so this reuses /resolve+/confirm
-      // (the bot's own "actually add this" path) instead of duplicating that
-      // logic here.
-      const resolution = await api.resolve(query);
-      const match = (resolution.candidates || []).find((c) => (c.url && c.url === candidate.url) || c.name === candidate.text || c.name === candidate.name);
-      if (!match) throw new Error('That result changed between search and add — try again.');
-      const confirmed = await api.confirm(resolution.resolutionId, match.rank);
+      // Call confirm() directly with the rank from the original resolve() response.
+      // This eliminates the second resolve() call and prevents the race condition
+      // where re-resolving could match a different product if the catalog changed.
+      const confirmed = await api.confirm(currentResolution.resolutionId, candidate.rank);
       const added = await api.addItem(formatProduct(confirmed, quantity), who);
       card.classList.remove('picking');
       card.classList.add('added');
