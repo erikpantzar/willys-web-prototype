@@ -1,9 +1,14 @@
 'use strict';
-import { getBaseUrl, setBaseUrl, isDemoMode, setDemoMode } from '../settings.js';
+import { getBaseUrl, setBaseUrl, isDemoMode, setDemoMode, isConnectionVerified, setConnectionVerified } from '../settings.js';
 import { healthCheck } from '../api.js';
 
 export function renderSettings(root) {
   const demo = isDemoMode();
+  const currentUrl = getBaseUrl();
+  // Strip https:// prefix if present for display in the input (without prefix)
+  const urlHost = currentUrl.replace(/^https:\/\//i, '') || 'ep-precision-5570.tail5370f3.ts.net';
+  const verified = isConnectionVerified();
+
   root.innerHTML = `
     <div class="settings-panel">
       <h2>Settings</h2>
@@ -18,8 +23,12 @@ export function renderSettings(root) {
       ${demo ? '' : `
         <p class="muted">This only works on a device connected to your Tailscale network — the base URL is your home server's tailnet HTTPS address (see home-server/SPEC.md).</p>
         <label>Backend base URL
-          <input id="base-url" type="text" value="${escapeHtml(getBaseUrl())}" placeholder="https://ep-precision-5570.tail5370f3.ts.net" />
+          <div class="url-input-group">
+            <span class="url-prefix">https://</span>
+            <input id="base-url" type="text" value="${escapeHtml(urlHost)}" />
+          </div>
         </label>
+        ${verified ? `<div class="success">✓ Connection verified</div>` : ''}
         <div class="settings-actions">
           <button id="save-url">Save</button>
           <button id="check-health">Test connection</button>
@@ -36,7 +45,10 @@ export function renderSettings(root) {
 
   if (!demo) {
     root.querySelector('#save-url').addEventListener('click', () => {
-      setBaseUrl(root.querySelector('#base-url').value.trim());
+      const hostValue = root.querySelector('#base-url').value.trim();
+      // Prepend https:// when saving
+      const fullUrl = `https://${hostValue}`;
+      setBaseUrl(fullUrl);
       root.querySelector('#health-result').textContent = 'Saved.';
     });
 
@@ -44,7 +56,16 @@ export function renderSettings(root) {
       const result = root.querySelector('#health-result');
       result.textContent = 'Checking…';
       const ok = await healthCheck();
-      result.textContent = ok ? '✓ All three backends reachable.' : '✕ Could not reach one or more backends — check the URL and your Tailscale connection.';
+      if (ok) {
+        setConnectionVerified(true);
+        result.textContent = '✓ All three backends reachable.';
+        // Navigate to list after successful connection verification
+        setTimeout(() => {
+          location.hash = '#list';
+        }, 500);
+      } else {
+        result.textContent = '✕ Could not reach one or more backends — check the URL and your Tailscale connection.';
+      }
     });
   }
 }

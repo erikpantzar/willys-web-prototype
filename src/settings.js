@@ -5,6 +5,7 @@
 // on the tailnet) but there's no reason to hardcode a hostname that could
 // change, or to force a redeploy if it ever does.
 const KEY = 'willys.baseUrl';
+const CONNECTION_VERIFIED_KEY = 'willys.connectionVerified';
 
 export function getBaseUrl() {
   return localStorage.getItem(KEY) || '';
@@ -12,10 +13,21 @@ export function getBaseUrl() {
 
 export function setBaseUrl(url) {
   localStorage.setItem(KEY, url.replace(/\/+$/, ''));
+  // Clear connection verification when base URL changes, since the new URL must be re-verified
+  localStorage.removeItem(CONNECTION_VERIFIED_KEY);
 }
 
 export function hasBaseUrl() {
   return Boolean(getBaseUrl());
+}
+
+export function isConnectionVerified() {
+  return localStorage.getItem(CONNECTION_VERIFIED_KEY) === '1';
+}
+
+export function setConnectionVerified(verified) {
+  if (verified) localStorage.setItem(CONNECTION_VERIFIED_KEY, '1');
+  else localStorage.removeItem(CONNECTION_VERIFIED_KEY);
 }
 
 // Demo mode: every view runs against seeded in-memory data (src/fakeData.js,

@@ -190,6 +190,23 @@ button.danger { background: var(--danger); color: white; border-color: var(--dan
 .confirm-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
 
 .settings-panel label { display: flex; flex-direction: column; gap: 0.3rem; margin: 0.7rem 0; }
+.url-input-group { display: flex; align-items: center; gap: 0; }
+.url-prefix {
+  display: flex;
+  align-items: center;
+  padding: 0.55rem 0.65rem;
+  background: var(--bg);
+  color: var(--muted);
+  font-weight: 500;
+  border: 1px solid var(--border);
+  border-right: none;
+  border-radius: 7px 0 0 7px;
+  font-size: 0.95rem;
+}
+.url-input-group input {
+  border-radius: 0 7px 7px 0;
+  margin: 0;
+}
 .settings-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 #health-result { margin-top: 0.7rem; font-size: 0.85rem; }
 
