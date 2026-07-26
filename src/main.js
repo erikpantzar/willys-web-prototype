@@ -1,5 +1,5 @@
 'use strict';
-import { hasBaseUrl, isDemoMode } from './settings.js';
+import { isConnectionVerified, isDemoMode } from './settings.js';
 import { renderList } from './views/list.js';
 import { renderSearch } from './views/search.js';
 import { renderDelivery } from './views/delivery.js';
@@ -22,7 +22,8 @@ function route() {
   demoBanner.hidden = !isDemoMode();
 
   // Demo mode never needs a real base URL — it runs entirely on seeded data.
-  if (!isDemoMode() && !hasBaseUrl() && name !== 'settings') {
+  // Non-demo mode requires connection to be verified before accessing app features.
+  if (!isDemoMode() && !isConnectionVerified() && name !== 'settings') {
     renderSettings(app);
     return;
   }
