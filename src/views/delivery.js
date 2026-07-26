@@ -2,14 +2,59 @@
 import * as api from '../api.js';
 import { pixelLoaderHtml } from '../loader.js';
 
+// Delivery status state: 'idle' | 'loading' | 'ready'
+let deliveryStatus = 'idle';
+
+export function getDeliveryStatus() {
+  return deliveryStatus;
+}
+
+function setDeliveryStatus(status) {
+  deliveryStatus = status;
+  updateTabBadge();
+}
+
+function updateTabBadge() {
+  const badge = document.querySelector('.tab[data-route="delivery"] .tab-badge');
+  if (!badge) return;
+
+  if (deliveryStatus === 'loading') {
+    badge.hidden = false;
+    badge.className = 'tab-badge loading';
+  } else if (deliveryStatus === 'ready') {
+    badge.hidden = false;
+    badge.className = 'tab-badge ready';
+  } else {
+    badge.hidden = true;
+  }
+}
+
+function currentRoute() {
+  return (location.hash || '#list').slice(1);
+}
+
 export async function renderDelivery(root) {
+  const routeAtStart = currentRoute();
+
   root.innerHTML = pixelLoaderHtml('Checking delivery times… (can take up to ~20s)');
+  setDeliveryStatus('loading');
 
   let body;
   try {
     body = await api.getDeliveryTimesWide();
   } catch (err) {
-    root.innerHTML = `<div class="error">Could not check delivery times: ${escapeHtml(err.message)}</div>`;
+    // Only render error if we're still on the delivery route
+    if (currentRoute() === routeAtStart && routeAtStart === 'delivery') {
+      root.innerHTML = `<div class="error">Could not check delivery times: ${escapeHtml(err.message)}</div>`;
+    }
+    setDeliveryStatus('idle');
+    return;
+  }
+
+  setDeliveryStatus('ready');
+
+  // Only render content if we're still on the delivery route
+  if (currentRoute() !== routeAtStart || routeAtStart !== 'delivery') {
     return;
   }
 
