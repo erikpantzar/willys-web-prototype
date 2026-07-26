@@ -1,6 +1,7 @@
 'use strict';
 import * as api from '../api.js';
 import { parseQuantity, formatProduct } from '../format.js';
+import { pixelLoaderHtml } from '../loader.js';
 
 const DEBOUNCE_MS = 300;
 const RESULT_LIMIT = 15;
@@ -33,7 +34,7 @@ export function renderSearch(root) {
   async function runSearch(raw) {
     const seq = ++requestSeq;
     const { text: query, quantity } = parseQuantity(raw);
-    resultsEl.innerHTML = `<div class="loading">Searching…</div>`;
+    resultsEl.innerHTML = pixelLoaderHtml('Searching…');
     let body;
     try {
       body = await api.search(query, RESULT_LIMIT);

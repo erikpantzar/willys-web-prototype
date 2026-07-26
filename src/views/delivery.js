@@ -1,8 +1,9 @@
 'use strict';
 import * as api from '../api.js';
+import { pixelLoaderHtml } from '../loader.js';
 
 export async function renderDelivery(root) {
-  root.innerHTML = `<div class="loading">Checking delivery times… (can take up to ~20s)</div>`;
+  root.innerHTML = pixelLoaderHtml('Checking delivery times… (can take up to ~20s)');
 
   let body;
   try {

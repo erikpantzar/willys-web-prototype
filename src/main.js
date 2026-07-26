@@ -1,5 +1,5 @@
 'use strict';
-import { hasBaseUrl } from './settings.js';
+import { hasBaseUrl, isDemoMode } from './settings.js';
 import { renderList } from './views/list.js';
 import { renderSearch } from './views/search.js';
 import { renderDelivery } from './views/delivery.js';
@@ -8,6 +8,7 @@ import { renderSettings } from './views/settings.js';
 const app = document.getElementById('app');
 const tabs = document.querySelectorAll('.tab');
 const settingsBtn = document.getElementById('settings-btn');
+const demoBanner = document.getElementById('demo-banner');
 
 const ROUTES = { list: renderList, search: renderSearch, delivery: renderDelivery };
 
@@ -18,8 +19,10 @@ function currentRoute() {
 function route() {
   const name = currentRoute();
   tabs.forEach((t) => t.classList.toggle('active', t.dataset.route === name));
+  demoBanner.hidden = !isDemoMode();
 
-  if (!hasBaseUrl() && name !== 'settings') {
+  // Demo mode never needs a real base URL — it runs entirely on seeded data.
+  if (!isDemoMode() && !hasBaseUrl() && name !== 'settings') {
     renderSettings(app);
     return;
   }

@@ -1,27 +1,46 @@
+/* Design direction: "Aisle Dashboard" — picked over two other directions
+   (till-roll receipt, chalkboard greengrocer) in a design review because
+   this app is opened mid-errand, one-handed, often in bright store
+   lighting: dense scannable rows and tabular numerals beat a louder visual
+   identity. See willys-web-prototype issue tracker / design-review
+   artifact for the other two directions and the rationale. */
 :root {
   color-scheme: light dark;
-  --green: #0b6b3a;
-  --danger: #b3261e;
+  --accent: #1f6f43;
+  --accent-ink: #16512f;
+  --danger: #c0392b;
   --bg: #ffffff;
-  --fg: #1a1a1a;
-  --muted: #6b6b6b;
-  --border: #e0e0e0;
-  --card: #f7f7f7;
+  --fg: #14171a;
+  --muted: #6b7178;
+  --border: #e6e8ea;
+  --card: #f7f8f7;
+  --pixel-off: #e6e8ea;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #121212;
-    --fg: #f0f0f0;
-    --muted: #a0a0a0;
-    --border: #2c2c2c;
-    --card: #1c1c1c;
+    --bg: #121412;
+    --fg: #eef0ee;
+    --muted: #9aa09b;
+    --border: #2b2f2c;
+    --card: #1a1c1a;
+    --accent: #4fae7b;
+    --accent-ink: #bff0d3;
+    --pixel-off: #2b2f2c;
   }
+}
+:root[data-theme="dark"] {
+  --bg: #121412; --fg: #eef0ee; --muted: #9aa09b; --border: #2b2f2c; --card: #1a1c1a;
+  --accent: #4fae7b; --accent-ink: #bff0d3; --pixel-off: #2b2f2c;
+}
+:root[data-theme="light"] {
+  --bg: #ffffff; --fg: #14171a; --muted: #6b7178; --border: #e6e8ea; --card: #f7f8f7;
+  --accent: #1f6f43; --accent-ink: #16512f; --pixel-off: #e6e8ea;
 }
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 body {
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   background: var(--bg);
   color: var(--fg);
   min-height: 100dvh;
@@ -33,22 +52,31 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1rem;
+  padding: 0.7rem 1rem;
   border-bottom: 1px solid var(--border);
-  background: var(--green);
-  color: white;
+  background: var(--bg);
+  color: var(--fg);
 }
-.topbar h1 { font-size: 1.1rem; margin: 0; }
-.topbar button { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; }
+.topbar h1 { font-size: 1rem; font-weight: 800; letter-spacing: -0.01em; margin: 0; }
+.topbar button { background: none; border: none; color: var(--fg); font-size: 1.15rem; cursor: pointer; }
 
 #app {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem;
-  padding-bottom: 5rem;
+  padding: 0.75rem 1rem 5rem;
   max-width: 640px;
   width: 100%;
   margin: 0 auto;
+}
+
+.demo-banner {
+  background: var(--accent);
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 0.4rem;
+  letter-spacing: 0.02em;
 }
 
 .tabbar {
@@ -63,94 +91,136 @@ body {
 }
 .tab {
   flex: 1;
-  padding: 0.9rem 0;
+  padding: 0.85rem 0;
   border: none;
   background: none;
   color: var(--muted);
-  font-size: 0.95rem;
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
 }
-.tab.active { color: var(--green); font-weight: 600; }
+.tab.active { color: var(--accent); }
 
 input[type="text"] {
-  font-size: 1rem;
-  padding: 0.6rem 0.7rem;
+  font-size: 0.95rem;
+  padding: 0.55rem 0.65rem;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--card);
+  border-radius: 7px;
+  background: var(--bg);
   color: var(--fg);
   width: 100%;
 }
+input[type="text"]:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 button {
-  font-size: 0.95rem;
-  padding: 0.55rem 0.9rem;
-  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.5rem 0.85rem;
+  border-radius: 7px;
   border: 1px solid var(--border);
-  background: var(--card);
+  background: var(--bg);
   color: var(--fg);
   cursor: pointer;
 }
 button.danger { background: var(--danger); color: white; border-color: var(--danger); }
 
-.who-row { margin-bottom: 0.75rem; }
-.who-row label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.85rem; color: var(--muted); }
+.who-row { margin-bottom: 0.6rem; }
+.who-row label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.78rem; color: var(--muted); }
 
-.add-row { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.add-row { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
 .add-row input { flex: 1; }
-.add-row button { background: var(--green); color: white; border-color: var(--green); }
+.add-row button { background: var(--accent); color: white; border-color: var(--accent); }
 
-.item-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.item-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); }
 .item-row {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.6rem 0.7rem;
-  background: var(--card);
-  border-radius: 8px;
-  border: 1px solid var(--border);
+  gap: 0.5rem;
+  padding: 0.55rem 0.1rem;
+  border-bottom: 1px solid var(--border);
 }
 .item-main { flex: 1; min-width: 0; }
-.item-text { word-break: break-word; }
-.item-meta { font-size: 0.75rem; color: var(--muted); }
-.qty-stepper { display: flex; align-items: center; gap: 0.4rem; }
-.qty-stepper button { padding: 0.2rem 0.6rem; }
-.remove-btn { background: none; border: none; color: var(--danger); font-size: 1.1rem; padding: 0.2rem 0.4rem; }
+.item-text { word-break: break-word; font-size: 0.85rem; }
+.item-meta { font-size: 0.72rem; color: var(--muted); }
+.qty-stepper { display: flex; align-items: center; gap: 0.35rem; }
+.qty-stepper button { padding: 0.15rem 0.5rem; font-variant-numeric: tabular-nums; }
+.qty-stepper span { font-variant-numeric: tabular-nums; min-width: 1ch; text-align: center; }
+.remove-btn { background: none; border: none; color: var(--danger); font-size: 1rem; padding: 0.2rem 0.35rem; }
 
-.total { margin-top: 1rem; font-weight: 600; }
-.total .note { font-weight: normal; font-size: 0.8rem; color: var(--muted); }
-.list-status { margin-top: 0.75rem; font-size: 0.85rem; color: var(--muted); }
+/* One deliberate flourish carried over from the "till roll" direction we
+   didn't otherwise pick — a receipt-style double rule under the running
+   total is the one place that motif earns its keep. */
+.total {
+  margin-top: 0.9rem;
+  padding-top: 0.6rem;
+  border-top: 3px double var(--fg);
+  font-weight: 800;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  justify-content: space-between;
+}
+.total .note { font-weight: normal; font-size: 0.72rem; color: var(--muted); display: block; margin-top: 0.2rem; }
+.list-status { margin-top: 0.6rem; font-size: 0.78rem; color: var(--muted); }
 .list-actions { margin-top: 1rem; }
 
-.results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.75rem; }
+.results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.6rem; }
 .result-card {
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 0.6rem;
+  border-radius: 8px;
+  padding: 0.5rem;
   background: var(--card);
   cursor: pointer;
   transition: opacity 0.15s;
 }
 .result-card.picking { opacity: 0.5; pointer-events: none; }
-.result-card.added { border-color: var(--green); }
-.result-img { width: 100%; aspect-ratio: 1; object-fit: contain; background: white; border-radius: 6px; }
+.result-card.added { border-color: var(--accent); }
+.result-img { width: 100%; aspect-ratio: 1; object-fit: contain; background: white; border-radius: 5px; }
 .result-img.placeholder { background: var(--border); }
-.result-name { font-size: 0.85rem; margin-top: 0.4rem; }
-.result-size, .result-price { font-size: 0.75rem; color: var(--muted); }
-.result-status { font-size: 0.75rem; color: var(--green); min-height: 1em; }
+.result-name { font-size: 0.8rem; margin-top: 0.35rem; }
+.result-size, .result-price { font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.result-status { font-size: 0.72rem; color: var(--accent); min-height: 1em; font-weight: 600; }
 
-.delivery-group { margin-bottom: 1.25rem; }
-.delivery-group h3 { font-size: 0.95rem; margin: 0 0 0.5rem; }
-.slot-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.confirm-dialog { margin-top: 1rem; padding: 1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--card); }
+.delivery-group { margin-bottom: 1.1rem; }
+.delivery-group h3 { font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; margin: 0 0 0.45rem; }
+.slot-buttons { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.slot-buttons button { font-variant-numeric: tabular-nums; }
+.slot-buttons button.sel, .slot-buttons button[aria-pressed="true"] { background: var(--accent); color: white; border-color: var(--accent); }
+.confirm-dialog { margin-top: 1rem; padding: 0.9rem 1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--card); }
 .confirm-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
 
-.settings-panel label { display: flex; flex-direction: column; gap: 0.3rem; margin: 0.75rem 0; }
-.settings-actions { display: flex; gap: 0.5rem; }
-#health-result { margin-top: 0.75rem; }
+.settings-panel label { display: flex; flex-direction: column; gap: 0.3rem; margin: 0.7rem 0; }
+.settings-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+#health-result { margin-top: 0.7rem; font-size: 0.85rem; }
 
-.muted { color: var(--muted); font-weight: normal; font-size: 0.85rem; }
-.loading, .empty, .error, .success { padding: 1rem 0; color: var(--muted); }
+.muted { color: var(--muted); font-weight: normal; font-size: 0.8rem; }
+.loading, .empty, .error, .success { padding: 0.75rem 0; color: var(--muted); font-size: 0.85rem; }
 .error { color: var(--danger); }
-.success { color: var(--green); }
-.empty.small { padding: 0.25rem 0; }
+.success { color: var(--accent); }
+.empty.small { padding: 0.2rem 0; }
+
+/* --- 8-bit segmented loader (picked from the design review: reads as
+   "still working" instantly, chunky per-block timing rather than a smooth
+   spinner) — used for the two genuinely slow calls (delivery-time preview,
+   ~20s; a live catalog-fallback search). */
+.pixel-loader { padding: 0.9rem 0; }
+.pixel-loader .bar { display: flex; gap: 2px; image-rendering: pixelated; }
+.pixel-loader .bar i {
+  flex: 1;
+  height: 8px;
+  background: var(--pixel-off);
+  animation: pixel-fill 1.6s steps(2) infinite;
+}
+.pixel-loader .bar i:nth-child(1) { animation-delay: 0s; }
+.pixel-loader .bar i:nth-child(2) { animation-delay: 0.2s; }
+.pixel-loader .bar i:nth-child(3) { animation-delay: 0.4s; }
+.pixel-loader .bar i:nth-child(4) { animation-delay: 0.6s; }
+.pixel-loader .bar i:nth-child(5) { animation-delay: 0.8s; }
+.pixel-loader .bar i:nth-child(6) { animation-delay: 1s; }
+.pixel-loader .bar i:nth-child(7) { animation-delay: 1.2s; }
+.pixel-loader .bar i:nth-child(8) { animation-delay: 1.4s; }
+@keyframes pixel-fill { 0% { background: var(--pixel-off); } 12% { background: var(--accent); } 100% { background: var(--accent); } }
+.pixel-loader .label { font-size: 0.72rem; color: var(--muted); font-weight: 600; margin-top: 0.5rem; }
+@media (prefers-reduced-motion: reduce) {
+  .pixel-loader .bar i { animation: none; background: var(--accent); }
+}
