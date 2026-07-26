@@ -1,0 +1,15 @@
+{
+  "name": "willys-web-prototype",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PWA front-end for the Willys shopping list: list view with remove buttons, richer product search with images, and a wider delivery-time picker. Talks to willys-shopping-list-bot / willys-item-matcher / willys-shopping-agent over the tailnet.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^7.1.7"
+  }
+}
