@@ -98,8 +98,43 @@ body {
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
+  position: relative;
 }
 .tab.active { color: var(--accent); }
+
+.tab-badge {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: 0.25rem;
+  vertical-align: middle;
+}
+.tab-badge.loading {
+  background: var(--accent);
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+.tab-badge.ready {
+  width: 1.2em;
+  height: 1.2em;
+  margin-left: 0.15rem;
+  vertical-align: -0.15em;
+  font-size: 0.7rem;
+  background: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.tab-badge.ready::after {
+  content: '✓';
+  color: var(--accent);
+  font-weight: 700;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
 
 input[type="text"] {
   font-size: 0.95rem;
