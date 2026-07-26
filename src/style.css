@@ -193,6 +193,15 @@ button.danger { background: var(--danger); color: white; border-color: var(--dan
 .settings-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 #health-result { margin-top: 0.7rem; font-size: 0.85rem; }
 
+.health-services { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 0.8rem; }
+.health-line { font-size: 0.85rem; }
+
+.troubleshooting { margin-top: 0.8rem; border: 1px solid var(--border); border-radius: 7px; padding: 0.6rem 0.8rem; background: var(--card); }
+.troubleshooting summary { cursor: pointer; font-weight: 600; font-size: 0.85rem; user-select: none; }
+.troubleshooting summary:hover { color: var(--accent); }
+.troubleshooting ul.checklist { list-style: disc inside; margin: 0.6rem 0 0 0; padding: 0; font-size: 0.8rem; color: var(--fg); }
+.troubleshooting ul.checklist li { margin-bottom: 0.3rem; }
+
 .muted { color: var(--muted); font-weight: normal; font-size: 0.8rem; }
 .loading, .empty, .error, .success { padding: 0.75rem 0; color: var(--muted); font-size: 0.85rem; }
 .error { color: var(--danger); }

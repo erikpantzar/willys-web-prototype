@@ -38,7 +38,27 @@ export const confirm = (resolutionId, choice) => request('/matcher/confirm', { m
 export const getDeliveryTimesWide = () => request('/agent/delivery-times/wide');
 export const chooseDeliveryTime = (slot) => request('/agent/delivery-times/choose', { method: 'POST', body: slot });
 
+async function healthCheckService(path, serviceName) {
+  try {
+    const res = await fetch(`${getBaseUrl()}${path}`);
+    if (!res.ok) {
+      return { service: serviceName, ok: false, kind: 'error', detail: `HTTP ${res.status} ${res.statusText}` };
+    }
+    return { service: serviceName, ok: true, kind: 'ok', detail: null };
+  } catch (err) {
+    // TypeError from fetch means network-level failure (DNS, CORS, Tailscale unreachable, etc.)
+    if (err instanceof TypeError) {
+      return { service: serviceName, ok: false, kind: 'unreachable', detail: 'Cannot reach host — check URL, Tailscale connection, and network access' };
+    }
+    return { service: serviceName, ok: false, kind: 'error', detail: err.message };
+  }
+}
+
 export async function healthCheck() {
-  const results = await Promise.allSettled([request('/list/health'), request('/matcher/health'), request('/agent/health')]);
-  return results.every((r) => r.status === 'fulfilled');
+  const results = await Promise.all([
+    healthCheckService('/list/health', 'list'),
+    healthCheckService('/matcher/health', 'matcher'),
+    healthCheckService('/agent/health', 'agent'),
+  ]);
+  return results;
 }
