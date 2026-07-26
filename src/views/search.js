@@ -4,6 +4,7 @@ import { parseQuantity, formatProduct } from '../format.js';
 import { pixelLoaderHtml } from '../loader.js';
 import { showToast } from '../toast.js';
 import { recordAction, performUndo } from '../undo.js';
+import { announce } from '../announce.js';
 
 const DEBOUNCE_MS = 300;
 const RESULT_LIMIT = 15;
@@ -58,6 +59,7 @@ export function renderSearch(root) {
     if (candidates.length === 0) {
       resultsEl.innerHTML = `<div class="empty">No matches for "${escapeHtml(query)}".</div>`;
       currentResolution = null;
+      announce(`No results for "${query}"`);
       return;
     }
     // Store the resolution for use in addFromSearch()
@@ -65,6 +67,7 @@ export function renderSearch(root) {
 
     const confirmedUrl = body.confirmedUrl || null;
     resultsEl.innerHTML = candidates.map((c, i) => resultCard(c, i, confirmedUrl)).join('');
+    announce(`Found ${candidates.length} result${candidates.length === 1 ? '' : 's'} for "${query}"`);
     resultsEl.querySelectorAll('[data-pick]').forEach((card, i) => {
       card.addEventListener('click', () => addFromSearch(candidates[i], quantity, card));
     });
@@ -85,6 +88,7 @@ export function renderSearch(root) {
       card.classList.remove('picking');
       card.classList.add('added');
       card.querySelector('.result-status').textContent = `Added "${added.text}" ✓`;
+      announce(`Added ${added.text}`);
       showToast(`Added "${added.text}"`, {
         type: 'success',
         actionLabel: 'Undo',

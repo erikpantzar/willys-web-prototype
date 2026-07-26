@@ -5,6 +5,7 @@ import { showToast } from '../toast.js';
 import { confirmDialog } from '../dialog.js';
 import { getWho, setWho } from '../who.js';
 import { recordAction, performUndo } from '../undo.js';
+import { announce } from '../announce.js';
 
 export async function renderList(root) {
   root.innerHTML = `<div class="loading">Loading list…</div>`;
@@ -86,10 +87,13 @@ export async function renderList(root) {
       for (const part of parts) {
         lastAddedItem = await api.addItem(part, who);
       }
+      const itemCount = parts.length;
+      announce(itemCount === 1 ? `Added ${parts[0]}` : `Added ${itemCount} items`);
       // Record undo for the last item added (or only item if single)
       if (lastAddedItem) {
         recordAction({ type: 'add', itemId: lastAddedItem.id, text: lastAddedItem.text, who });
         renderList(root);
+        root.querySelector('#add-input')?.focus();
         showToast(`Added "${lastAddedItem.text}"`, {
           type: 'success',
           actionLabel: 'Undo',
@@ -112,12 +116,15 @@ export async function renderList(root) {
       const itemId = Number(btn.dataset.remove);
       const item = items.find((i) => i.id === itemId);
       btn.disabled = true;
+      const itemText = btn.closest('.item-row')?.querySelector('.item-text')?.textContent || 'item';
       try {
         await api.removeItem(itemId);
         if (item) {
           recordAction({ type: 'remove', itemId, text: item.text, who: item.added_by });
         }
+        announce(`Removed ${itemText}`);
         renderList(root);
+        root.querySelector('#add-input')?.focus();
         showToast(`Removed "${item?.text || 'item'}"`, {
           type: 'success',
           actionLabel: 'Undo',
@@ -141,9 +148,11 @@ export async function renderList(root) {
       const next = current + delta;
       if (next < 1) return;
       btn.disabled = true;
+      const itemText = btn.closest('.item-row')?.querySelector('.item-text')?.textContent || 'item';
       try {
         await api.setQuantity(id, next);
         recordAction({ type: 'qty', itemId: id, previousValue: current });
+        announce(`${itemText} quantity changed to ${next}`);
         renderList(root);
         showToast(`Quantity updated to ${next}`, {
           type: 'success',
