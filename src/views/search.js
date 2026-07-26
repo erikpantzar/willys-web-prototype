@@ -11,10 +11,17 @@ const RESULT_LIMIT = 15;
 
 export function renderSearch(root) {
   root.innerHTML = `
-    <form id="search-form" class="add-row">
-      <input id="search-input" type="text" placeholder="Search products… e.g. 2 mjölk" autocomplete="off" />
-    </form>
+    <div class="hero hero-search">
+      <div class="hero-title">Find Groceries</div>
+      <div class="hero-subtitle">Search our shelves and add what you need</div>
+      <form id="search-form" class="hero-search-box">
+        <svg width="18" height="18" viewBox="0 0 18 18" style="flex-shrink:0"><circle cx="8" cy="8" r="6" fill="none" stroke="var(--search-pill-fg)" stroke-width="2"></circle><line x1="12.2" y1="12.2" x2="16.5" y2="16.5" stroke="var(--search-pill-fg)" stroke-width="2" stroke-linecap="round"></line></svg>
+        <input id="search-input" type="text" placeholder="Search products… e.g. 2 mjölk" autocomplete="off" />
+      </form>
+    </div>
+    <div class="view-body">
     <div id="search-results" class="results-grid"></div>
+    </div>
   `;
 
   const input = root.querySelector('#search-input');

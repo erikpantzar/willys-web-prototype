@@ -25,7 +25,16 @@ export async function renderList(root) {
   const missingPrice = items.some((i) => extractPrice(i.text) === null);
   const anyVariable = items.some((i) => isVariableWeight(i.text));
 
+  const totalQty = items.reduce((sum, i) => sum + (i.quantity || 1), 0);
+  updateCartBadge(totalQty);
+
   root.innerHTML = `
+    <div class="hero hero-list">
+      <div class="hero-title">Our List</div>
+      <div class="hero-subtitle">${items.length === 0 ? 'Nothing on the list yet' : `${totalQty} item${totalQty === 1 ? '' : 's'} to shop for`}</div>
+    </div>
+
+    <div class="view-body">
     <div class="who-row">
       <label>Your name <input id="who" type="text" value="${escapeHtml(getWho())}" placeholder="e.g. Erik" /></label>
     </div>
@@ -36,7 +45,7 @@ export async function renderList(root) {
     </form>
 
     <ul class="item-list">
-      ${items.length === 0 ? '<li class="empty">List is empty.</li>' : items.map(itemRow).join('')}
+      ${items.length === 0 ? emptyState() : items.map(itemRow).join('')}
     </ul>
 
     ${pricedTotal > 0 ? `
@@ -52,6 +61,7 @@ export async function renderList(root) {
 
     <div class="list-actions">
       <button id="reset-btn" class="danger">Reset list</button>
+    </div>
     </div>
   `;
 
@@ -179,6 +189,29 @@ export async function renderList(root) {
       showToast(`Could not reset: ${err.message}`);
     }
   });
+}
+
+function updateCartBadge(totalQty) {
+  const badge = document.getElementById('cart-badge');
+  if (!badge) return;
+  if (totalQty > 0) {
+    badge.hidden = false;
+    badge.textContent = String(totalQty);
+  } else {
+    badge.hidden = true;
+  }
+}
+
+function emptyState() {
+  return `
+    <li class="empty-state" style="list-style: none">
+      <div class="empty-state-icon" style="background: var(--list-pill-bg)">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M4 6h16l-1.5 10.5a2 2 0 01-2 1.5H7.5a2 2 0 01-2-1.5L4 6z" stroke="var(--list-pill-fg)" stroke-width="1.8" stroke-linejoin="round"></path><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="var(--list-pill-fg)" stroke-width="1.8"></path></svg>
+      </div>
+      <div class="empty-state-title">Your list is empty</div>
+      <div class="empty-state-subtitle">Search for groceries to start adding!</div>
+    </li>
+  `;
 }
 
 function itemRow(item) {

@@ -10,31 +10,39 @@ export function renderSettings(root) {
   const verified = isConnectionVerified();
 
   root.innerHTML = `
-    <div class="settings-panel">
-      <h2>Settings</h2>
+    <div class="setup-screen">
+      <div class="setup-icon">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none">
+          <path d="M2 8.5C7 3.5 17 3.5 22 8.5" stroke="var(--delivery-btn)" stroke-width="1.8" stroke-linecap="round"></path>
+          <path d="M5.5 12C9 8.7 15 8.7 18.5 12" stroke="var(--delivery-btn)" stroke-width="1.8" stroke-linecap="round"></path>
+          <path d="M9 15.5C10.7 13.9 13.3 13.9 15 15.5" stroke="var(--delivery-btn)" stroke-width="1.8" stroke-linecap="round"></path>
+          <circle cx="12" cy="19" r="1.6" fill="var(--delivery-btn)"></circle>
+        </svg>
+      </div>
+      <div class="setup-title">Settings</div>
+      <div class="setup-subtitle">Connect this device to your family's shopping hub, or try the sample data first.</div>
 
-      <label>
-        <span>Demo mode</span>
-        <button id="toggle-demo">${demo ? '✓ On — showing sample data' : 'Off — try it with sample data'}</button>
-      </label>
-      <p class="muted">Runs entirely on seeded sample data, no tailnet connection needed — for trying out the
-      interactions and design. Turn it off to connect to your real list.</p>
+      <div class="setup-form">
+        <label>Demo mode</label>
+        <button id="toggle-demo" style="width: 100%">${demo ? '✓ On — showing sample data' : 'Off — try it with sample data'}</button>
+        <p class="muted" style="margin-top: 0.5rem">Runs entirely on seeded sample data, no tailnet connection needed — for trying out the
+        interactions and design. Turn it off to connect to your real list.</p>
 
-      ${demo ? '' : `
-        <p class="muted">This only works on a device connected to your Tailscale network — the base URL is your home server's tailnet HTTPS address (see home-server/SPEC.md).</p>
-        <label>Backend base URL
+        ${demo ? '' : `
+          <p class="muted">This only works on a device connected to your Tailscale network — the base URL is your home server's tailnet HTTPS address (see home-server/SPEC.md).</p>
+          <label style="margin-top: 1rem">Backend base URL</label>
           <div class="url-input-group">
             <span class="url-prefix">https://</span>
             <input id="base-url" type="text" value="${escapeHtml(urlHost)}" />
           </div>
-        </label>
-        ${verified ? `<div class="success">✓ Connection verified</div>` : ''}
-        <div class="settings-actions">
-          <button id="save-url">Save</button>
-          <button id="check-health">Test connection</button>
-        </div>
-        <div id="health-result"></div>
-      `}
+          ${verified ? `<div class="success">✓ Connection verified</div>` : ''}
+          <div class="settings-actions" style="margin-top: 0.85rem">
+            <button id="save-url">Save</button>
+            <button id="check-health">Test connection</button>
+          </div>
+          <div id="health-result"></div>
+        `}
+      </div>
     </div>
   `;
 

@@ -34,10 +34,28 @@ function currentRoute() {
   return (location.hash || '#list').slice(1);
 }
 
+function hero(inner) {
+  return `
+    <div class="hero hero-delivery">
+      <div class="hero-row">
+        <div>
+          <div class="hero-title">Delivery Time</div>
+          <div class="hero-subtitle">Pick a day and time that works for your family</div>
+        </div>
+        <button class="hero-icon-btn" id="refresh-delivery" title="Refresh available times" aria-label="Refresh available times">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 0113.66-5.66M20 12a8 8 0 01-13.66 5.66" stroke="#fff" stroke-width="2" stroke-linecap="round"></path><path d="M17 3v4h-4M7 21v-4h4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </button>
+      </div>
+    </div>
+    <div class="view-body">${inner}</div>
+  `;
+}
+
 export async function renderDelivery(root) {
   const routeAtStart = currentRoute();
 
-  root.innerHTML = pixelLoaderHtml('Checking delivery times… (can take up to ~20s)');
+  root.innerHTML = hero(pixelLoaderHtml('Fetching delivery times… (can take up to ~20s)'));
+  wireRefresh(root);
   setDeliveryStatus('loading');
 
   let body;
@@ -46,7 +64,8 @@ export async function renderDelivery(root) {
   } catch (err) {
     // Only render error if we're still on the delivery route
     if (currentRoute() === routeAtStart && routeAtStart === 'delivery') {
-      root.innerHTML = `<div class="error">Could not check delivery times: ${escapeHtml(err.message)}</div>`;
+      root.innerHTML = hero(`<div class="error">Could not check delivery times: ${escapeHtml(err.message)}</div>`);
+      wireRefresh(root);
     }
     setDeliveryStatus('idle');
     return;
@@ -61,20 +80,26 @@ export async function renderDelivery(root) {
 
   const alternatives = body.alternatives || [];
   if (alternatives.every((a) => a.slots.length === 0)) {
-    root.innerHTML = `<div class="empty">No delivery times available in the next few days — try again later.</div>`;
+    root.innerHTML = hero(`<div class="empty">No delivery times available in the next few days — try again later.</div>`);
+    wireRefresh(root);
     return;
   }
 
-  root.innerHTML = `
+  root.innerHTML = hero(`
     <div id="delivery-groups">
       ${alternatives.map(dateGroup).join('')}
     </div>
     <div id="confirm-box"></div>
-  `;
+  `);
+  wireRefresh(root);
 
   root.querySelectorAll('[data-slot]').forEach((btn) => {
     btn.addEventListener('click', () => showConfirm(root, JSON.parse(btn.dataset.slot)));
   });
+}
+
+function wireRefresh(root) {
+  root.querySelector('#refresh-delivery')?.addEventListener('click', () => renderDelivery(root));
 }
 
 function dateGroup(alt) {
