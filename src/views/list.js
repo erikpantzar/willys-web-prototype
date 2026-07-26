@@ -3,14 +3,7 @@ import * as api from '../api.js';
 import { extractPrice, isVariableWeight, formatSum, splitParts } from '../format.js';
 import { showToast } from '../toast.js';
 import { confirmDialog } from '../dialog.js';
-
-const WHO_KEY = 'willys.who';
-function getWho() {
-  return localStorage.getItem(WHO_KEY) || '';
-}
-function setWho(name) {
-  localStorage.setItem(WHO_KEY, name);
-}
+import { getWho, setWho } from '../who.js';
 
 export async function renderList(root) {
   root.innerHTML = `<div class="loading">Loading list…</div>`;
@@ -60,7 +53,23 @@ export async function renderList(root) {
     </div>
   `;
 
-  root.querySelector('#who').addEventListener('change', (e) => setWho(e.target.value.trim()));
+  const whoInput = root.querySelector('#who');
+  whoInput.addEventListener('change', (e) => {
+    const newName = e.target.value.trim();
+    const existingNames = new Set(items.map(i => i.added_by.toLowerCase()));
+    const currentWho = getWho().toLowerCase();
+
+    // Warn if the new name case-insensitively matches a different existing name
+    if (newName && newName.toLowerCase() !== currentWho && existingNames.has(newName.toLowerCase())) {
+      const matches = items.filter(i => i.added_by.toLowerCase() === newName.toLowerCase()).map(i => i.added_by);
+      const existingCasing = [...new Set(matches)][0];
+      if (existingCasing && existingCasing !== newName) {
+        showToast(`Note: "${existingCasing}" is already in use on this list (different casing).`);
+      }
+    }
+
+    setWho(newName);
+  });
 
   root.querySelector('#add-form').addEventListener('submit', async (e) => {
     e.preventDefault();
