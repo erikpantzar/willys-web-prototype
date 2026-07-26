@@ -1,5 +1,6 @@
 'use strict';
 import { hasBaseUrl, isDemoMode } from './settings.js';
+import { initWho } from './who.js';
 import { renderList } from './views/list.js';
 import { renderSearch } from './views/search.js';
 import { renderDelivery } from './views/delivery.js';
@@ -33,6 +34,7 @@ tabs.forEach((btn) => btn.addEventListener('click', () => (location.hash = `#${b
 settingsBtn.addEventListener('click', () => renderSettings(app));
 
 window.addEventListener('hashchange', route);
+initWho();
 route();
 
 if ('serviceWorker' in navigator) {

@@ -58,6 +58,8 @@ body {
   color: var(--fg);
 }
 .topbar h1 { font-size: 1rem; font-weight: 800; letter-spacing: -0.01em; margin: 0; }
+.who-badge { font-size: 0.75rem; color: var(--muted); flex: 1; text-align: center; }
+.who-badge.active { color: var(--muted); font-weight: 600; }
 .topbar button { background: none; border: none; color: var(--fg); font-size: 1.15rem; cursor: pointer; }
 
 #app {
