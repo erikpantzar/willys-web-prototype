@@ -2,6 +2,7 @@
 import * as api from '../api.js';
 import { parseQuantity, formatProduct } from '../format.js';
 import { pixelLoaderHtml } from '../loader.js';
+import { showToast } from '../toast.js';
 
 const DEBOUNCE_MS = 300;
 const RESULT_LIMIT = 15;
@@ -57,7 +58,7 @@ export function renderSearch(root) {
 
   async function addFromSearch(query, candidate, quantity, card) {
     const who = localStorage.getItem('willys.who');
-    if (!who) return alert('Set your name on the List tab first.');
+    if (!who) return showToast('Set your name on the List tab first.');
     card.classList.add('picking');
     try {
       // /search doesn't persist a resolution (see item-matcher/src/server.js) —
@@ -75,7 +76,7 @@ export function renderSearch(root) {
       card.querySelector('.result-status').textContent = `Added "${added.text}" ✓`;
     } catch (err) {
       card.classList.remove('picking');
-      alert(`Could not add: ${err.message}`);
+      showToast(`Could not add: ${err.message}`);
     }
   }
 }

@@ -1,6 +1,8 @@
 'use strict';
 import * as api from '../api.js';
 import { extractPrice, isVariableWeight, formatSum, splitParts } from '../format.js';
+import { showToast } from '../toast.js';
+import { confirmDialog } from '../dialog.js';
 
 const WHO_KEY = 'willys.who';
 function getWho() {
@@ -66,7 +68,7 @@ export async function renderList(root) {
     const text = input.value.trim();
     const who = getWho();
     if (!text) return;
-    if (!who) return alert('Enter your name first.');
+    if (!who) return showToast('Enter your name first.');
     input.disabled = true;
     try {
       for (const part of splitParts(text)) {
@@ -74,7 +76,7 @@ export async function renderList(root) {
       }
       renderList(root);
     } catch (err) {
-      alert(`Could not add: ${err.message}`);
+      showToast(`Could not add: ${err.message}`);
       input.disabled = false;
     }
   });
@@ -86,7 +88,7 @@ export async function renderList(root) {
         await api.removeItem(Number(btn.dataset.remove));
         renderList(root);
       } catch (err) {
-        alert(`Could not remove: ${err.message}`);
+        showToast(`Could not remove: ${err.message}`);
         btn.disabled = false;
       }
     });
@@ -104,19 +106,20 @@ export async function renderList(root) {
         await api.setQuantity(id, next);
         renderList(root);
       } catch (err) {
-        alert(`Could not update quantity: ${err.message}`);
+        showToast(`Could not update quantity: ${err.message}`);
         btn.disabled = false;
       }
     });
   });
 
   root.querySelector('#reset-btn').addEventListener('click', async () => {
-    if (!confirm("Clear the whole list and start fresh? Can't be undone.")) return;
+    const ok = await confirmDialog("Clear the whole list and start fresh? Can't be undone.", { confirmLabel: 'Clear list' });
+    if (!ok) return;
     try {
       await api.resetList();
       renderList(root);
     } catch (err) {
-      alert(`Could not reset: ${err.message}`);
+      showToast(`Could not reset: ${err.message}`);
     }
   });
 }
