@@ -6,7 +6,7 @@
 // state instead of hitting the network. A small artificial delay on every
 // call so loading states (including the 8-bit loader) are actually visible
 // during review, not just a flash.
-import { CATALOG, seedListItems, seedListState, seedDeliveryAlternatives } from './fakeData.js';
+import { CATALOG, seedListItems, seedListState, seedDeliveryAlternatives, demoConfirmedByQuery } from './fakeData.js';
 
 const delay = (ms = 350) => new Promise((r) => setTimeout(r, ms));
 
@@ -83,7 +83,11 @@ function rank(query) {
 export async function search(q, limit = 15) {
   await delay(400);
   const candidates = rank(q).slice(0, limit);
-  return { query: q, source: candidates.length ? 'catalog' : 'none', candidates };
+  // The real backend (/matcher/search) should return confirmedUrl (or a per-candidate
+  // confirmed flag) to mark which candidate matches a previously-resolved query.
+  // Demo data: lookup the confirmed URL for this normalized query.
+  const confirmedUrl = demoConfirmedByQuery.get(q.toLowerCase().trim()) || null;
+  return { query: q, source: candidates.length ? 'catalog' : 'none', candidates, confirmedUrl };
 }
 
 export async function resolve(query) {
