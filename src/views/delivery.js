@@ -1,6 +1,7 @@
 'use strict';
 import * as api from '../api.js';
 import { pixelLoaderHtml } from '../loader.js';
+import { announce } from '../announce.js';
 
 export async function renderDelivery(root) {
   root.innerHTML = pixelLoaderHtml('Checking delivery times… (can take up to ~20s)');
@@ -77,6 +78,7 @@ async function showConfirm(root, slot) {
       await api.chooseDeliveryTime(slot);
       await api.fakeSend(who);
       await api.resetList();
+      announce(`Delivery time set for ${slot.formattedTime}. List sent for shopping.`);
       box.innerHTML = `<div class="success">✅ Delivery time set: ${escapeHtml(slot.formattedTime)}. List sent for shopping and cleared for a new one.</div>`;
     } catch (err) {
       box.innerHTML = `<div class="error">Could not finalize: ${escapeHtml(err.message)}</div>`;

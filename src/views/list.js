@@ -3,6 +3,7 @@ import * as api from '../api.js';
 import { extractPrice, isVariableWeight, formatSum, splitParts } from '../format.js';
 import { showToast } from '../toast.js';
 import { confirmDialog } from '../dialog.js';
+import { announce } from '../announce.js';
 
 const WHO_KEY = 'willys.who';
 function getWho() {
@@ -71,10 +72,14 @@ export async function renderList(root) {
     if (!who) return showToast('Enter your name first.');
     input.disabled = true;
     try {
-      for (const part of splitParts(text)) {
+      const parts = splitParts(text);
+      for (const part of parts) {
         await api.addItem(part, who);
       }
+      const itemCount = parts.length;
+      announce(itemCount === 1 ? `Added ${parts[0]}` : `Added ${itemCount} items`);
       renderList(root);
+      root.querySelector('#add-input')?.focus();
     } catch (err) {
       showToast(`Could not add: ${err.message}`);
       input.disabled = false;
@@ -84,9 +89,12 @@ export async function renderList(root) {
   root.querySelectorAll('[data-remove]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       btn.disabled = true;
+      const itemText = btn.closest('.item-row')?.querySelector('.item-text')?.textContent || 'item';
       try {
         await api.removeItem(Number(btn.dataset.remove));
+        announce(`Removed ${itemText}`);
         renderList(root);
+        root.querySelector('#add-input')?.focus();
       } catch (err) {
         showToast(`Could not remove: ${err.message}`);
         btn.disabled = false;
@@ -102,8 +110,10 @@ export async function renderList(root) {
       const next = current + delta;
       if (next < 1) return;
       btn.disabled = true;
+      const itemText = btn.closest('.item-row')?.querySelector('.item-text')?.textContent || 'item';
       try {
         await api.setQuantity(id, next);
+        announce(`${itemText} quantity changed to ${next}`);
         renderList(root);
       } catch (err) {
         showToast(`Could not update quantity: ${err.message}`);

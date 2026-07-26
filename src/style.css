@@ -265,3 +265,16 @@ button.danger { background: var(--danger); color: white; border-color: var(--dan
   z-index: 200;
 }
 .modal-backdrop .confirm-dialog { max-width: 400px; width: 100%; margin: 0; }
+
+/* Screen reader only text — visually hidden but announced by assistive tech */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
