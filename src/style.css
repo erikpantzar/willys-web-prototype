@@ -127,7 +127,6 @@ h1, h2, h3, button, .heading-font { font-family: 'Baloo 2', ui-sans-serif, sans-
   color: white;
   margin-bottom: 1rem;
 }
-.hero.hero-search { background: linear-gradient(180deg, var(--search-grad-1), var(--search-grad-2) 80%); }
 .hero.hero-list { background: linear-gradient(180deg, var(--list-grad-1), var(--list-grad-2) 80%); }
 .hero.hero-delivery { background: linear-gradient(180deg, var(--delivery-grad-1), var(--delivery-grad-2) 80%); }
 .hero-title { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 1.6rem; letter-spacing: 0.2px; }
@@ -138,11 +137,18 @@ h1, h2, h3, button, .heading-font { font-family: 'Baloo 2', ui-sans-serif, sans-
   background: rgba(255, 255, 255, 0.25); display: flex; align-items: center; justify-content: center;
   cursor: pointer; flex-shrink: 0; color: white; font-size: 1.1rem;
 }
-.hero-search-box {
-  margin-top: 0.9rem; background: #fff; border-radius: 1.1rem; padding: 0.7rem 1rem;
-  display: flex; align-items: center; gap: 0.6rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+/* Product-database search-and-add, folded into the List view (the
+   item-matcher-backed flow the Telegram bot's inline-keyboard search
+   maps to) rather than a separate Search tab. */
+.search-section { margin-bottom: 0.9rem; }
+.search-box {
+  background: var(--card); border: 2px solid var(--search-pill-bg); border-radius: 1.1rem; padding: 0.65rem 0.9rem;
+  display: flex; align-items: center; gap: 0.6rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
-.hero-search-box input { border: none; outline: none; background: transparent; padding: 0; }
+.search-box input { border: none; outline: none; background: transparent; padding: 0; }
+.search-section .results-grid { margin-top: 0.6rem; }
+.search-section .results-grid:empty { margin-top: 0; }
 
 .tabbar {
   position: fixed;
@@ -178,18 +184,12 @@ h1, h2, h3, button, .heading-font { font-family: 'Baloo 2', ui-sans-serif, sans-
   display: flex; align-items: center; justify-content: center; position: relative;
   transition: background-color 0.15s;
 }
-.tab[data-route="search"] .tab-icon-wrap svg circle,
-.tab[data-route="search"] .tab-icon-wrap svg line { stroke: var(--tab-inactive-fg); }
 .tab[data-route="list"] .tab-icon-wrap svg path { stroke: var(--tab-inactive-fg); }
 .tab[data-route="delivery"] .tab-icon-wrap svg rect,
 .tab[data-route="delivery"] .tab-icon-wrap svg path { stroke: var(--tab-inactive-fg); }
 .tab[data-route="delivery"] .tab-icon-wrap svg circle { fill: var(--tab-inactive-fg); }
 
 .tab.active { color: var(--list-pill-fg); }
-.tab[data-route="search"].active { color: var(--search-pill-fg); }
-.tab[data-route="search"].active .tab-icon-wrap { background: var(--search-pill-bg); }
-.tab[data-route="search"].active .tab-icon-wrap svg circle,
-.tab[data-route="search"].active .tab-icon-wrap svg line { stroke: var(--search-pill-fg); }
 .tab[data-route="list"].active { color: var(--list-pill-fg); }
 .tab[data-route="list"].active .tab-icon-wrap { background: var(--list-pill-bg); }
 .tab[data-route="list"].active .tab-icon-wrap svg path { stroke: var(--list-pill-fg); }

@@ -2,7 +2,6 @@
 import { isConnectionVerified, isDemoMode } from './settings.js';
 import { initWho } from './who.js';
 import { renderList } from './views/list.js';
-import { renderSearch } from './views/search.js';
 import { renderDelivery } from './views/delivery.js';
 import { renderSettings } from './views/settings.js';
 
@@ -11,7 +10,7 @@ const tabs = document.querySelectorAll('.tab');
 const settingsBtn = document.getElementById('settings-btn');
 const demoBanner = document.getElementById('demo-banner');
 
-const ROUTES = { list: renderList, search: renderSearch, delivery: renderDelivery };
+const ROUTES = { list: renderList, delivery: renderDelivery };
 
 function currentRoute() {
   return (location.hash || '#list').slice(1);

@@ -1,11 +1,15 @@
 'use strict';
 import * as api from '../api.js';
-import { extractPrice, isVariableWeight, formatSum, splitParts } from '../format.js';
+import { extractPrice, isVariableWeight, formatSum, splitParts, parseQuantity, formatProduct } from '../format.js';
 import { showToast } from '../toast.js';
 import { confirmDialog } from '../dialog.js';
 import { getWho, setWho } from '../who.js';
 import { recordAction, performUndo } from '../undo.js';
 import { announce } from '../announce.js';
+import { pixelLoaderHtml } from '../loader.js';
+
+const SEARCH_DEBOUNCE_MS = 300;
+const SEARCH_RESULT_LIMIT = 15;
 
 export async function renderList(root) {
   root.innerHTML = `<div class="loading">Loading list…</div>`;
@@ -43,6 +47,14 @@ export async function renderList(root) {
       <input id="add-input" type="text" placeholder="Add items… (comma-separated)" autocomplete="off" />
       <button type="submit">Add</button>
     </form>
+
+    <div class="search-section">
+      <form id="search-form" class="search-box">
+        <svg width="18" height="18" viewBox="0 0 18 18" style="flex-shrink:0"><circle cx="8" cy="8" r="6" fill="none" stroke="var(--search-pill-fg)" stroke-width="2"></circle><line x1="12.2" y1="12.2" x2="16.5" y2="16.5" stroke="var(--search-pill-fg)" stroke-width="2" stroke-linecap="round"></line></svg>
+        <input id="search-input" type="text" placeholder="Find products… e.g. 2 mjölk" autocomplete="off" />
+      </form>
+      <div id="search-results" class="results-grid"></div>
+    </div>
 
     <ul class="item-list">
       ${items.length === 0 ? emptyState() : items.map(itemRow).join('')}
@@ -121,6 +133,8 @@ export async function renderList(root) {
     }
   });
 
+  wireProductSearch(root);
+
   root.querySelectorAll('[data-remove]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const itemId = Number(btn.dataset.remove);
@@ -191,6 +205,113 @@ export async function renderList(root) {
   });
 }
 
+// Product-database search-and-add (the item-matcher-backed flow the
+// Telegram bot's inline-keyboard search maps to) — folded into the List
+// view instead of a separate Search tab.
+function wireProductSearch(root) {
+  const input = root.querySelector('#search-input');
+  const resultsEl = root.querySelector('#search-results');
+  let debounceTimer;
+  let requestSeq = 0;
+  let currentResolution = null;
+
+  root.querySelector('#search-form').addEventListener('submit', (e) => e.preventDefault());
+
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    const raw = input.value.trim();
+    if (!raw) {
+      resultsEl.innerHTML = '';
+      currentResolution = null;
+      return;
+    }
+    debounceTimer = setTimeout(() => runSearch(raw), SEARCH_DEBOUNCE_MS);
+  });
+
+  async function runSearch(raw) {
+    const seq = ++requestSeq;
+    const { text: query, quantity } = parseQuantity(raw);
+    resultsEl.innerHTML = pixelLoaderHtml('Searching…');
+    let body;
+    try {
+      // Call resolve() instead of search() to get a persisted resolution.
+      // This avoids the race condition where calling resolve() again on click
+      // could match a different product if the catalog changed in between.
+      body = await api.resolve(query);
+    } catch (err) {
+      if (seq === requestSeq) resultsEl.innerHTML = `<div class="error">${escapeHtml(err.message)}</div>`;
+      currentResolution = null;
+      return;
+    }
+    if (seq !== requestSeq) return; // a newer keystroke's search already landed
+
+    const candidates = body.candidates || [];
+    if (candidates.length === 0) {
+      resultsEl.innerHTML = `<div class="empty">No matches for "${escapeHtml(query)}".</div>`;
+      currentResolution = null;
+      announce(`No results for "${query}"`);
+      return;
+    }
+    currentResolution = body;
+
+    const confirmedUrl = body.confirmedUrl || null;
+    resultsEl.innerHTML = candidates.map((c, i) => resultCard(c, i, confirmedUrl)).join('');
+    announce(`Found ${candidates.length} result${candidates.length === 1 ? '' : 's'} for "${query}"`);
+    resultsEl.querySelectorAll('[data-pick]').forEach((card, i) => {
+      card.addEventListener('click', () => addFromSearch(candidates[i], quantity, card));
+    });
+  }
+
+  async function addFromSearch(candidate, quantity, card) {
+    const who = getWho();
+    if (!who) return showToast('Enter your name first.');
+    if (!currentResolution) return showToast('Search result expired — try again.');
+    card.classList.add('picking');
+    try {
+      // Call confirm() directly with the rank from the original resolve()
+      // response — no second resolve() call, no identity re-matching race.
+      const confirmed = await api.confirm(currentResolution.resolutionId, candidate.rank);
+      const added = await api.addItem(formatProduct(confirmed, quantity), who);
+      recordAction({ type: 'add', itemId: added.id, text: added.text, who });
+      announce(`Added ${added.text}`);
+      showToast(`Added "${added.text}"`, {
+        type: 'success',
+        actionLabel: 'Undo',
+        onAction: async () => {
+          await performUndo();
+          renderList(root);
+        },
+      });
+      renderList(root);
+    } catch (err) {
+      card.classList.remove('picking');
+      showToast(`Could not add: ${err.message}`);
+    }
+  }
+}
+
+function resultCard(c, i, confirmedUrl) {
+  const size = c.size ? `<div class="result-size">${escapeHtml(c.size)}</div>` : '';
+  const price = c.price ? `<div class="result-price">${escapeHtml(c.price)} kr${c.priceUnit === 'kg' ? '/kg' : ''}</div>` : '';
+  const img = c.imageUrl
+    ? `<img class="result-img" src="${escapeHtml(c.imageUrl)}" loading="lazy" alt="" />`
+    : `<div class="result-img placeholder"></div>`;
+  const isConfirmed = confirmedUrl && c.url && c.url === confirmedUrl;
+  const confirmedClass = isConfirmed ? ' confirmed' : '';
+  return `
+    <div class="result-card${confirmedClass}" data-pick="${i}">
+      ${img}
+      ${isConfirmed ? '<div class="result-confirmed-badge">✓</div>' : ''}
+      <div class="result-info">
+        <div class="result-name">${escapeHtml(c.text || c.name)}</div>
+        ${size}
+        ${price}
+        <div class="result-status"></div>
+      </div>
+    </div>
+  `;
+}
+
 function updateCartBadge(totalQty) {
   const badge = document.getElementById('cart-badge');
   if (!badge) return;
@@ -209,7 +330,7 @@ function emptyState() {
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M4 6h16l-1.5 10.5a2 2 0 01-2 1.5H7.5a2 2 0 01-2-1.5L4 6z" stroke="var(--list-pill-fg)" stroke-width="1.8" stroke-linejoin="round"></path><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="var(--list-pill-fg)" stroke-width="1.8"></path></svg>
       </div>
       <div class="empty-state-title">Your list is empty</div>
-      <div class="empty-state-subtitle">Search for groceries to start adding!</div>
+      <div class="empty-state-subtitle">Search for groceries above to start adding!</div>
     </li>
   `;
 }
