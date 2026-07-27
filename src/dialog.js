@@ -7,7 +7,7 @@ export function confirmDialog(message, { confirmLabel = 'Confirm', cancelLabel =
     const backdrop = document.createElement('div');
     backdrop.className = 'modal-backdrop';
     backdrop.innerHTML = `
-      <div class="confirm-dialog" role="alertdialog" aria-modal="true">
+      <div class="confirm-dialog">
         <p>${escapeHtml(message)}</p>
         <div class="confirm-actions">
           <button id="dialog-yes" class="${danger ? 'danger' : ''}">${escapeHtml(confirmLabel)}</button>

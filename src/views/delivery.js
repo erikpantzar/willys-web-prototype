@@ -1,7 +1,6 @@
 'use strict';
 import * as api from '../api.js';
 import { pixelLoaderHtml } from '../loader.js';
-import { announce } from '../announce.js';
 
 // Delivery status state: 'idle' | 'loading' | 'ready'
 let deliveryStatus = 'idle';
@@ -42,7 +41,7 @@ function hero(inner) {
           <div class="hero-title">Delivery Time</div>
           <div class="hero-subtitle">Pick a day and time that works for your family</div>
         </div>
-        <button class="hero-icon-btn" id="refresh-delivery" title="Refresh available times" aria-label="Refresh available times">
+        <button class="hero-icon-btn" id="refresh-delivery" title="Refresh available times">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 0113.66-5.66M20 12a8 8 0 01-13.66 5.66" stroke="#fff" stroke-width="2" stroke-linecap="round"></path><path d="M17 3v4h-4M7 21v-4h4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
         </button>
       </div>
@@ -148,7 +147,6 @@ async function showConfirm(root, slot) {
       await api.chooseDeliveryTime(slot);
       await api.fakeSend(who);
       await api.resetList();
-      announce(`Delivery time set for ${slot.formattedTime}. List sent for shopping.`);
       box.innerHTML = `<div class="success">✅ Delivery time set: ${escapeHtml(slot.formattedTime)}. List sent for shopping and cleared for a new one.</div>`;
     } catch (err) {
       box.innerHTML = `<div class="error">Could not finalize: ${escapeHtml(err.message)}</div>`;

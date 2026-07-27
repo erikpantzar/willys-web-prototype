@@ -5,7 +5,6 @@ import { showToast } from '../toast.js';
 import { confirmDialog } from '../dialog.js';
 import { getWho, setWho } from '../who.js';
 import { recordAction, performUndo } from '../undo.js';
-import { announce } from '../announce.js';
 import { pixelLoaderHtml } from '../loader.js';
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -39,15 +38,6 @@ export async function renderList(root) {
     </div>
 
     <div class="view-body">
-    <div class="who-row">
-      <label>Your name <input id="who" type="text" value="${escapeHtml(getWho())}" placeholder="e.g. Erik" /></label>
-    </div>
-
-    <form id="add-form" class="add-row">
-      <input id="add-input" type="text" placeholder="Add items… (comma-separated)" autocomplete="off" />
-      <button type="submit">Add</button>
-    </form>
-
     <div class="search-section">
       <form id="search-form" class="search-box">
         <svg width="18" height="18" viewBox="0 0 18 18" style="flex-shrink:0"><circle cx="8" cy="8" r="6" fill="none" stroke="var(--search-pill-fg)" stroke-width="2"></circle><line x1="12.2" y1="12.2" x2="16.5" y2="16.5" stroke="var(--search-pill-fg)" stroke-width="2" stroke-linecap="round"></line></svg>
@@ -66,6 +56,17 @@ export async function renderList(root) {
         ${missingPrice || anyVariable ? `<div class="note">${[missingPrice && 'some items have no price on file', anyVariable && 'some prices are per kg — weight varies'].filter(Boolean).join('; ')}</div>` : ''}
       </div>
     ` : ''}
+
+    <div class="utility-section">
+      <div class="who-row">
+        <label>Your name <input id="who" type="text" value="${escapeHtml(getWho())}" placeholder="e.g. Erik" /></label>
+      </div>
+
+      <form id="add-form" class="add-row">
+        <input id="add-input" type="text" placeholder="Quick add… (comma-separated)" autocomplete="off" />
+        <button type="submit">Add</button>
+      </form>
+    </div>
 
     <div class="list-status">
       Status: ${state.status}${state.trigger_at ? ` · Trigger: ${new Date(state.trigger_at).toLocaleString()} (${state.trigger_set_by})` : ''}
@@ -110,7 +111,6 @@ export async function renderList(root) {
         lastAddedItem = await api.addItem(part, who);
       }
       const itemCount = parts.length;
-      announce(itemCount === 1 ? `Added ${parts[0]}` : `Added ${itemCount} items`);
       // Record undo for the last item added (or only item if single)
       if (lastAddedItem) {
         recordAction({ type: 'add', itemId: lastAddedItem.id, text: lastAddedItem.text, who });
@@ -146,7 +146,6 @@ export async function renderList(root) {
         if (item) {
           recordAction({ type: 'remove', itemId, text: item.text, who: item.added_by });
         }
-        announce(`Removed ${itemText}`);
         renderList(root);
         root.querySelector('#add-input')?.focus();
         showToast(`Removed "${item?.text || 'item'}"`, {
@@ -176,7 +175,6 @@ export async function renderList(root) {
       try {
         await api.setQuantity(id, next);
         recordAction({ type: 'qty', itemId: id, previousValue: current });
-        announce(`${itemText} quantity changed to ${next}`);
         renderList(root);
         showToast(`Quantity updated to ${next}`, {
           type: 'success',
@@ -249,14 +247,12 @@ function wireProductSearch(root) {
     if (candidates.length === 0) {
       resultsEl.innerHTML = `<div class="empty">No matches for "${escapeHtml(query)}".</div>`;
       currentResolution = null;
-      announce(`No results for "${query}"`);
       return;
     }
     currentResolution = body;
 
     const confirmedUrl = body.confirmedUrl || null;
     resultsEl.innerHTML = candidates.map((c, i) => resultCard(c, i, confirmedUrl)).join('');
-    announce(`Found ${candidates.length} result${candidates.length === 1 ? '' : 's'} for "${query}"`);
     resultsEl.querySelectorAll('[data-pick]').forEach((card, i) => {
       card.addEventListener('click', () => addFromSearch(candidates[i], quantity, card));
     });
@@ -273,7 +269,6 @@ function wireProductSearch(root) {
       const confirmed = await api.confirm(currentResolution.resolutionId, candidate.rank);
       const added = await api.addItem(formatProduct(confirmed, quantity), who);
       recordAction({ type: 'add', itemId: added.id, text: added.text, who });
-      announce(`Added ${added.text}`);
       showToast(`Added "${added.text}"`, {
         type: 'success',
         actionLabel: 'Undo',
@@ -347,7 +342,7 @@ function itemRow(item) {
         <span>${item.quantity}</span>
         <button data-qty-step="1" data-id="${item.id}" data-current="${item.quantity}">+</button>
       </div>
-      <button class="remove-btn" data-remove="${item.id}" aria-label="Remove">✕</button>
+      <button class="remove-btn" data-remove="${item.id}">✕</button>
     </li>
   `;
 }

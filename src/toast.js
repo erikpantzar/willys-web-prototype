@@ -11,7 +11,6 @@ function container() {
     el = document.createElement('div');
     el.id = 'toast-container';
     el.className = 'toast-container';
-    el.setAttribute('aria-live', 'polite');
     document.body.appendChild(el);
   }
   return el;
