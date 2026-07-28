@@ -71,17 +71,14 @@
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { margin: 0; padding: 0; overscroll-behavior-y: none; }
+html, body { margin: 0; padding: 0; overscroll-behavior-y: none; height: 100%; }
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
-/* Everything sits below the fixed .topnav, applied once here rather than
-   separately on .hero/.setup-screen/demo-banner, so it can't double up
-   depending on which of those happens to be visible. */
 body {
   font-family: 'Nunito', ui-sans-serif, system-ui, sans-serif;
   background: var(--bg);
   color: var(--ink);
-  min-height: 100dvh;
-  padding-top: calc(3.25rem + env(safe-area-inset-top));
+  height: 100dvh;
+  overflow: hidden;
   -webkit-font-smoothing: antialiased;
 }
 h1, h2, h3, button, .heading-font { font-family: 'Baloo 2', ui-sans-serif, sans-serif; }
@@ -93,7 +90,42 @@ button:active { transform: scale(0.96); }
 .result-card:active, .item-row:active { transform: scale(0.985); }
 button, .result-card, .item-row { transition: transform 0.1s ease; }
 
-#app { width: 100%; margin: 0 auto; }
+/* #app fills exactly the viewport below the fixed .topnav — a frame, not a
+   scroller itself. Views are permanent side-by-side panes inside it
+   (.view-track/.view-pane) that slide horizontally instead of being torn
+   down and swapped; each pane scrolls independently. This also means a
+   short pane (e.g. Delivery's loading state) never leaves dead space below
+   its content where touches wouldn't register — #app always spans the
+   full height regardless of what's in the active pane. */
+#app {
+  position: fixed;
+  top: calc(3.25rem + env(safe-area-inset-top));
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.view-track {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+.view-pane {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+@media (prefers-reduced-motion: reduce) {
+  .view-track { transition: none; }
+}
+
 .view-body { padding: 0 1rem 1.5rem; max-width: 640px; margin: 0 auto; }
 
 .demo-banner {
@@ -105,6 +137,7 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
   padding: 0.4rem;
   letter-spacing: 0.02em;
   font-family: 'Baloo 2', sans-serif;
+  flex-shrink: 0;
 }
 
 /* Per-view gradient hero header, rounded on the bottom corners */
@@ -471,7 +504,7 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 /* min-height accounts for body's topnav-clearance padding-top (see body
    rule) so this doesn't add up to more than one screen's worth of height. */
 .setup-screen {
-  min-height: calc(100dvh - 3.25rem - env(safe-area-inset-top));
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
