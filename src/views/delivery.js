@@ -27,11 +27,17 @@ function updateTabBadge() {
   if (deliveryStatus === 'loading') {
     badge.hidden = false;
     badge.className = 'tab-badge loading';
+    // Three tiny bouncing dots, echoing the same bouncing-dot language as
+    // the in-view "Fetching delivery times…" loader (loader.js) — one
+    // consistent "still working on it" motif instead of two different ones.
+    badge.innerHTML = '<i></i><i></i><i></i>';
   } else if (deliveryStatus === 'ready') {
     badge.hidden = false;
     badge.className = 'tab-badge ready';
+    badge.innerHTML = '';
   } else {
     badge.hidden = true;
+    badge.innerHTML = '';
   }
 }
 
