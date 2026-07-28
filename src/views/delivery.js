@@ -2,7 +2,7 @@
 import * as api from '../api.js';
 import { pixelLoaderHtml } from '../loader.js';
 import { getIdentity } from '../who.js';
-import { getCached, setCached, isStale } from '../deliveryCache.js';
+import { getCached, setCached, clearCached, isStale } from '../deliveryCache.js';
 
 // Delivery status state: 'idle' | 'loading' | 'ready'
 let deliveryStatus = 'idle';
@@ -116,12 +116,17 @@ function renderAlternatives(root, body, fetchedAt) {
     <div id="delivery-groups">
       ${alternatives.map(dateGroup).join('')}
     </div>
-    <div id="confirm-box"></div>
   `);
   wireRefresh(root);
 
   root.querySelectorAll('[data-slot]').forEach((btn) => {
-    btn.addEventListener('click', () => showConfirm(root, JSON.parse(btn.dataset.slot)));
+    btn.addEventListener('click', () => {
+      // Show the tap as pressed/selected immediately — the modal (which
+      // does its own async work) can take a moment to appear.
+      root.querySelectorAll('[data-slot].sel').forEach((b) => b.classList.remove('sel'));
+      btn.classList.add('sel');
+      openConfirmModal(root, JSON.parse(btn.dataset.slot), btn);
+    });
   });
 }
 
@@ -159,54 +164,110 @@ async function verifySlotStillAvailable(slot) {
   return { stillThere, body };
 }
 
-async function showConfirm(root, slot) {
-  const box = root.querySelector('#confirm-box');
-  let count = 0;
-  try {
-    const { items } = await api.getList();
-    count = items.length;
-  } catch {
-    // fall through with count 0 — the confirm copy still makes sense
-  }
-  box.innerHTML = `
-    <div class="confirm-dialog">
-      <p>Confirm delivery time <strong>${escapeHtml(slot.formattedTime)}</strong>?</p>
-      <p>This sends your current list (${count} item${count === 1 ? '' : 's'}) for shopping and starts a fresh list — can't be undone.</p>
-      <div class="confirm-actions">
-        <button id="confirm-yes" class="danger">Confirm</button>
-        <button id="confirm-no">Cancel</button>
+function itemSummaryRow(item) {
+  return `
+    <li class="item-row item-row-readonly">
+      <div class="item-main">
+        <div class="item-text">${escapeHtml(item.text)}</div>
+        <div class="item-meta">added by ${escapeHtml(item.added_by)}</div>
       </div>
-    </div>
+      <div class="item-qty-readonly">×${item.quantity}</div>
+    </li>
   `;
-  box.querySelector('#confirm-no').addEventListener('click', () => (box.innerHTML = ''));
-  box.querySelector('#confirm-yes').addEventListener('click', async () => {
-    box.innerHTML = `<div class="loading">Finalizing…</div>`;
+}
 
+// Fullscreen — not the small centered .modal-backdrop used elsewhere
+// (dialog.js) — this is the last checkpoint before sending a real order,
+// so it gets the full list, the chosen time, and a clear signoff, not a
+// one-line "are you sure?".
+async function openConfirmModal(root, slot, slotBtn) {
+  let items = [];
+  try {
+    ({ items } = await api.getList());
+  } catch {
+    // fall through with an empty list — the modal still works, just
+    // without a item-by-item breakdown
+  }
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'fullscreen-modal-backdrop';
+  const who = getIdentity();
+  const totalQty = items.reduce((sum, i) => sum + (i.quantity || 1), 0);
+
+  function renderBody(inner) {
+    backdrop.innerHTML = `
+      <div class="fullscreen-modal-header">
+        <div class="fullscreen-modal-title">Confirm order</div>
+        <button class="toolbar-icon-btn" id="modal-close" title="Cancel">✕</button>
+      </div>
+      <div class="fullscreen-modal-body">${inner}</div>
+    `;
+    backdrop.querySelector('#modal-close')?.addEventListener('click', cancel);
+  }
+
+  function cancel() {
+    backdrop.remove();
+    slotBtn.classList.remove('sel');
+  }
+
+  renderBody(`
+    <div class="confirm-time-banner">
+      <div class="muted">Delivery time</div>
+      <div class="confirm-time">${escapeHtml(slot.formattedTime)}</div>
+    </div>
+    <ul class="item-list">
+      ${items.length === 0 ? '<li class="empty small">No items on the list.</li>' : items.map(itemSummaryRow).join('')}
+    </ul>
+    <div class="signoff-row muted">
+      ${totalQty} item${totalQty === 1 ? '' : 's'} — confirming as <strong>${escapeHtml(who)}</strong>. This sends the list for
+      shopping and starts a fresh one — can't be undone.
+    </div>
+    <div class="fullscreen-modal-actions">
+      <button id="confirm-yes" class="danger">Confirm &amp; send</button>
+      <button id="confirm-no">Cancel</button>
+    </div>
+  `);
+  document.body.appendChild(backdrop);
+
+  backdrop.querySelector('#confirm-no').addEventListener('click', cancel);
+  backdrop.querySelector('#confirm-yes').addEventListener('click', async () => {
+    renderBody(pixelLoaderHtml('Finalizing…'));
+
+    let finalSlot = slot;
     if (isStale(lastFetchedAt)) {
-      box.innerHTML = `<div class="loading">This list was checked a while ago — confirming it's still available…</div>`;
+      renderBody(pixelLoaderHtml("This list was checked a while ago — confirming it's still available…"));
       let verified;
       try {
         verified = await verifySlotStillAvailable(slot);
       } catch (err) {
-        box.innerHTML = `<div class="error">Could not re-check availability: ${escapeHtml(err.message)}</div>`;
+        renderBody(`<div class="error">Could not re-check availability: ${escapeHtml(err.message)}</div><div class="fullscreen-modal-actions"><button id="modal-close-2">Close</button></div>`);
+        backdrop.querySelector('#modal-close-2').addEventListener('click', cancel);
         return;
       }
       if (!verified.stillThere) {
-        box.innerHTML = `<div class="error">That time is no longer available — refreshing the list.</div>`;
-        setTimeout(() => renderAlternatives(root, verified.body, lastFetchedAt), 1200);
+        renderAlternatives(root, verified.body, lastFetchedAt);
+        cancel();
         return;
       }
-      box.innerHTML = `<div class="loading">Finalizing…</div>`;
+      renderBody(pixelLoaderHtml('Finalizing…'));
     }
 
-    const who = getIdentity();
     try {
-      await api.chooseDeliveryTime(slot);
+      await api.chooseDeliveryTime(finalSlot);
       await api.fakeSend(who);
       await api.resetList();
-      box.innerHTML = `<div class="success">✅ Delivery time set: ${escapeHtml(slot.formattedTime)}. List sent for shopping and cleared for a new one.</div>`;
+      backdrop.remove();
+      // Clear the view fully — the delivery times just used are spent
+      // (a fresh order needs a fresh check), so don't leave the old slot
+      // groups on screen or serve them from cache next visit.
+      clearCached();
+      lastFetchedAt = null;
+      setDeliveryStatus('idle');
+      root.innerHTML = shell(`<div class="success">✅ Sent! Delivery time ${escapeHtml(finalSlot.formattedTime)} confirmed and the list is cleared for next time.</div>`);
+      wireRefresh(root);
     } catch (err) {
-      box.innerHTML = `<div class="error">Could not finalize: ${escapeHtml(err.message)}</div>`;
+      renderBody(`<div class="error">Could not finalize: ${escapeHtml(err.message)}</div><div class="fullscreen-modal-actions"><button id="modal-close-2">Close</button></div>`);
+      backdrop.querySelector('#modal-close-2').addEventListener('click', cancel);
     }
   });
 }
