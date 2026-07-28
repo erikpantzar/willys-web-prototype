@@ -1,6 +1,7 @@
 'use strict';
 import * as api from '../api.js';
 import { pixelLoaderHtml } from '../loader.js';
+import { getIdentity } from '../who.js';
 
 // Delivery status state: 'idle' | 'loading' | 'ready'
 let deliveryStatus = 'idle';
@@ -142,7 +143,7 @@ async function showConfirm(root, slot) {
   box.querySelector('#confirm-no').addEventListener('click', () => (box.innerHTML = ''));
   box.querySelector('#confirm-yes').addEventListener('click', async () => {
     box.innerHTML = `<div class="loading">Finalizing…</div>`;
-    const who = localStorage.getItem('willys.who') || 'unknown';
+    const who = getIdentity();
     try {
       await api.chooseDeliveryTime(slot);
       await api.fakeSend(who);

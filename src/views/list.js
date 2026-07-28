@@ -3,7 +3,7 @@ import * as api from '../api.js';
 import { extractPrice, isVariableWeight, formatSum, parseQuantity, formatProduct } from '../format.js';
 import { showToast } from '../toast.js';
 import { confirmDialog } from '../dialog.js';
-import { getWho, setWho } from '../who.js';
+import { getWho, getIdentity, setWho } from '../who.js';
 import { recordAction, performUndo } from '../undo.js';
 import { pixelLoaderHtml } from '../loader.js';
 
@@ -59,7 +59,7 @@ export async function renderList(root) {
 
     <div class="utility-section">
       <div class="who-row">
-        <label>Your name <input id="who" type="text" value="${escapeHtml(getWho())}" placeholder="e.g. Erik" /></label>
+        <label>Your name (optional) <input id="who" type="text" value="${escapeHtml(getWho())}" placeholder="e.g. Erik — defaults to Guest" /></label>
       </div>
     </div>
 
@@ -216,8 +216,7 @@ function wireProductSearch(root) {
   }
 
   async function addFromSearch(candidate, quantity, card) {
-    const who = getWho();
-    if (!who) return showToast('Enter your name first.');
+    const who = getIdentity();
     if (!currentResolution) return showToast('Search result expired — try again.');
     card.classList.add('picking');
     try {
