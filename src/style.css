@@ -182,8 +182,12 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
   padding-top: env(safe-area-inset-top);
 }
 /* Each tab always carries its view's color (no more colored hero banner
-   doing that job) — active/inactive is a weight + underline distinction,
-   not a color one, since the color itself is now permanent. */
+   doing that job) — always tinted with its view's color (issue #21), but
+   subtly when inactive and at full strength when active, so the active
+   tab still reads clearly as "you are here" rather than all three
+   looking equally loud. color-mix blends toward the page background
+   rather than a hardcoded lighter shade, so it stays correct in dark mode
+   too. */
 .tab {
   flex: 1;
   padding: 0.8rem 0.5rem 0.65rem;
@@ -198,14 +202,15 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
+  transition: color 0.2s ease;
 }
-.tab[data-route="list"] { color: var(--list-pill-fg); }
-.tab[data-route="delivery"] { color: var(--delivery-pill-fg); }
-.tab[data-route="settings"] { color: var(--ink-soft); }
+.tab[data-route="list"] { color: color-mix(in oklch, var(--list-pill-fg) 45%, var(--bg)); }
+.tab[data-route="delivery"] { color: color-mix(in oklch, var(--delivery-pill-fg) 45%, var(--bg)); }
+.tab[data-route="settings"] { color: color-mix(in oklch, var(--ink-soft) 45%, var(--bg)); }
 .tab.active { font-weight: 800; }
-.tab[data-route="list"].active { border-bottom-color: var(--list-btn); }
-.tab[data-route="delivery"].active { border-bottom-color: var(--delivery-btn); }
-.tab[data-route="settings"].active { border-bottom-color: var(--ink-soft); }
+.tab[data-route="list"].active { color: var(--list-pill-fg); border-bottom-color: var(--list-btn); }
+.tab[data-route="delivery"].active { color: var(--delivery-pill-fg); border-bottom-color: var(--delivery-btn); }
+.tab[data-route="settings"].active { color: var(--ink-soft); border-bottom-color: var(--ink-soft); }
 
 /* [hidden] needs the explicit override — .cart-badge/.tab-badge's own
    `display: flex` otherwise beats the UA stylesheet's `[hidden]{display:none}`
