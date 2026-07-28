@@ -87,7 +87,7 @@ export async function renderDelivery(root, { forceRefresh = false } = {}) {
 
   let body;
   try {
-    body = await api.getDeliveryTimesWide();
+    body = await api.getDeliveryTimesWide(forceRefresh);
   } catch (err) {
     // Only render error if we're still on the delivery route
     if (currentRoute() === routeAtStart && routeAtStart === 'delivery') {
@@ -163,7 +163,7 @@ function timePart(formattedTime) {
 // meantime — re-check live before committing if the data behind it is
 // more than 30 minutes old (see deliveryCache.js STALE_MS).
 async function verifySlotStillAvailable(slot) {
-  const body = await api.getDeliveryTimesWide();
+  const body = await api.getDeliveryTimesWide(true);
   setCached(body);
   lastFetchedAt = Date.now();
   const stillThere = (body.alternatives || []).some((a) => a.slots.some((s) => s.startTime === slot.startTime));

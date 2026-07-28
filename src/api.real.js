@@ -35,7 +35,11 @@ export const resolve = (query) => request('/matcher/resolve', { method: 'POST', 
 export const confirm = (resolutionId, choice) => request('/matcher/confirm', { method: 'POST', body: { resolutionId, choice } });
 
 // --- delivery times (willys-shopping-agent) ---
-export const getDeliveryTimesWide = () => request('/agent/delivery-times/wide');
+// The agent now caches this server-side too (a live check launches a real
+// headless browser, ~20s) — forceRefresh bypasses that cache, same as it
+// bypasses this app's own client-side cache (deliveryCache.js).
+export const getDeliveryTimesWide = (forceRefresh = false) =>
+  request(`/agent/delivery-times/wide${forceRefresh ? '?refresh=1' : ''}`);
 export const chooseDeliveryTime = (slot) => request('/agent/delivery-times/choose', { method: 'POST', body: slot });
 
 async function healthCheckService(path, serviceName) {
