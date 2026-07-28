@@ -6,6 +6,7 @@ import { confirmDialog } from '../dialog.js';
 import { getWho, getIdentity, setWho } from '../who.js';
 import { recordAction, performUndo } from '../undo.js';
 import { pixelLoaderHtml } from '../loader.js';
+import { playAddSound } from '../sound.js';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const SEARCH_RESULT_LIMIT = 15;
@@ -232,6 +233,7 @@ function wireProductSearch(root) {
       const confirmed = await api.confirm(currentResolution.resolutionId, candidate.rank);
       const added = await api.addItem(formatProduct(confirmed, quantity), who);
       recordAction({ type: 'add', itemId: added.id, text: added.text, who });
+      playAddSound();
       showToast(`Added "${added.text}"`, {
         type: 'success',
         actionLabel: 'Undo',
