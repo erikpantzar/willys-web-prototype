@@ -17,6 +17,10 @@ function container() {
 }
 
 export function showToast(message, { type = 'error', actionLabel, onAction } = {}) {
+  // A fast run of actions (add, undo, add, ...) would otherwise stack toasts
+  // until the whole screen is covered — only the newest is useful.
+  container().replaceChildren();
+
   const el = document.createElement('div');
   el.className = `toast toast-${type}`;
 
