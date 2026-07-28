@@ -1,10 +1,13 @@
 # Plan: temporarily open the app for kid testing (no Tailscale required)
 
-Status: **client-side bypass implemented 2026-07-28** (`isTestingOpen()` in
-`src/settings.js`, gate widened in `src/main.js`) — no hard expiry date was set, see
-"Rollback" below for how to turn it back off. The network-reachability question below
-is still open and unimplemented — the bypass alone doesn't get a kid's device onto
-the tailnet.
+Status: **tried and reverted, 2026-07-28.** The client-side bypass
+(`isTestingOpen()`/`?open=1`) was implemented, then confirmed by testing with
+Tailscale off: it only skipped the verify *screen*, it couldn't make the
+tailnet-only backend actually reachable, so List/Delivery just failed instead —
+no real improvement over hitting the screen. Reverted (code removed from
+`src/main.js`/`src/settings.js`). This plan stands as-is for if/when the
+network-reachability question below gets an answer — the client-side half is
+still exactly this shape, it's just not worth doing again until (1) is solved.
 
 ## Current behavior (what we'd be bypassing)
 

@@ -48,23 +48,3 @@ export function setDemoMode(on) {
   if (on) localStorage.setItem(DEMO_KEY, '1');
   else localStorage.removeItem(DEMO_KEY);
 }
-
-// Testing-mode bypass (see docs/testing-mode-plan.md) — skips the forced
-// Settings/verify-connection gate for a period while non-Tailscale devices
-// (e.g. kids' phones) try the real app. `?open=1` is the shareable link,
-// same persistence pattern as demo mode. Settings/verify are NOT deleted —
-// still reachable via the gear icon, and this is one `isTestingOpen()`
-// check to remove (or make return false) to fully re-enable the gate.
-const TESTING_KEY = 'willys.testingOpen';
-
-export function isTestingOpen() {
-  if (new URLSearchParams(location.search).get('open') === '1') {
-    localStorage.setItem(TESTING_KEY, '1');
-  }
-  return localStorage.getItem(TESTING_KEY) === '1';
-}
-
-export function setTestingOpen(on) {
-  if (on) localStorage.setItem(TESTING_KEY, '1');
-  else localStorage.removeItem(TESTING_KEY);
-}
