@@ -7,7 +7,6 @@ import { renderSettings } from './views/settings.js';
 
 const app = document.getElementById('app');
 const tabs = document.querySelectorAll('.tab');
-const settingsBtn = document.getElementById('settings-btn');
 const demoBanner = document.getElementById('demo-banner');
 
 const ROUTES = { list: renderList, delivery: renderDelivery };
@@ -25,16 +24,23 @@ function route() {
   // Non-demo mode requires connection to be verified before accessing app features.
   if (!isDemoMode() && !isConnectionVerified() && name !== 'settings') {
     renderSettings(app);
-    return;
+  } else {
+    (ROUTES[name] || renderList)(app);
   }
-  (ROUTES[name] || renderList)(app);
+  // Harmless if the current view has no #who-badge (e.g. settings) — list.js
+  // and delivery.js also call this themselves after their own re-renders.
+  initWho();
 }
 
 tabs.forEach((btn) => btn.addEventListener('click', () => (location.hash = `#${btn.dataset.route}`)));
-settingsBtn.addEventListener('click', () => renderSettings(app));
+// Settings button is re-created on every render (it lives in each view's
+// hero now), so it's wired via delegation on #app rather than a one-time
+// direct listener.
+app.addEventListener('click', (e) => {
+  if (e.target.closest('#settings-btn')) renderSettings(app);
+});
 
 window.addEventListener('hashchange', route);
-initWho();
 route();
 
 if ('serviceWorker' in navigator) {

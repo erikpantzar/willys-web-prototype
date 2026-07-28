@@ -71,16 +71,13 @@
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { margin: 0; padding: 0; height: 100%; overscroll-behavior-y: none; }
+html, body { margin: 0; padding: 0; overscroll-behavior-y: none; }
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body {
   font-family: 'Nunito', ui-sans-serif, system-ui, sans-serif;
   background: var(--bg);
   color: var(--ink);
-  height: 100dvh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
 }
 h1, h2, h3, button, .heading-font { font-family: 'Baloo 2', ui-sans-serif, sans-serif; }
@@ -92,33 +89,15 @@ button:active { transform: scale(0.96); }
 .result-card:active, .item-row:active { transform: scale(0.985); }
 button, .result-card, .item-row { transition: transform 0.1s ease; }
 
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.7rem 1rem;
-  background: var(--bg);
-  color: var(--ink);
-}
-.topbar h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: 0; margin: 0; }
-.who-badge { font-size: 0.75rem; color: var(--muted); flex: 1; text-align: center; font-family: 'Nunito', sans-serif; font-weight: 700; }
-.who-badge.active { color: var(--muted); }
-.topbar button {
-  background: var(--tab-inactive-bg); border: none; color: var(--ink); font-size: 1.05rem;
-  cursor: pointer; width: 2.2rem; height: 2.2rem; border-radius: 0.75rem;
-  display: flex; align-items: center; justify-content: center;
-}
+/* Wordmark + who-badge + settings button, folded into each view's hero
+   instead of a permanently-visible sticky topbar (issue #13) — this row
+   scrolls away with the rest of the page instead of always eating space. */
+.hero-top-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.6rem; }
+.hero-wordmark { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 1rem; }
+.who-badge { font-size: 0.75rem; color: rgba(255, 255, 255, 0.85); flex: 1; text-align: center; font-family: 'Nunito', sans-serif; font-weight: 700; }
 
-#app {
-  flex: 1;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-  padding: 0 0 5.5rem;
-  width: 100%;
-  margin: 0 auto;
-}
-.view-body { padding: 0 1rem 0.25rem; max-width: 640px; margin: 0 auto; }
+#app { width: 100%; margin: 0 auto; }
+.view-body { padding: 0 1rem 1.5rem; max-width: 640px; margin: 0 auto; }
 
 .demo-banner {
   background: var(--list-btn);
@@ -162,18 +141,19 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
 .search-section .results-grid { margin-top: 0.6rem; }
 .search-section .results-grid:empty { margin-top: 0; }
 
+/* Not fixed/sticky (issue #13) — sits at the end of the normal page flow,
+   so it scrolls away with the rest of the content instead of permanently
+   reserving screen space (the iOS complaint was the header+footer combo
+   crowding the add-item flow). */
 .tabbar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 50;
   display: flex;
   align-items: center;
   justify-content: space-around;
+  max-width: 640px;
+  margin: 0.5rem auto 0;
   background: var(--card);
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
-  border-radius: 1.5rem 1.5rem 0 0;
+  border-radius: 1.5rem;
   padding: 0.6rem 0.75rem calc(0.6rem + env(safe-area-inset-bottom));
 }
 .tab {
@@ -448,7 +428,7 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  bottom: calc(1.25rem + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   align-items: center;
