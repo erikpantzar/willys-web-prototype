@@ -1,5 +1,5 @@
 'use strict';
-// Centralized 'who' state management — localStorage + topbar badge.
+// Centralized 'who' state management.
 // A name was never required to use the app (access is already gated on a
 // verified tailnet connection — see settings.js) — it's just a courtesy
 // label on list items. DEFAULT_WHO is the identity used when nobody's set
@@ -19,16 +19,4 @@ export function getIdentity() {
 
 export function setWho(name) {
   localStorage.setItem(WHO_KEY, name);
-  updateBadge();
-}
-
-export function initWho() {
-  updateBadge();
-}
-
-function updateBadge() {
-  const badge = document.getElementById('who-badge');
-  if (!badge) return;
-  badge.textContent = `as ${getIdentity()}`;
-  badge.classList.add('active');
 }

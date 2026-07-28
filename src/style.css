@@ -73,11 +73,15 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; padding: 0; overscroll-behavior-y: none; }
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+/* Everything sits below the fixed .topnav, applied once here rather than
+   separately on .hero/.setup-screen/demo-banner, so it can't double up
+   depending on which of those happens to be visible. */
 body {
   font-family: 'Nunito', ui-sans-serif, system-ui, sans-serif;
   background: var(--bg);
   color: var(--ink);
   min-height: 100dvh;
+  padding-top: calc(3.25rem + env(safe-area-inset-top));
   -webkit-font-smoothing: antialiased;
 }
 h1, h2, h3, button, .heading-font { font-family: 'Baloo 2', ui-sans-serif, sans-serif; }
@@ -89,17 +93,8 @@ button:active { transform: scale(0.96); }
 .result-card:active, .item-row:active { transform: scale(0.985); }
 button, .result-card, .item-row { transition: transform 0.1s ease; }
 
-/* Wordmark + who-badge + settings button, folded into each view's hero
-   instead of a permanently-visible sticky topbar (issue #13) — this row
-   scrolls away with the rest of the page instead of always eating space. */
-.hero-top-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.6rem; }
-.hero-wordmark { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 1rem; }
-.who-badge { font-size: 0.75rem; color: rgba(255, 255, 255, 0.85); flex: 1; text-align: center; font-family: 'Nunito', sans-serif; font-weight: 700; }
-
 #app { width: 100%; margin: 0 auto; }
-/* Bottom padding reserves room for the fixed .tabbar below so it never
-   covers the last item/button in the view (see .tabbar). */
-.view-body { padding: 0 1rem calc(5.5rem + env(safe-area-inset-bottom)); max-width: 640px; margin: 0 auto; }
+.view-body { padding: 0 1rem 1.5rem; max-width: 640px; margin: 0 auto; }
 
 .demo-banner {
   background: var(--list-btn);
@@ -143,66 +138,51 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
 .search-section .results-grid { margin-top: 0.6rem; }
 .search-section .results-grid:empty { margin-top: 0; }
 
-/* Fixed at the bottom again (issue #13 made it scroll with the page, but
-   that meant it wasn't always reachable) — .view-body/.setup-screen both
-   reserve bottom padding so this never covers/blocks the last item or
-   button underneath it. */
-.tabbar {
+/* Top, not bottom (was a fixed bottom bar — iOS pushes that up above the
+   keyboard while typing, a poor experience; a top bar never fights the
+   keyboard). Always shows all views in one row — that alone is "what's to
+   the left/right of here" with no extra indicator needed — plus swipe
+   left/right between them (see main.js). */
+.topnav {
   position: fixed;
-  bottom: 0;
+  top: 0;
   left: 0;
   right: 0;
   z-index: 50;
   display: flex;
-  align-items: center;
-  justify-content: space-around;
-  max-width: 640px;
-  margin: 0 auto;
   background: var(--card);
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
-  border-radius: 1.5rem 1.5rem 0 0;
-  padding: 0.6rem 0.75rem calc(0.6rem + env(safe-area-inset-bottom));
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  padding-top: env(safe-area-inset-top);
 }
 .tab {
   flex: 1;
-  max-width: 6rem;
-  padding: 0.2rem 0 0;
+  padding: 0.8rem 0.5rem 0.65rem;
   border: none;
+  border-bottom: 3px solid transparent;
   background: none;
   color: var(--tab-inactive-fg);
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   font-weight: 800;
   cursor: pointer;
   position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
+  justify-content: center;
+  gap: 0.35rem;
 }
-.tab-icon-wrap {
-  width: 2.5rem; height: 1.9rem; border-radius: 0.75rem; background: var(--tab-inactive-bg);
-  display: flex; align-items: center; justify-content: center; position: relative;
-  transition: background-color 0.15s;
-}
-.tab[data-route="list"] .tab-icon-wrap svg path { stroke: var(--tab-inactive-fg); }
-.tab[data-route="delivery"] .tab-icon-wrap svg rect,
-.tab[data-route="delivery"] .tab-icon-wrap svg path { stroke: var(--tab-inactive-fg); }
-.tab[data-route="delivery"] .tab-icon-wrap svg circle { fill: var(--tab-inactive-fg); }
+.tab[data-route="list"].active { color: var(--list-pill-fg); border-bottom-color: var(--list-btn); }
+.tab[data-route="delivery"].active { color: var(--delivery-pill-fg); border-bottom-color: var(--delivery-btn); }
+.tab[data-route="settings"].active { color: var(--ink); border-bottom-color: var(--ink-soft); }
 
-.tab.active { color: var(--list-pill-fg); }
-.tab[data-route="list"].active { color: var(--list-pill-fg); }
-.tab[data-route="list"].active .tab-icon-wrap { background: var(--list-pill-bg); }
-.tab[data-route="list"].active .tab-icon-wrap svg path { stroke: var(--list-pill-fg); }
-.tab[data-route="delivery"].active { color: var(--delivery-pill-fg); }
-.tab[data-route="delivery"].active .tab-icon-wrap { background: var(--delivery-pill-bg); }
-.tab[data-route="delivery"].active .tab-icon-wrap svg rect,
-.tab[data-route="delivery"].active .tab-icon-wrap svg path { stroke: var(--delivery-pill-fg); }
-.tab[data-route="delivery"].active .tab-icon-wrap svg circle { fill: var(--delivery-pill-fg); }
+/* [hidden] needs the explicit override — .cart-badge/.tab-badge's own
+   `display: flex` otherwise beats the UA stylesheet's `[hidden]{display:none}`
+   at equal specificity, so a "hidden" badge rendered as an empty dot. */
+.cart-badge[hidden], .tab-badge[hidden] { display: none; }
 
 .cart-badge {
-  position: absolute; top: -0.25rem; right: 0.1rem; min-width: 1rem; height: 1rem;
-  border-radius: 0.6rem; background: var(--search-btn); color: #fff; font-size: 0.62rem;
-  font-weight: 800; display: flex; align-items: center; justify-content: center; padding: 0 0.25rem;
+  min-width: 1.1rem; height: 1.1rem;
+  border-radius: 0.6rem; background: var(--search-btn); color: #fff; font-size: 0.65rem;
+  font-weight: 800; display: flex; align-items: center; justify-content: center; padding: 0 0.3rem;
   font-family: 'Baloo 2', sans-serif;
 }
 
@@ -211,20 +191,15 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  position: absolute;
-  top: -0.15rem;
-  right: 0.35rem;
 }
 .tab-badge.loading {
   background: var(--delivery-btn);
-  box-shadow: 0 0 0 2px var(--card);
   animation: pulse-dot 1.2s ease-in-out infinite;
 }
 .tab-badge.ready {
   width: 1.1em;
   height: 1.1em;
-  top: -0.3rem;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   background: none;
   display: inline-flex;
   align-items: center;
@@ -237,7 +212,7 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
 }
 
 /* Scale, not opacity, so the dot stays solid and never looks like a
-   flickering/broken badge against the icon background (issue #19). */
+   flickering/broken badge (issue #19). */
 @keyframes pulse-dot {
   0%, 100% { transform: scale(0.75); }
   50% { transform: scale(1); }
@@ -435,7 +410,7 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  bottom: calc(1.25rem + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -493,13 +468,15 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 .modal-backdrop .confirm-dialog { max-width: 400px; width: 100%; margin: 0; }
 
 /* Setup / connection-gate screen */
+/* min-height accounts for body's topnav-clearance padding-top (see body
+   rule) so this doesn't add up to more than one screen's worth of height. */
 .setup-screen {
-  min-height: 100dvh;
+  min-height: calc(100dvh - 3.25rem - env(safe-area-inset-top));
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 4.2rem 1.5rem calc(5.5rem + env(safe-area-inset-bottom));
+  padding: 2.5rem 1.5rem 2rem;
   background: linear-gradient(180deg, oklch(80% 0.1 245), oklch(90% 0.05 90) 70%);
 }
 .setup-icon {

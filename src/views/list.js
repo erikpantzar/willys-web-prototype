@@ -3,10 +3,9 @@ import * as api from '../api.js';
 import { extractPrice, isVariableWeight, formatSum, parseQuantity, formatProduct } from '../format.js';
 import { showToast } from '../toast.js';
 import { confirmDialog } from '../dialog.js';
-import { getWho, getIdentity, setWho, initWho } from '../who.js';
+import { getWho, getIdentity, setWho } from '../who.js';
 import { recordAction, performUndo } from '../undo.js';
 import { pixelLoaderHtml } from '../loader.js';
-import { heroTopRow } from '../heroChrome.js';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const SEARCH_RESULT_LIMIT = 15;
@@ -34,7 +33,6 @@ export async function renderList(root) {
 
   root.innerHTML = `
     <div class="hero hero-list">
-      ${heroTopRow()}
       <div class="hero-title">Our List</div>
       <div class="hero-subtitle">${items.length === 0 ? 'Nothing on the list yet' : `${totalQty} item${totalQty === 1 ? '' : 's'} to shop for`}</div>
     </div>
@@ -74,11 +72,6 @@ export async function renderList(root) {
     </div>
     </div>
   `;
-
-  // hero-top-row's #who-badge is a fresh element every render (whole-view
-  // innerHTML replacement) — repopulate it here rather than relying on the
-  // caller, since list.js re-renders itself directly after add/remove/undo.
-  initWho();
 
   const whoInput = root.querySelector('#who');
   whoInput.addEventListener('change', (e) => {

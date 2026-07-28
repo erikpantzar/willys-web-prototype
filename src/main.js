@@ -1,6 +1,5 @@
 'use strict';
 import { isConnectionVerified, isDemoMode } from './settings.js';
-import { initWho } from './who.js';
 import { renderList } from './views/list.js';
 import { renderDelivery } from './views/delivery.js';
 import { renderSettings } from './views/settings.js';
@@ -9,39 +8,78 @@ const app = document.getElementById('app');
 const tabs = document.querySelectorAll('.tab');
 const demoBanner = document.getElementById('demo-banner');
 
-const ROUTES = { list: renderList, delivery: renderDelivery };
+// Order here is also swipe order (index 0 = swipe all the way right,
+// last index = swipe all the way left) and top-nav left-to-right order —
+// one array drives all three.
+const ROUTE_ORDER = ['list', 'delivery', 'settings'];
+const ROUTES = { list: renderList, delivery: renderDelivery, settings: renderSettings };
 
 function currentRoute() {
-  return (location.hash || '#list').slice(1);
+  const name = (location.hash || '#list').slice(1);
+  return ROUTE_ORDER.includes(name) ? name : 'list';
 }
 
 function route() {
   const name = currentRoute();
-  tabs.forEach((t) => t.classList.toggle('active', t.dataset.route === name));
   demoBanner.hidden = !isDemoMode();
 
   // Demo mode never needs a real base URL — it runs entirely on seeded data.
-  // Non-demo mode requires connection to be verified before accessing app features.
-  // (A testing-mode bypass was tried 2026-07-28 — see docs/testing-mode-plan.md —
-  // but reverted: it only skipped this screen, it couldn't make the tailnet-only
-  // backend actually reachable without Tailscale, so it wasn't useful on its own.)
+  // Non-demo mode requires connection to be verified before accessing app
+  // features. Renders settings content without changing the hash/active tab
+  // (same as before Settings became a real route) so this doesn't fight
+  // whatever route the user was actually headed to.
   if (!isDemoMode() && !isConnectionVerified() && name !== 'settings') {
+    tabs.forEach((t) => t.classList.toggle('active', t.dataset.route === 'settings'));
     renderSettings(app);
-  } else {
-    (ROUTES[name] || renderList)(app);
+    return;
   }
-  // Harmless if the current view has no #who-badge (e.g. settings) — list.js
-  // and delivery.js also call this themselves after their own re-renders.
-  initWho();
+  tabs.forEach((t) => t.classList.toggle('active', t.dataset.route === name));
+  ROUTES[name](app);
 }
 
 tabs.forEach((btn) => btn.addEventListener('click', () => (location.hash = `#${btn.dataset.route}`)));
-// Settings button is re-created on every render (it lives in each view's
-// hero now), so it's wired via delegation on #app rather than a one-time
-// direct listener.
-app.addEventListener('click', (e) => {
-  if (e.target.closest('#settings-btn')) renderSettings(app);
-});
+
+function navigateBy(delta) {
+  const idx = ROUTE_ORDER.indexOf(currentRoute());
+  const next = ROUTE_ORDER[Math.min(ROUTE_ORDER.length - 1, Math.max(0, idx + delta))];
+  if (next !== ROUTE_ORDER[idx]) location.hash = `#${next}`;
+}
+
+// Swipe left/right between views (issue: the old fixed bottom tab bar got
+// pushed up above the iOS keyboard while typing — moving nav to the top
+// fixes that on its own, this is the other half of the ask). Threshold-
+// based on release, not 1:1 drag-follow — simpler, and doesn't fight
+// vertical scrolling inside the view. Dominant-axis check (dx vs dy) keeps
+// an ordinary vertical scroll from ever triggering a navigation.
+const SWIPE_THRESHOLD_PX = 60;
+let touchStartX = 0;
+let touchStartY = 0;
+let tracking = false;
+
+app.addEventListener(
+  'touchstart',
+  (e) => {
+    if (e.touches.length !== 1) return;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    tracking = true;
+  },
+  { passive: true }
+);
+
+app.addEventListener(
+  'touchend',
+  (e) => {
+    if (!tracking) return;
+    tracking = false;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) > SWIPE_THRESHOLD_PX && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      navigateBy(dx < 0 ? 1 : -1);
+    }
+  },
+  { passive: true }
+);
 
 window.addEventListener('hashchange', route);
 route();

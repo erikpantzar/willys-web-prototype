@@ -1,8 +1,7 @@
 'use strict';
 import * as api from '../api.js';
 import { pixelLoaderHtml } from '../loader.js';
-import { getIdentity, initWho } from '../who.js';
-import { heroTopRow } from '../heroChrome.js';
+import { getIdentity } from '../who.js';
 import { getCached, setCached, isStale } from '../deliveryCache.js';
 
 // Delivery status state: 'idle' | 'loading' | 'ready'
@@ -43,7 +42,6 @@ function currentRoute() {
 function hero(inner) {
   return `
     <div class="hero hero-delivery">
-      ${heroTopRow()}
       <div class="hero-row">
         <div>
           <div class="hero-title">Delivery Time</div>
@@ -128,10 +126,6 @@ function renderAlternatives(root, body, fetchedAt) {
 }
 
 function wireRefresh(root) {
-  // hero-top-row's #who-badge is a fresh element every render (whole-view
-  // innerHTML replacement) — repopulate it here since this runs after every
-  // root.innerHTML = hero(...) assignment in this file.
-  initWho();
   root.querySelector('#refresh-delivery')?.addEventListener('click', () => renderDelivery(root, { forceRefresh: true }));
 }
 
