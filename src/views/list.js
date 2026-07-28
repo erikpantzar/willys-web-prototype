@@ -256,8 +256,11 @@ function resultCard(c, i, confirmedUrl) {
     : `<div class="result-img placeholder"></div>`;
   const isConfirmed = confirmedUrl && c.url && c.url === confirmedUrl;
   const confirmedClass = isConfirmed ? ' confirmed' : '';
+  // Staggered entrance (issue #24) — capped delay so a long result list
+  // doesn't make the bottom cards visibly lag behind the search.
+  const delay = Math.min(i, 8) * 40;
   return `
-    <div class="result-card${confirmedClass}" data-pick="${i}">
+    <div class="result-card${confirmedClass} result-card-enter" data-pick="${i}" style="animation-delay: ${delay}ms">
       ${img}
       ${isConfirmed ? '<div class="result-confirmed-badge">✓</div>' : ''}
       <div class="result-info">

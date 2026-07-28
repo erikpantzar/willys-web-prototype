@@ -336,6 +336,16 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
   align-items: center;
   gap: 0.75rem;
 }
+/* Playful staggered entrance as results land (issue #24) — each card's
+   animation-delay is set inline per-index in list.js's resultCard(). */
+.result-card-enter { animation: result-pop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+@keyframes result-pop {
+  0% { opacity: 0; transform: translateY(10px) scale(0.94); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .result-card-enter { animation: none; }
+}
 .result-card.picking { opacity: 0.5; pointer-events: none; }
 .result-card.added { box-shadow: 0 0 0 2px var(--list-btn); }
 .result-card.confirmed { box-shadow: 0 0 0 2px var(--search-btn); }
