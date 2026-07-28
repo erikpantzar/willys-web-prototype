@@ -284,10 +284,6 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 .who-row { margin-bottom: 0.6rem; }
 .who-row label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.78rem; font-weight: 700; color: var(--muted); }
 
-.add-row { display: flex; gap: 0.5rem; }
-.add-row input { flex: 1; }
-.add-row button { background: var(--list-btn); color: white; }
-
 .item-list { list-style: none; margin: 0.75rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.55rem; }
 .item-row {
   display: flex;

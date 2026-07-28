@@ -1,6 +1,6 @@
 'use strict';
 import * as api from '../api.js';
-import { extractPrice, isVariableWeight, formatSum, splitParts, parseQuantity, formatProduct } from '../format.js';
+import { extractPrice, isVariableWeight, formatSum, parseQuantity, formatProduct } from '../format.js';
 import { showToast } from '../toast.js';
 import { confirmDialog } from '../dialog.js';
 import { getWho, setWho } from '../who.js';
@@ -61,11 +61,6 @@ export async function renderList(root) {
       <div class="who-row">
         <label>Your name <input id="who" type="text" value="${escapeHtml(getWho())}" placeholder="e.g. Erik" /></label>
       </div>
-
-      <form id="add-form" class="add-row">
-        <input id="add-input" type="text" placeholder="Quick add… (comma-separated)" autocomplete="off" />
-        <button type="submit">Add</button>
-      </form>
     </div>
 
     <div class="list-status">
@@ -96,43 +91,6 @@ export async function renderList(root) {
     setWho(newName);
   });
 
-  root.querySelector('#add-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const input = root.querySelector('#add-input');
-    const text = input.value.trim();
-    const who = getWho();
-    if (!text) return;
-    if (!who) return showToast('Enter your name first.');
-    input.disabled = true;
-    try {
-      const parts = splitParts(text);
-      let lastAddedItem = null;
-      for (const part of parts) {
-        lastAddedItem = await api.addItem(part, who);
-      }
-      const itemCount = parts.length;
-      // Record undo for the last item added (or only item if single)
-      if (lastAddedItem) {
-        recordAction({ type: 'add', itemId: lastAddedItem.id, text: lastAddedItem.text, who });
-        renderList(root);
-        root.querySelector('#add-input')?.focus();
-        showToast(`Added "${lastAddedItem.text}"`, {
-          type: 'success',
-          actionLabel: 'Undo',
-          onAction: async () => {
-            await performUndo();
-            renderList(root);
-          },
-        });
-      } else {
-        renderList(root);
-      }
-    } catch (err) {
-      showToast(`Could not add: ${err.message}`);
-      input.disabled = false;
-    }
-  });
-
   wireProductSearch(root);
 
   root.querySelectorAll('[data-remove]').forEach((btn) => {
@@ -147,7 +105,6 @@ export async function renderList(root) {
           recordAction({ type: 'remove', itemId, text: item.text, who: item.added_by });
         }
         renderList(root);
-        root.querySelector('#add-input')?.focus();
         showToast(`Removed "${item?.text || 'item'}"`, {
           type: 'success',
           actionLabel: 'Undo',
