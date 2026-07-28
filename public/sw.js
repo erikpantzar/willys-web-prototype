@@ -5,7 +5,15 @@
 // just "the app loads"), (2) CacheFirst for willys.se product images, which
 // is the "cache image URLs" ask — no backend storage, just a faster/more
 // resilient repeat load of the same photo.
-const SHELL_CACHE = 'willys-shell-v1';
+//
+// The shell cache is network-first, not cache-first (issue #16): with
+// cache-first, once the app shell was cached there was no way for it to
+// ever refresh short of a manual cache-name bump — Vite's build hashes mean
+// old cached HTML kept referencing JS/CSS bundles from a prior deploy
+// indefinitely, which is what made iOS Safari show a very stale version.
+// Network-first always picks up a new deploy when online, and still falls
+// back to the cache offline.
+const SHELL_CACHE = 'willys-shell-v2';
 const IMAGE_CACHE = 'willys-images-v1';
 const SHELL_URLS = [self.registration.scope, `${self.registration.scope}manifest.json`, `${self.registration.scope}icon.svg`];
 
@@ -44,6 +52,18 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (url.origin === self.location.origin) {
-    event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request)));
+    event.respondWith(
+      caches.open(SHELL_CACHE).then(async (cache) => {
+        try {
+          const res = await fetch(event.request);
+          if (res.ok) cache.put(event.request, res.clone());
+          return res;
+        } catch {
+          const cached = await cache.match(event.request);
+          if (cached) return cached;
+          throw new Error('offline and not cached');
+        }
+      })
+    );
   }
 });
