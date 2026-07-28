@@ -6,7 +6,7 @@ import { confirmDialog } from '../dialog.js';
 import { getWho, getIdentity, setWho } from '../who.js';
 import { recordAction, performUndo } from '../undo.js';
 import { pixelLoaderHtml } from '../loader.js';
-import { playAddSound } from '../sound.js';
+import { playAddSound, playQtyUpSound, playQtyDownSound, vibrateAdd } from '../sound.js';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const SEARCH_RESULT_LIMIT = 15;
@@ -49,7 +49,7 @@ export async function renderList(root) {
 
     ${pricedTotal > 0 ? `
       <div class="total">
-        Total: ${formatSum(pricedTotal)} kr
+        Total: <span id="total-amount">${formatSum(pricedTotal)}</span> kr
         ${missingPrice || anyVariable ? `<div class="note">${[missingPrice && 'some items have no price on file', anyVariable && 'some prices are per kg — weight varies'].filter(Boolean).join('; ')}</div>` : ''}
       </div>
     ` : ''}
@@ -129,7 +129,12 @@ export async function renderList(root) {
       try {
         await api.setQuantity(id, next);
         recordAction({ type: 'qty', itemId: id, previousValue: current });
-        renderList(root);
+        if (delta > 0) playQtyUpSound(); else playQtyDownSound();
+        // Patch the DOM in place instead of a full renderList() — that was
+        // re-fetching + rebuilding the whole view on every +/- tap, which
+        // visibly flashed a "Loading list…" screen for a one-number change.
+        applyQuantityLocally(root, items, id, next);
+        btn.disabled = false;
         showToast(`Quantity updated to ${next}`, {
           type: 'success',
           actionLabel: 'Undo',
@@ -234,6 +239,7 @@ function wireProductSearch(root) {
       const added = await api.addItem(formatProduct(confirmed, quantity), who);
       recordAction({ type: 'add', itemId: added.id, text: added.text, who });
       playAddSound();
+      vibrateAdd();
       showToast(`Added "${added.text}"`, {
         type: 'success',
         actionLabel: 'Undo',
@@ -284,6 +290,66 @@ function updateCartBadge(totalQty) {
   } else {
     badge.hidden = true;
   }
+}
+
+// Patches just the changed item's row + the cart badge + the total in
+// place, instead of a full renderList() re-fetch/rebuild (which flashed a
+// "Loading list…" screen for a single +/- tap). Falls back to a full
+// renderList() only if the Total card needs to appear/disappear entirely
+// (e.g. the last priced item's quantity dropped to where rounding makes a
+// 0kr total — rare, not worth a bespoke DOM-insertion path for).
+function applyQuantityLocally(root, items, id, next) {
+  const item = items.find((i) => i.id === id);
+  if (!item) return;
+  item.quantity = next;
+
+  const row = root.querySelector(`[data-qty-step][data-id="${id}"]`)?.closest('.item-row');
+  if (row) {
+    row.querySelector('.qty-stepper span').textContent = next;
+    row.querySelectorAll('[data-qty-step]').forEach((b) => (b.dataset.current = String(next)));
+  }
+
+  const totalQty = items.reduce((sum, i) => sum + (i.quantity || 1), 0);
+  updateCartBadge(totalQty);
+
+  const pricedTotal = items.reduce((sum, i) => {
+    const price = extractPrice(i.text);
+    return price === null ? sum : sum + price * (i.quantity || 1);
+  }, 0);
+  const totalEl = root.querySelector('#total-amount');
+  if (totalEl && pricedTotal > 0) {
+    animateTotal(totalEl, pricedTotal);
+  } else if (pricedTotal > 0 !== Boolean(totalEl)) {
+    renderList(root); // the Total card needs to appear or disappear — full rebuild
+  }
+}
+
+// Rolls the displayed total from its current value to the new one over a
+// short tween instead of just snapping to the new number, plus a small pop
+// so an increase/decrease is felt, not just read.
+function animateTotal(el, newTotal) {
+  const from = parseFloat((el.dataset.rawValue ?? el.textContent).toString().replace(/\s/g, '').replace(',', '.')) || 0;
+  el.dataset.rawValue = String(newTotal);
+  if (from === newTotal) return;
+
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    el.textContent = formatSum(newTotal);
+    return;
+  }
+
+  el.classList.remove('total-pop');
+  void el.offsetWidth; // restart the pop animation even if it's still mid-way
+  el.classList.add('total-pop');
+
+  const durationMs = 400;
+  const startTime = performance.now();
+  function step(now) {
+    const t = Math.min(1, (now - startTime) / durationMs);
+    const eased = 1 - Math.pow(1 - t, 3);
+    el.textContent = formatSum(from + (newTotal - from) * eased);
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
 }
 
 function emptyState() {

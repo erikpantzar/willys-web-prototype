@@ -25,7 +25,10 @@
       Delivery
       <span class="tab-badge" hidden></span>
     </button>
-    <button data-route="settings" class="tab">Settings</button>
+    <!-- Settings is a real route (still swipeable/still a pane, see
+         view-track below) but not an equal-weight peer tab next to
+         List/Delivery — just a small gear icon at the end of the bar. -->
+    <button data-route="settings" class="settings-gear-btn" title="Settings">⚙</button>
   </nav>
 
   <!-- Views are three permanent panes side by side, not swapped in/out —

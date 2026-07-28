@@ -1,8 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Dark-mode-aware: browsers that render this SVG as a live document
+       (rather than rasterizing it once at install time — support varies by
+       OS/browser for home-screen icons) will pick up the darker, less
+       saturated gradient automatically via prefers-color-scheme. Best-effort,
+       not guaranteed everywhere, but free given this icon is already SVG. -->
+  <style>
+    .stop1 { stop-color: #2a9660; }
+    .stop2 { stop-color: #155c37; }
+    @media (prefers-color-scheme: dark) {
+      .stop1 { stop-color: #1f7a4f; }
+      .stop2 { stop-color: #0c2e1c; }
+    }
+  </style>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#2a9660"/>
-      <stop offset="100%" stop-color="#155c37"/>
+      <stop class="stop1" offset="0%"/>
+      <stop class="stop2" offset="100%"/>
     </linearGradient>
   </defs>
 

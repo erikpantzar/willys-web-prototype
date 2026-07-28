@@ -3,6 +3,7 @@ import * as api from '../api.js';
 import { pixelLoaderHtml } from '../loader.js';
 import { getIdentity } from '../who.js';
 import { getCached, setCached, clearCached, isStale } from '../deliveryCache.js';
+import { buildDeliveryIcsDataUrl } from '../calendar.js';
 
 // Delivery status state: 'idle' | 'loading' | 'ready'
 let deliveryStatus = 'idle';
@@ -269,7 +270,10 @@ async function openConfirmModal(root, slot, slotBtn) {
       clearCached();
       lastFetchedAt = null;
       setDeliveryStatus('idle');
-      root.innerHTML = shell(`<div class="success">✅ Sent! Delivery time ${escapeHtml(finalSlot.formattedTime)} confirmed and the list is cleared for next time.</div>`);
+      root.innerHTML = shell(`
+        <div class="success">✅ Sent! Delivery time ${escapeHtml(finalSlot.formattedTime)} confirmed and the list is cleared for next time.</div>
+        <a class="add-to-calendar-link" href="${buildDeliveryIcsDataUrl(finalSlot)}" download="willys-delivery.ics">📅 Add to calendar</a>
+      `);
       wireRefresh(root);
     } catch (err) {
       renderBody(`<div class="error">Could not finalize: ${escapeHtml(err.message)}</div><div class="fullscreen-modal-actions"><button id="modal-close-2">Close</button></div>`);

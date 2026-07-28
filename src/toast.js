@@ -39,6 +39,65 @@ export function showToast(message, { type = 'error', actionLabel, onAction } = {
     el.appendChild(actionBtn);
   }
 
+  wireSwipeToDismiss(el, onAction);
+
   container().appendChild(el);
   setTimeout(() => el.remove(), AUTO_DISMISS_MS);
+}
+
+// Swipe the toast itself (either direction) as a faster alternative to
+// tapping the small Undo button — if there's an action (e.g. undo), the
+// swipe fires it, same as tapping would; a toast with no action just
+// dismisses early instead of waiting out the full auto-dismiss timer.
+const SWIPE_DISMISS_THRESHOLD_PX = 60;
+
+function wireSwipeToDismiss(el, onAction) {
+  let startX = 0;
+  let startY = 0;
+  let tracking = false;
+
+  el.addEventListener(
+    'touchstart',
+    (e) => {
+      if (e.touches.length !== 1) return;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      tracking = true;
+    },
+    { passive: true }
+  );
+
+  el.addEventListener(
+    'touchmove',
+    (e) => {
+      if (!tracking) return;
+      const dx = e.touches[0].clientX - startX;
+      el.style.transform = `translateX(${dx}px)`;
+      el.style.opacity = String(Math.max(0.3, 1 - Math.abs(dx) / 200));
+    },
+    { passive: true }
+  );
+
+  el.addEventListener(
+    'touchend',
+    (e) => {
+      if (!tracking) return;
+      tracking = false;
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      if (Math.abs(dx) > SWIPE_DISMISS_THRESHOLD_PX && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        el.style.transition = 'transform 0.15s ease, opacity 0.15s ease';
+        el.style.transform = `translateX(${dx < 0 ? -1 : 1}00%)`;
+        el.style.opacity = '0';
+        onAction?.();
+        setTimeout(() => el.remove(), 150);
+      } else {
+        el.style.transition = 'transform 0.15s ease, opacity 0.15s ease';
+        el.style.transform = '';
+        el.style.opacity = '';
+        setTimeout(() => (el.style.transition = ''), 150);
+      }
+    },
+    { passive: true }
+  );
 }

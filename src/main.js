@@ -6,6 +6,7 @@ import { renderSettings } from './views/settings.js';
 
 const app = document.getElementById('app');
 const tabs = document.querySelectorAll('.tab');
+const settingsBtn = document.querySelector('.settings-gear-btn');
 const demoBanner = document.getElementById('demo-banner');
 const viewTrack = document.getElementById('view-track');
 
@@ -41,17 +42,20 @@ function route() {
   // touching location.hash, so this doesn't fight whatever route the user
   // was actually headed to (they land right back on it once verified).
   if (!isDemoMode() && !isConnectionVerified() && name !== 'settings') {
-    tabs.forEach((t) => t.classList.toggle('active', t.dataset.route === 'settings'));
+    tabs.forEach((t) => t.classList.remove('active'));
+    settingsBtn.classList.add('active');
     renderSettings(panes.settings);
     slideTo('settings');
     return;
   }
   tabs.forEach((t) => t.classList.toggle('active', t.dataset.route === name));
+  settingsBtn.classList.toggle('active', name === 'settings');
   ROUTES[name](panes[name]);
   slideTo(name);
 }
 
 tabs.forEach((btn) => btn.addEventListener('click', () => (location.hash = `#${btn.dataset.route}`)));
+settingsBtn.addEventListener('click', () => (location.hash = `#${settingsBtn.dataset.route}`));
 
 function navigateBy(delta) {
   const idx = ROUTE_ORDER.indexOf(currentRoute());

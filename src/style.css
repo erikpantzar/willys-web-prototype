@@ -177,10 +177,24 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
   right: 0;
   z-index: 50;
   display: flex;
+  align-items: center;
   background: var(--card);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
   padding-top: env(safe-area-inset-top);
 }
+/* Settings is a real route (still swipeable, still a pane) but not an
+   equal-weight peer next to List/Delivery — a small icon instead of a
+   full-width tab, so it doesn't compete for attention with the two views
+   people actually live in day to day. */
+.settings-gear-btn {
+  flex: 0 0 auto;
+  margin: 0 0.6rem 0 0.2rem;
+  width: 2rem; height: 2rem; border-radius: 0.7rem; border: none;
+  background: var(--tab-inactive-bg); color: color-mix(in oklch, var(--ink-soft) 55%, var(--bg));
+  font-size: 1rem; display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.settings-gear-btn.active { background: var(--tab-inactive-bg); color: var(--ink); }
 /* Each tab always carries its view's color (no more colored hero banner
    doing that job) — always tinted with its view's color (issue #21), but
    subtly when inactive and at full strength when active, so the active
@@ -206,11 +220,9 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
 }
 .tab[data-route="list"] { color: color-mix(in oklch, var(--list-pill-fg) 45%, var(--bg)); }
 .tab[data-route="delivery"] { color: color-mix(in oklch, var(--delivery-pill-fg) 45%, var(--bg)); }
-.tab[data-route="settings"] { color: color-mix(in oklch, var(--ink-soft) 45%, var(--bg)); }
 .tab.active { font-weight: 800; }
 .tab[data-route="list"].active { color: var(--list-pill-fg); border-bottom-color: var(--list-btn); }
 .tab[data-route="delivery"].active { color: var(--delivery-pill-fg); border-bottom-color: var(--delivery-btn); }
-.tab[data-route="settings"].active { color: var(--ink-soft); border-bottom-color: var(--ink-soft); }
 
 /* [hidden] needs the explicit override — .cart-badge/.tab-badge's own
    `display: flex` otherwise beats the UA stylesheet's `[hidden]{display:none}`
@@ -334,6 +346,17 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
   display: flex;
   justify-content: space-between;
 }
+/* Small pop when the rolling total updates (see list.js's animateTotal) —
+   the number itself counts up/down over the same window. */
+#total-amount { display: inline-block; }
+#total-amount.total-pop { animation: total-pop 0.3s ease-out; }
+@keyframes total-pop {
+  0% { transform: scale(1.18); color: var(--list-pill-fg); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #total-amount.total-pop { animation: none; }
+}
 .total .note { font-weight: normal; font-family: 'Nunito', sans-serif; font-size: 0.72rem; color: var(--muted); display: block; margin-top: 0.2rem; }
 .list-status { margin-top: 0.7rem; font-size: 0.78rem; color: var(--muted); font-weight: 700; }
 .list-actions { margin-top: 1rem; }
@@ -434,6 +457,13 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 .error { color: var(--danger-fg); }
 .success { color: var(--list-pill-fg); }
 .empty.small { padding: 0.2rem 0; }
+
+.add-to-calendar-link {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.6rem 0.95rem; border-radius: 1rem;
+  background: var(--delivery-pill-bg); color: var(--delivery-pill-fg);
+  font-weight: 700; font-size: 0.85rem; text-decoration: none;
+}
 
 .empty-state {
   text-align: center; padding: 3rem 1.25rem; color: var(--muted);
