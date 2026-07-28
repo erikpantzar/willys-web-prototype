@@ -156,6 +156,12 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
   display: flex; align-items: center; gap: 0.6rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 .search-box input { border: none; outline: none; background: transparent; padding: 0; }
+.search-clear-btn[hidden] { display: none; }
+.search-clear-btn {
+  flex-shrink: 0; width: 1.4rem; height: 1.4rem; padding: 0; border-radius: 50%;
+  border: none; background: var(--tab-inactive-bg); color: var(--muted);
+  font-size: 0.7rem; display: flex; align-items: center; justify-content: center;
+}
 .search-section .results-grid { margin-top: 0.6rem; }
 .search-section .results-grid:empty { margin-top: 0; }
 

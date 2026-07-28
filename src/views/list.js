@@ -37,6 +37,7 @@ export async function renderList(root) {
       <form id="search-form" class="search-box">
         <svg width="18" height="18" viewBox="0 0 18 18" style="flex-shrink:0"><circle cx="8" cy="8" r="6" fill="none" stroke="var(--search-pill-fg)" stroke-width="2"></circle><line x1="12.2" y1="12.2" x2="16.5" y2="16.5" stroke="var(--search-pill-fg)" stroke-width="2" stroke-linecap="round"></line></svg>
         <input id="search-input" type="text" placeholder="Find products… e.g. 2 mjölk" autocomplete="off" />
+        <button type="button" id="search-clear" class="search-clear-btn" hidden aria-label="Clear search">✕</button>
       </form>
       <div id="search-results" class="results-grid"></div>
     </div>
@@ -160,6 +161,7 @@ export async function renderList(root) {
 // view instead of a separate Search tab.
 function wireProductSearch(root) {
   const input = root.querySelector('#search-input');
+  const clearBtn = root.querySelector('#search-clear');
   const resultsEl = root.querySelector('#search-results');
   let debounceTimer;
   let requestSeq = 0;
@@ -168,6 +170,7 @@ function wireProductSearch(root) {
   root.querySelector('#search-form').addEventListener('submit', (e) => e.preventDefault());
 
   input.addEventListener('input', () => {
+    clearBtn.hidden = input.value.length === 0;
     clearTimeout(debounceTimer);
     const raw = input.value.trim();
     if (!raw) {
@@ -176,6 +179,15 @@ function wireProductSearch(root) {
       return;
     }
     debounceTimer = setTimeout(() => runSearch(raw), SEARCH_DEBOUNCE_MS);
+  });
+
+  clearBtn.addEventListener('click', () => {
+    clearTimeout(debounceTimer);
+    input.value = '';
+    clearBtn.hidden = true;
+    resultsEl.innerHTML = '';
+    currentResolution = null;
+    input.focus();
   });
 
   async function runSearch(raw) {
