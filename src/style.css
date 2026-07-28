@@ -25,14 +25,10 @@
   --search-pill-bg: oklch(93% 0.05 40);
   --search-pill-fg: oklch(50% 0.15 40);
 
-  --list-grad-1: oklch(80% 0.12 155);
-  --list-grad-2: oklch(84% 0.1 155);
   --list-btn: oklch(62% 0.14 155);
   --list-pill-bg: oklch(93% 0.05 155);
   --list-pill-fg: oklch(45% 0.14 155);
 
-  --delivery-grad-1: oklch(78% 0.1 245);
-  --delivery-grad-2: oklch(82% 0.08 245);
   --delivery-btn: oklch(58% 0.13 245);
   --delivery-pill-bg: oklch(93% 0.05 245);
   --delivery-pill-fg: oklch(45% 0.13 245);
@@ -140,23 +136,15 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
   flex-shrink: 0;
 }
 
-/* Per-view gradient hero header, rounded on the bottom corners */
-.hero {
-  padding: 1.1rem 1.25rem 1.4rem;
-  border-radius: 0 0 1.75rem 1.75rem;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-  color: white;
-  margin-bottom: 1rem;
-}
-.hero.hero-list { background: linear-gradient(180deg, var(--list-grad-1), var(--list-grad-2) 80%); }
-.hero.hero-delivery { background: linear-gradient(180deg, var(--delivery-grad-1), var(--delivery-grad-2) 80%); }
-.hero-title { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 1.6rem; letter-spacing: 0.2px; }
-.hero-subtitle { font-size: 0.88rem; color: rgba(255, 255, 255, 0.9); margin-top: 0.15rem; font-weight: 700; }
-.hero-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
-.hero-icon-btn {
-  width: 2.4rem; height: 2.4rem; border-radius: 0.75rem; border: none;
-  background: rgba(255, 255, 255, 0.25); display: flex; align-items: center; justify-content: center;
-  cursor: pointer; flex-shrink: 0; color: white; font-size: 1.1rem;
+/* No more colored hero banner per view — the top nav tab already carries
+   that view's color identity (see .tab rules), so the view itself can
+   start right at the top with its main content, no separate header. */
+.view-body-top { padding-top: 1rem; }
+.view-toolbar { display: flex; justify-content: flex-end; margin-bottom: 0.5rem; }
+.toolbar-icon-btn {
+  width: 2.2rem; height: 2.2rem; border-radius: 0.75rem; border: none;
+  background: var(--delivery-pill-bg); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
 }
 
 /* Product-database search-and-add, folded into the List view (the
@@ -187,15 +175,17 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
   padding-top: env(safe-area-inset-top);
 }
+/* Each tab always carries its view's color (no more colored hero banner
+   doing that job) — active/inactive is a weight + underline distinction,
+   not a color one, since the color itself is now permanent. */
 .tab {
   flex: 1;
   padding: 0.8rem 0.5rem 0.65rem;
   border: none;
   border-bottom: 3px solid transparent;
   background: none;
-  color: var(--tab-inactive-fg);
   font-size: 0.85rem;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
   position: relative;
   display: flex;
@@ -203,9 +193,13 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
   justify-content: center;
   gap: 0.35rem;
 }
-.tab[data-route="list"].active { color: var(--list-pill-fg); border-bottom-color: var(--list-btn); }
-.tab[data-route="delivery"].active { color: var(--delivery-pill-fg); border-bottom-color: var(--delivery-btn); }
-.tab[data-route="settings"].active { color: var(--ink); border-bottom-color: var(--ink-soft); }
+.tab[data-route="list"] { color: var(--list-pill-fg); }
+.tab[data-route="delivery"] { color: var(--delivery-pill-fg); }
+.tab[data-route="settings"] { color: var(--ink-soft); }
+.tab.active { font-weight: 800; }
+.tab[data-route="list"].active { border-bottom-color: var(--list-btn); }
+.tab[data-route="delivery"].active { border-bottom-color: var(--delivery-btn); }
+.tab[data-route="settings"].active { border-bottom-color: var(--ink-soft); }
 
 /* [hidden] needs the explicit override — .cart-badge/.tab-badge's own
    `display: flex` otherwise beats the UA stylesheet's `[hidden]{display:none}`

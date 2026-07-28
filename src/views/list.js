@@ -32,12 +32,7 @@ export async function renderList(root) {
   updateCartBadge(totalQty);
 
   root.innerHTML = `
-    <div class="hero hero-list">
-      <div class="hero-title">Our List</div>
-      <div class="hero-subtitle">${items.length === 0 ? 'Nothing on the list yet' : `${totalQty} item${totalQty === 1 ? '' : 's'} to shop for`}</div>
-    </div>
-
-    <div class="view-body">
+    <div class="view-body view-body-top">
     <div class="search-section">
       <form id="search-form" class="search-box">
         <svg width="18" height="18" viewBox="0 0 18 18" style="flex-shrink:0"><circle cx="8" cy="8" r="6" fill="none" stroke="var(--search-pill-fg)" stroke-width="2"></circle><line x1="12.2" y1="12.2" x2="16.5" y2="16.5" stroke="var(--search-pill-fg)" stroke-width="2" stroke-linecap="round"></line></svg>

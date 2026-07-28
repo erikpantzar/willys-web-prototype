@@ -39,20 +39,20 @@ function currentRoute() {
   return (location.hash || '#list').slice(1);
 }
 
-function hero(inner) {
+// No colored hero banner (the top nav tab already carries the "Delivery"
+// identity/color) — just the view-body plus a small refresh control,
+// present in every state (loading/error/empty/success alike) so there's
+// always a way to re-check without waiting.
+function shell(inner) {
   return `
-    <div class="hero hero-delivery">
-      <div class="hero-row">
-        <div>
-          <div class="hero-title">Delivery Time</div>
-          <div class="hero-subtitle">Pick a day and time that works for your family</div>
-        </div>
-        <button class="hero-icon-btn" id="refresh-delivery" title="Refresh available times">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 0113.66-5.66M20 12a8 8 0 01-13.66 5.66" stroke="#fff" stroke-width="2" stroke-linecap="round"></path><path d="M17 3v4h-4M7 21v-4h4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    <div class="view-body view-body-top">
+      <div class="view-toolbar">
+        <button class="toolbar-icon-btn" id="refresh-delivery" title="Refresh available times">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 0113.66-5.66M20 12a8 8 0 01-13.66 5.66" stroke="var(--delivery-pill-fg)" stroke-width="2" stroke-linecap="round"></path><path d="M17 3v4h-4M7 21v-4h4" stroke="var(--delivery-pill-fg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
         </button>
       </div>
+      ${inner}
     </div>
-    <div class="view-body">${inner}</div>
   `;
 }
 
@@ -75,7 +75,7 @@ export async function renderDelivery(root, { forceRefresh = false } = {}) {
     }
   }
 
-  root.innerHTML = hero(pixelLoaderHtml('Fetching delivery times… (can take up to ~20s)'));
+  root.innerHTML = shell(pixelLoaderHtml('Fetching delivery times… (can take up to ~20s)'));
   wireRefresh(root);
   setDeliveryStatus('loading');
 
@@ -85,7 +85,7 @@ export async function renderDelivery(root, { forceRefresh = false } = {}) {
   } catch (err) {
     // Only render error if we're still on the delivery route
     if (currentRoute() === routeAtStart && routeAtStart === 'delivery') {
-      root.innerHTML = hero(`<div class="error">Could not check delivery times: ${escapeHtml(err.message)}</div>`);
+      root.innerHTML = shell(`<div class="error">Could not check delivery times: ${escapeHtml(err.message)}</div>`);
       wireRefresh(root);
     }
     setDeliveryStatus('idle');
@@ -106,12 +106,12 @@ export async function renderDelivery(root, { forceRefresh = false } = {}) {
 function renderAlternatives(root, body, fetchedAt) {
   const alternatives = body.alternatives || [];
   if (alternatives.every((a) => a.slots.length === 0)) {
-    root.innerHTML = hero(`<div class="empty">No delivery times available in the next few days — try again later.</div>`);
+    root.innerHTML = shell(`<div class="empty">No delivery times available in the next few days — try again later.</div>`);
     wireRefresh(root);
     return;
   }
 
-  root.innerHTML = hero(`
+  root.innerHTML = shell(`
     ${checkedNote(fetchedAt)}
     <div id="delivery-groups">
       ${alternatives.map(dateGroup).join('')}
