@@ -97,7 +97,9 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
 .who-badge { font-size: 0.75rem; color: rgba(255, 255, 255, 0.85); flex: 1; text-align: center; font-family: 'Nunito', sans-serif; font-weight: 700; }
 
 #app { width: 100%; margin: 0 auto; }
-.view-body { padding: 0 1rem 1.5rem; max-width: 640px; margin: 0 auto; }
+/* Bottom padding reserves room for the fixed .tabbar below so it never
+   covers the last item/button in the view (see .tabbar). */
+.view-body { padding: 0 1rem calc(5.5rem + env(safe-area-inset-bottom)); max-width: 640px; margin: 0 auto; }
 
 .demo-banner {
   background: var(--list-btn);
@@ -141,19 +143,24 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
 .search-section .results-grid { margin-top: 0.6rem; }
 .search-section .results-grid:empty { margin-top: 0; }
 
-/* Not fixed/sticky (issue #13) — sits at the end of the normal page flow,
-   so it scrolls away with the rest of the content instead of permanently
-   reserving screen space (the iOS complaint was the header+footer combo
-   crowding the add-item flow). */
+/* Fixed at the bottom again (issue #13 made it scroll with the page, but
+   that meant it wasn't always reachable) — .view-body/.setup-screen both
+   reserve bottom padding so this never covers/blocks the last item or
+   button underneath it. */
 .tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
   display: flex;
   align-items: center;
   justify-content: space-around;
   max-width: 640px;
-  margin: 0.5rem auto 0;
+  margin: 0 auto;
   background: var(--card);
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
-  border-radius: 1.5rem;
+  border-radius: 1.5rem 1.5rem 0 0;
   padding: 0.6rem 0.75rem calc(0.6rem + env(safe-area-inset-bottom));
 }
 .tab {
@@ -428,7 +435,7 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(1.25rem + env(safe-area-inset-bottom));
+  bottom: calc(5.5rem + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -492,7 +499,7 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 4.2rem 1.5rem 2rem;
+  padding: 4.2rem 1.5rem calc(5.5rem + env(safe-area-inset-bottom));
   background: linear-gradient(180deg, oklch(80% 0.1 245), oklch(90% 0.05 90) 70%);
 }
 .setup-icon {

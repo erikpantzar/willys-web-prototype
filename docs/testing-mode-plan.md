@@ -1,9 +1,10 @@
 # Plan: temporarily open the app for kid testing (no Tailscale required)
 
-Status: **planning only — not implemented.** Written 2026-07-28 per request: let the
-kids use the real app to test it, without each of them needing Tailscale set up, for
-a defined period — without deleting the connection-verification setup, just bypassing
-it temporarily and reversibly.
+Status: **client-side bypass implemented 2026-07-28** (`isTestingOpen()` in
+`src/settings.js`, gate widened in `src/main.js`) — no hard expiry date was set, see
+"Rollback" below for how to turn it back off. The network-reachability question below
+is still open and unimplemented — the bypass alone doesn't get a kid's device onto
+the tailnet.
 
 ## Current behavior (what we'd be bypassing)
 
@@ -33,31 +34,20 @@ it temporarily and reversibly.
 2. **Client-side gate** — this repo's Settings/verify screen standing in the way
    even once (1) is solved. This is what the rest of this plan covers.
 
-## Recommended approach (not yet applied)
+## Implemented approach
 
-Add a testing-mode flag, same shape as the existing `isDemoMode()` (see
+A testing-mode flag, same shape as the existing `isDemoMode()` (see
 `src/settings.js`): a `?open=1` URL param that sets a `localStorage` flag
 (`willys.testingOpen`), checked in `main.js`'s route gate alongside demo mode.
-Nothing about the existing verify flow gets deleted — Settings stays reachable via
+Nothing about the existing verify flow was deleted — Settings stays reachable via
 the gear icon at all times, so this is purely an additional bypass, easy to remove.
 
-### Concrete changes, when this is actually turned on
+### What actually shipped (2026-07-28)
 
-1. `src/settings.js` — add, mirroring `isDemoMode()`/`setDemoMode()`:
-   ```js
-   const TESTING_KEY = 'willys.testingOpen';
-   // Optional hard cutoff — see "Rollback" below.
-   const TESTING_MODE_EXPIRES = '2026-08-15T00:00:00Z'; // pick the real end date
-
-   export function isTestingOpen() {
-     if (new URLSearchParams(location.search).get('open') === '1') {
-       localStorage.setItem(TESTING_KEY, '1');
-     }
-     if (Date.now() > Date.parse(TESTING_MODE_EXPIRES)) return false;
-     return localStorage.getItem(TESTING_KEY) === '1';
-   }
-   ```
-2. `src/main.js` — widen the gate condition:
+1. `src/settings.js` — `isTestingOpen()`/`setTestingOpen()`, mirroring
+   `isDemoMode()`/`setDemoMode()`. No hard expiry date was added (kept simple per
+   the "just remove it" ask) — see "Rollback" for how to turn it back off manually.
+2. `src/main.js` — gate widened to:
    ```js
    if (!isDemoMode() && !isTestingOpen() && !isConnectionVerified() && name !== 'settings') {
    ```
@@ -75,18 +65,21 @@ the gear icon at all times, so this is purely an additional bypass, easy to remo
 
 - Simplest: stop sharing/using the `?open=1` link. The flag is opt-in per device via
   `localStorage`, so devices that never opened that link are unaffected.
-- Recommended: the `TESTING_MODE_EXPIRES` cutoff above, so the bypass silently stops
-  working after the agreed date with no follow-up deploy needed.
+- To actively re-lock devices that already opened the link: change `isTestingOpen()`
+  in `src/settings.js` to `return false` (or delete the function and its call site in
+  `main.js`), deploy — every device re-hits the verify gate on its next load.
+- If a hard cutoff date is wanted later, add back an expiry check inside
+  `isTestingOpen()` (e.g. `if (Date.now() > Date.parse(EXPIRY)) return false;`).
 - If (1b) Funnel was used: `tailscale funnel off` on the home server, and treat the
   temporary public URL as burned (don't reuse it later without re-checking exposure).
 - If (1a) invites were used: remove the kids' devices/users from the tailnet.
 
-## Open questions (need a decision before implementing)
+## Open questions
 
 1. Which networking option — (a) invite, (b) Funnel, or (c) demo-only? This decides
    whether the client-side bypass above is even sufficient, or purely cosmetic on
-   top of a network the kids' devices still can't reach.
-2. How long is "a period"? Needed for `TESTING_MODE_EXPIRES`.
-3. Kids get real write access to the real shopping list/delivery flow during the
-   test — `Reset list` already requires a confirm dialog, so blast radius is
-   contained, but worth a beat of thought before handing this out.
+   top of a network the kids' devices still can't reach. Still unresolved/unimplemented.
+2. Kids get real write access to the real shopping list/delivery flow — confirmed
+   fine by request (2026-07-28): not connected to actual shopping yet, so the blast
+   radius is just the list/delivery-time data itself, and `Reset list` already
+   requires a confirm dialog.

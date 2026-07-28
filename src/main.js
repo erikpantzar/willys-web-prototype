@@ -1,5 +1,5 @@
 'use strict';
-import { isConnectionVerified, isDemoMode } from './settings.js';
+import { isConnectionVerified, isDemoMode, isTestingOpen } from './settings.js';
 import { initWho } from './who.js';
 import { renderList } from './views/list.js';
 import { renderDelivery } from './views/delivery.js';
@@ -21,8 +21,13 @@ function route() {
   demoBanner.hidden = !isDemoMode();
 
   // Demo mode never needs a real base URL — it runs entirely on seeded data.
-  // Non-demo mode requires connection to be verified before accessing app features.
-  if (!isDemoMode() && !isConnectionVerified() && name !== 'settings') {
+  // Non-demo mode requires connection to be verified before accessing app
+  // features, unless testing mode is open (see docs/testing-mode-plan.md —
+  // a temporary bypass for kid testing, not a permanent removal: Settings
+  // is still reachable via the gear icon, and a saved base URL is still
+  // required for real API calls to work, testing mode just skips being
+  // forced through the verify screen first).
+  if (!isDemoMode() && !isTestingOpen() && !isConnectionVerified() && name !== 'settings') {
     renderSettings(app);
   } else {
     (ROUTES[name] || renderList)(app);
