@@ -3,9 +3,14 @@ import * as api from '../api.js';
 import { pixelLoaderHtml } from '../loader.js';
 import { getIdentity, initWho } from '../who.js';
 import { heroTopRow } from '../heroChrome.js';
+import { getCached, setCached, isStale } from '../deliveryCache.js';
 
 // Delivery status state: 'idle' | 'loading' | 'ready'
 let deliveryStatus = 'idle';
+// When the alternatives currently on screen were fetched — drives the
+// "checked Xm ago" note and whether a picked slot needs re-verifying
+// before it's actually committed to (issue #18).
+let lastFetchedAt = null;
 
 export function getDeliveryStatus() {
   return deliveryStatus;
@@ -53,8 +58,24 @@ function hero(inner) {
   `;
 }
 
-export async function renderDelivery(root) {
+function checkedNote(fetchedAt) {
+  const mins = Math.max(0, Math.round((Date.now() - fetchedAt) / 60000));
+  const when = mins === 0 ? 'just now' : mins === 1 ? '1 minute ago' : `${mins} minutes ago`;
+  return `<div class="muted" style="margin-bottom: 0.7rem">Checked ${when}${mins >= 5 ? ' — tap ↻ above to refresh' : ''}</div>`;
+}
+
+export async function renderDelivery(root, { forceRefresh = false } = {}) {
   const routeAtStart = currentRoute();
+
+  if (!forceRefresh) {
+    const cached = getCached();
+    if (cached) {
+      lastFetchedAt = cached.fetchedAt;
+      setDeliveryStatus('ready');
+      renderAlternatives(root, cached.body, cached.fetchedAt);
+      return;
+    }
+  }
 
   root.innerHTML = hero(pixelLoaderHtml('Fetching delivery times… (can take up to ~20s)'));
   wireRefresh(root);
@@ -73,13 +94,18 @@ export async function renderDelivery(root) {
     return;
   }
 
-  setDeliveryStatus('ready');
-
   // Only render content if we're still on the delivery route
   if (currentRoute() !== routeAtStart || routeAtStart !== 'delivery') {
     return;
   }
 
+  setCached(body);
+  lastFetchedAt = Date.now();
+  setDeliveryStatus('ready');
+  renderAlternatives(root, body, lastFetchedAt);
+}
+
+function renderAlternatives(root, body, fetchedAt) {
   const alternatives = body.alternatives || [];
   if (alternatives.every((a) => a.slots.length === 0)) {
     root.innerHTML = hero(`<div class="empty">No delivery times available in the next few days — try again later.</div>`);
@@ -88,6 +114,7 @@ export async function renderDelivery(root) {
   }
 
   root.innerHTML = hero(`
+    ${checkedNote(fetchedAt)}
     <div id="delivery-groups">
       ${alternatives.map(dateGroup).join('')}
     </div>
@@ -105,7 +132,7 @@ function wireRefresh(root) {
   // innerHTML replacement) — repopulate it here since this runs after every
   // root.innerHTML = hero(...) assignment in this file.
   initWho();
-  root.querySelector('#refresh-delivery')?.addEventListener('click', () => renderDelivery(root));
+  root.querySelector('#refresh-delivery')?.addEventListener('click', () => renderDelivery(root, { forceRefresh: true }));
 }
 
 function dateGroup(alt) {
@@ -125,6 +152,17 @@ function dateGroup(alt) {
 function timePart(formattedTime) {
   const m = formattedTime.match(/(\d{2}:\d{2}-\d{2}:\d{2})$/);
   return m ? m[1] : formattedTime;
+}
+
+// A slot picked from a cached/older list might have sold out in the
+// meantime — re-check live before committing if the data behind it is
+// more than 30 minutes old (see deliveryCache.js STALE_MS).
+async function verifySlotStillAvailable(slot) {
+  const body = await api.getDeliveryTimesWide();
+  setCached(body);
+  lastFetchedAt = Date.now();
+  const stillThere = (body.alternatives || []).some((a) => a.slots.some((s) => s.startTime === slot.startTime));
+  return { stillThere, body };
 }
 
 async function showConfirm(root, slot) {
@@ -149,6 +187,24 @@ async function showConfirm(root, slot) {
   box.querySelector('#confirm-no').addEventListener('click', () => (box.innerHTML = ''));
   box.querySelector('#confirm-yes').addEventListener('click', async () => {
     box.innerHTML = `<div class="loading">Finalizing…</div>`;
+
+    if (isStale(lastFetchedAt)) {
+      box.innerHTML = `<div class="loading">This list was checked a while ago — confirming it's still available…</div>`;
+      let verified;
+      try {
+        verified = await verifySlotStillAvailable(slot);
+      } catch (err) {
+        box.innerHTML = `<div class="error">Could not re-check availability: ${escapeHtml(err.message)}</div>`;
+        return;
+      }
+      if (!verified.stillThere) {
+        box.innerHTML = `<div class="error">That time is no longer available — refreshing the list.</div>`;
+        setTimeout(() => renderAlternatives(root, verified.body, lastFetchedAt), 1200);
+        return;
+      }
+      box.innerHTML = `<div class="loading">Finalizing…</div>`;
+    }
+
     const who = getIdentity();
     try {
       await api.chooseDeliveryTime(slot);
