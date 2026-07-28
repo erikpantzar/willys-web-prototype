@@ -230,7 +230,8 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
 }
 .tab-badge.loading {
   background: var(--delivery-btn);
-  animation: pulse-dot 1.5s ease-in-out infinite;
+  box-shadow: 0 0 0 2px var(--card);
+  animation: pulse-dot 1.2s ease-in-out infinite;
 }
 .tab-badge.ready {
   width: 1.1em;
@@ -248,9 +249,11 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
   font-weight: 700;
 }
 
+/* Scale, not opacity, so the dot stays solid and never looks like a
+   flickering/broken badge against the icon background (issue #19). */
 @keyframes pulse-dot {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+  0%, 100% { transform: scale(0.75); }
+  50% { transform: scale(1); }
 }
 
 input[type="text"] {
