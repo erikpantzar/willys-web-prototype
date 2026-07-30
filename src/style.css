@@ -576,36 +576,7 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 }
 
 .settings-panel label { display: flex; flex-direction: column; gap: 0.3rem; margin: 0.7rem 0; font-weight: 700; }
-.url-input-group { display: flex; align-items: center; gap: 0; }
-.url-prefix {
-  display: flex;
-  align-items: center;
-  padding: 0.7rem 0.75rem;
-  background: var(--tab-inactive-bg);
-  color: var(--muted);
-  font-weight: 700;
-  font-family: ui-monospace, monospace;
-  border: 2px solid var(--border);
-  border-right: none;
-  border-radius: 1rem 0 0 1rem;
-  font-size: 0.9rem;
-}
-.url-input-group input {
-  border-radius: 0 1rem 1rem 0;
-  margin: 0;
-  font-family: ui-monospace, monospace;
-}
-.settings-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 #health-result { margin-top: 0.7rem; font-size: 0.85rem; }
-
-.health-services { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 0.8rem; }
-.health-line { font-size: 0.85rem; }
-
-.troubleshooting { margin-top: 0.8rem; border: none; border-radius: 1rem; padding: 0.7rem 0.9rem; background: var(--card); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); }
-.troubleshooting summary { cursor: pointer; font-weight: 700; font-family: 'Baloo 2', sans-serif; font-size: 0.85rem; user-select: none; }
-.troubleshooting summary:hover { color: var(--delivery-pill-fg); }
-.troubleshooting ul.checklist { list-style: disc inside; margin: 0.6rem 0 0 0; padding: 0; font-size: 0.8rem; color: var(--ink); }
-.troubleshooting ul.checklist li { margin-bottom: 0.3rem; }
 
 .muted { color: var(--muted); font-weight: 700; font-size: 0.8rem; }
 .loading, .empty, .error, .success { padding: 0.9rem 0; color: var(--muted); font-size: 0.85rem; font-weight: 700; }
@@ -653,5 +624,3 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 .setup-subtitle { font-size: 0.88rem; color: var(--ink-soft); font-weight: 700; margin-top: 0.4rem; max-width: 300px; line-height: 1.4; }
 .setup-form { width: 100%; max-width: 320px; margin-top: 1.75rem; text-align: left; }
 .setup-form label { display: block; font-family: 'Baloo 2', sans-serif; font-weight: 600; font-size: 0.85rem; color: var(--ink-soft); margin-bottom: 0.4rem; }
-.setup-form .settings-actions button { flex: 1; padding: 0.85rem 0; }
-.setup-form .settings-actions #save-url { background: var(--delivery-btn); color: white; }
