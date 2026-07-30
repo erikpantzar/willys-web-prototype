@@ -1,0 +1,63 @@
+/* Design tokens — the :root custom properties, and their dark-mode /
+   data-theme overrides. These stay global by design (see docs/COMPONENTS.md)
+   — every component keeps referencing them via var(--x) — this file just
+   gives them an explicit home separate from the component rules that are
+   migrating out of style.css around them. */
+:root {
+  color-scheme: light dark;
+  --bg: oklch(96% 0.015 85);
+  --ink: oklch(28% 0.03 50);
+  --ink-soft: oklch(45% 0.03 50);
+  --muted: oklch(55% 0.02 50);
+  --border: oklch(90% 0.01 85);
+  --card: #ffffff;
+
+  --danger-bg: oklch(95% 0.02 30);
+  --danger-fg: oklch(50% 0.15 30);
+
+  --search-grad-1: oklch(78% 0.14 40);
+  --search-grad-2: oklch(82% 0.12 45);
+  --search-btn: oklch(70% 0.17 35);
+  --search-pill-bg: oklch(93% 0.05 40);
+  --search-pill-fg: oklch(50% 0.15 40);
+
+  --list-btn: oklch(62% 0.14 155);
+  --list-pill-bg: oklch(93% 0.05 155);
+  --list-pill-fg: oklch(45% 0.14 155);
+
+  --delivery-btn: oklch(58% 0.13 245);
+  --delivery-pill-bg: oklch(93% 0.05 245);
+  --delivery-pill-fg: oklch(45% 0.13 245);
+
+  --tab-inactive-bg: oklch(96% 0.01 85);
+  --tab-inactive-fg: oklch(58% 0.02 50);
+
+  /* Kept for components not yet re-themed (health check, dialogs) */
+  --accent: var(--list-btn);
+  --accent-ink: var(--list-pill-fg);
+  --danger: var(--danger-fg);
+  --fg: var(--ink);
+  --pixel-off: var(--border);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: oklch(22% 0.015 85);
+    --ink: oklch(92% 0.02 85);
+    --ink-soft: oklch(80% 0.02 85);
+    --muted: oklch(68% 0.02 85);
+    --border: oklch(32% 0.01 85);
+    --card: oklch(27% 0.015 85);
+    --tab-inactive-bg: oklch(30% 0.01 85);
+    --tab-inactive-fg: oklch(68% 0.02 85);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: oklch(22% 0.015 85); --ink: oklch(92% 0.02 85); --ink-soft: oklch(80% 0.02 85);
+  --muted: oklch(68% 0.02 85); --border: oklch(32% 0.01 85); --card: oklch(27% 0.015 85);
+  --tab-inactive-bg: oklch(30% 0.01 85); --tab-inactive-fg: oklch(68% 0.02 85);
+}
+:root[data-theme="light"] {
+  --bg: oklch(96% 0.015 85); --ink: oklch(28% 0.03 50); --ink-soft: oklch(45% 0.03 50);
+  --muted: oklch(55% 0.02 50); --border: oklch(90% 0.01 85); --card: #ffffff;
+  --tab-inactive-bg: oklch(96% 0.01 85); --tab-inactive-fg: oklch(58% 0.02 50);
+}
