@@ -1,0 +1,50 @@
+/* In-app toast, replacing native alert() for transient errors/confirmations
+   (see issue #3) — same card + button vocabulary as the rest of the design. */
+.toast-container {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(1.25rem + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 1rem;
+  z-index: 100;
+  pointer-events: none;
+}
+.toast {
+  max-width: 640px;
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border-radius: 1.1rem;
+  border: none;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.toast > div {
+  flex: 1;
+}
+.toast-action {
+  font-size: 0.75rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 0.7rem;
+  border: none;
+  background: var(--tab-inactive-bg);
+  color: var(--ink);
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.toast-action:active { opacity: 0.7; }
+.toast-error { box-shadow: 0 0 0 2px var(--danger-fg), 0 4px 14px rgba(0, 0, 0, 0.15); color: var(--danger-fg); }
+.toast-error .toast-action { color: var(--danger-fg); background: var(--danger-bg); }
+.toast-success { box-shadow: 0 0 0 2px var(--list-btn), 0 4px 14px rgba(0, 0, 0, 0.15); color: var(--list-pill-fg); }
+.toast-success .toast-action { color: var(--list-pill-fg); background: var(--list-pill-bg); }
