@@ -1,0 +1,12 @@
+/* Shared empty-list placeholder — used both for a genuinely empty list
+   (emptyState()) and a filter that hides everything (filteredEmptyState()),
+   see list.js. */
+.empty-state {
+  text-align: center; padding: 3rem 1.25rem; color: var(--muted);
+}
+.empty-state-icon {
+  width: 4.5rem; height: 4.5rem; border-radius: 50%; margin: 0 auto 0.9rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.empty-state-title { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 1.05rem; color: var(--ink-soft); margin-bottom: 0.25rem; }
+.empty-state-subtitle { font-size: 0.85rem; font-weight: 700; }

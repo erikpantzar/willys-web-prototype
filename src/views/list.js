@@ -13,6 +13,7 @@ import itemRowStyles from '../components/ItemRow.module.css';
 import searchBoxStyles from '../components/SearchBox.module.css';
 import resultCardStyles from '../components/ResultCard.module.css';
 import totalCardStyles from '../components/TotalCard.module.css';
+import emptyStateStyles from '../components/EmptyState.module.css';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const SEARCH_RESULT_LIMIT = 15;
@@ -245,9 +246,9 @@ function openFilterModal(root, items) {
 
 function filteredEmptyState() {
   return `
-    <li class="empty-state" style="list-style: none">
-      <div class="empty-state-title">No items match this filter</div>
-      <div class="empty-state-subtitle">Tap the banner above to clear it.</div>
+    <li class="${emptyStateStyles['empty-state']}" style="list-style: none">
+      <div class="${emptyStateStyles['empty-state-title']}">No items match this filter</div>
+      <div class="${emptyStateStyles['empty-state-subtitle']}">Tap the banner above to clear it.</div>
     </li>
   `;
 }
@@ -1002,7 +1003,7 @@ function addItemLocally(root, items, item) {
     return;
   }
 
-  list.querySelector('.empty-state')?.remove();
+  list.querySelector(`.${emptyStateStyles['empty-state']}`)?.remove();
 
   const wrapper = document.createElement('div');
   wrapper.innerHTML = itemRow(item);
@@ -1065,12 +1066,12 @@ function animateTotal(el, newTotal) {
 
 function emptyState() {
   return `
-    <li class="empty-state" style="list-style: none">
-      <div class="empty-state-icon" style="background: var(--list-pill-bg)">
+    <li class="${emptyStateStyles['empty-state']}" style="list-style: none">
+      <div class="${emptyStateStyles['empty-state-icon']}" style="background: var(--list-pill-bg)">
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M4 6h16l-1.5 10.5a2 2 0 01-2 1.5H7.5a2 2 0 01-2-1.5L4 6z" stroke="var(--list-pill-fg)" stroke-width="1.8" stroke-linejoin="round"></path><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="var(--list-pill-fg)" stroke-width="1.8"></path></svg>
       </div>
-      <div class="empty-state-title">Your list is empty</div>
-      <div class="empty-state-subtitle">Search for groceries above to start adding!</div>
+      <div class="${emptyStateStyles['empty-state-title']}">Your list is empty</div>
+      <div class="${emptyStateStyles['empty-state-subtitle']}">Search for groceries above to start adding!</div>
     </li>
   `;
 }

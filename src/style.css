@@ -633,16 +633,6 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
   font-weight: 700; font-size: 0.85rem; text-decoration: none;
 }
 
-.empty-state {
-  text-align: center; padding: 3rem 1.25rem; color: var(--muted);
-}
-.empty-state-icon {
-  width: 4.5rem; height: 4.5rem; border-radius: 50%; margin: 0 auto 0.9rem;
-  display: flex; align-items: center; justify-content: center;
-}
-.empty-state-title { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 1.05rem; color: var(--ink-soft); margin-bottom: 0.25rem; }
-.empty-state-subtitle { font-size: 0.85rem; font-weight: 700; }
-
 /* Fullscreen order-confirm modal (issue: delivery slot confirmation) —
    the last checkpoint before a real order goes out, so it gets the whole
    screen and the full list, not a small centered "are you sure?" card. */
