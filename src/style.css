@@ -640,9 +640,6 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 .slot-buttons button { font-variant-numeric: tabular-nums; background: var(--card); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04); }
 .slot-buttons button.sel { background: var(--delivery-btn); color: white; }
 .slot-buttons button.is-soonest { box-shadow: 0 0 0 2px var(--delivery-btn); font-weight: 800; color: var(--delivery-pill-fg); }
-.confirm-dialog { margin-top: 1rem; padding: 1rem 1.1rem; border: none; border-radius: 1.1rem; background: var(--card); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06); }
-.confirm-actions { display: flex; gap: 0.5rem; margin-top: 0.85rem; }
-
 /* Confirm-order hero — a truck icon, the time, and a quick item-count/total
    stat row, so the last checkpoint before sending reads as a real order
    summary rather than a plain "are you sure" line. */
@@ -759,21 +756,6 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 @media (prefers-reduced-motion: reduce) {
   .pixel-loader .bar i { animation: none; opacity: 1; transform: none; }
 }
-
-/* In-app dialog, replacing native confirm() (issue #3) — same card + button
-   vocabulary as the rest of the design. (Toast's styles moved to
-   toast.module.css.) */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  z-index: 200;
-}
-.modal-backdrop .confirm-dialog { max-width: 400px; width: 100%; margin: 0; }
 
 /* Fullscreen order-confirm modal (issue: delivery slot confirmation) —
    the last checkpoint before a real order goes out, so it gets the whole

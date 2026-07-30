@@ -8,6 +8,7 @@ import { FAMILY_MEMBERS, personaFor, personaBadgeHtml } from '../personas.js';
 import { recordAction, performUndo } from '../undo.js';
 import { pixelLoaderHtml } from '../loader.js';
 import { playAddSound, playQtyUpSound, playQtyDownSound, playRemoveSound, vibrateAdd, vibrateRemove } from '../sound.js';
+import dialogStyles from '../dialog.module.css';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const SEARCH_RESULT_LIMIT = 15;
@@ -148,7 +149,7 @@ function wireSortFilterToolbar(root, items) {
 // actually showing underneath.
 function openFilterModal(root, items) {
   const backdrop = document.createElement('div');
-  backdrop.className = 'modal-backdrop';
+  backdrop.className = dialogStyles['modal-backdrop'];
 
   function personChips() {
     const names = [...new Set(items.map((i) => i.added_by))];
@@ -180,7 +181,7 @@ function openFilterModal(root, items) {
 
   function render() {
     backdrop.innerHTML = `
-      <div class="confirm-dialog filter-modal">
+      <div class="${dialogStyles['confirm-dialog']} filter-modal">
         <div class="filter-modal-header">
           <div class="filter-modal-title">Filter list</div>
           <button type="button" class="toolbar-icon-btn" id="filter-modal-close" title="Close">✕</button>
