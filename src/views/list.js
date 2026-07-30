@@ -287,6 +287,13 @@ export async function renderList(root) {
         <button type="button" id="search-clear" class="${searchBoxStyles['search-clear-btn']}" hidden aria-label="Clear search">✕</button>
       </form>
       <div id="search-results" class="${searchBoxStyles['results-grid']}"></div>
+      <div id="search-placeholder" class="${searchBoxStyles['search-placeholder']}">
+        <div class="${searchBoxStyles['search-placeholder-icon']}">
+          <svg width="22" height="22" viewBox="0 0 18 18" fill="none"><circle cx="8" cy="8" r="6" fill="none" stroke="var(--search-pill-fg)" stroke-width="2"></circle><line x1="12.2" y1="12.2" x2="16.5" y2="16.5" stroke="var(--search-pill-fg)" stroke-width="2" stroke-linecap="round"></line></svg>
+        </div>
+        <div class="${searchBoxStyles['search-placeholder-title']}">Search groceries</div>
+        <div class="${searchBoxStyles['search-placeholder-subtitle']}">Find products above to add them to your list.</div>
+      </div>
     </div>
 
     <div class="list-rail">
@@ -724,6 +731,7 @@ function wireProductSearch(root, items) {
   const input = root.querySelector('#search-input');
   const clearBtn = root.querySelector('#search-clear');
   const resultsEl = root.querySelector('#search-results');
+  const placeholderEl = root.querySelector('#search-placeholder');
   let debounceTimer;
   let requestSeq = 0;
   let currentResolution = null;
@@ -736,6 +744,7 @@ function wireProductSearch(root, items) {
     const raw = input.value.trim();
     if (!raw) {
       resultsEl.innerHTML = '';
+      placeholderEl.hidden = false;
       currentResolution = null;
       return;
     }
@@ -747,6 +756,7 @@ function wireProductSearch(root, items) {
     input.value = '';
     clearBtn.hidden = true;
     resultsEl.innerHTML = '';
+    placeholderEl.hidden = false;
     currentResolution = null;
     input.focus();
   });
@@ -754,6 +764,7 @@ function wireProductSearch(root, items) {
   async function runSearch(raw) {
     const seq = ++requestSeq;
     const { text: query, quantity } = parseQuantity(raw);
+    placeholderEl.hidden = true;
     resultsEl.innerHTML = pixelLoaderHtml('Searching…');
     let body;
     try {
@@ -813,6 +824,7 @@ function wireProductSearch(root, items) {
       input.value = '';
       clearBtn.hidden = true;
       resultsEl.innerHTML = '';
+      placeholderEl.hidden = false;
       currentResolution = null;
       input.focus();
     } catch (err) {

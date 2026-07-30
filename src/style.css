@@ -80,7 +80,12 @@ button { transition: transform 0.1s ease; }
   .list-view-body {
     max-width: 960px;
     display: flex;
-    align-items: flex-start;
+    /* stretch (the flex default), not flex-start (issue #50) — makes the
+       search rail match the list rail's height natively, no JS
+       measurement needed. This is a cross-axis (height) stretch only;
+       the "don't stretch width to fill the screen" bound above is a
+       separate axis and still holds via each rail's own max-width. */
+    align-items: stretch;
     gap: 2rem;
   }
   .list-view-body .list-rail { flex: 1 1 480px; max-width: 520px; min-width: 0; }
