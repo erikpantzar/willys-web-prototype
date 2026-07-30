@@ -211,39 +211,152 @@ function wireWhoPicker(root, items) {
 // one that was there since page load.
 function wireItemRow(li, root, items) {
   const removeBtn = li.querySelector('[data-remove]');
-  if (removeBtn) wireRemoveButton(removeBtn, root, items);
+  if (removeBtn) {
+    wireRemoveButton(removeBtn, root, items);
+    wireSwipeToRemove(li, removeBtn, root, items);
+  }
   li.querySelectorAll('[data-qty-step]').forEach((btn) => wireQtyButton(btn, root, items));
 }
 
 function wireRemoveButton(btn, root, items) {
-  btn.addEventListener('click', async () => {
-    const itemId = Number(btn.dataset.remove);
-    const item = items.find((i) => i.id === itemId);
-    btn.disabled = true;
-    try {
-      await api.removeItem(itemId);
-      if (item) {
-        recordAction({ type: 'remove', itemId, text: item.text, who: item.added_by });
-      }
-      playRemoveSound();
-      vibrateRemove();
-      // Same local-patch treatment as qty +/- (see applyQuantityLocally) —
-      // a full renderList() here flashed "Loading list…" and dropped scroll
-      // position for what's visually just one row disappearing.
-      removeItemLocally(root, items, itemId);
-      showToast(`Removed "${item?.text || 'item'}"`, {
-        type: 'success',
-        actionLabel: 'Undo',
-        onAction: async () => {
-          await performUndo();
-          renderList(root);
-        },
-      });
-    } catch (err) {
-      showToast(`Could not remove: ${err.message}`);
-      btn.disabled = false;
+  btn.addEventListener('click', () => performRemove(btn, root, items));
+}
+
+// Shared by the ✕ button's click and the swipe gesture below — same
+// request, same sound/haptic, same undo toast, regardless of which
+// triggered it. Returns whether it succeeded so a caller mid-animation
+// (the swipe path) knows whether to finish removing the row or snap it
+// back into place.
+async function performRemove(btn, root, items) {
+  const itemId = Number(btn.dataset.remove);
+  const item = items.find((i) => i.id === itemId);
+  btn.disabled = true;
+  try {
+    await api.removeItem(itemId);
+    if (item) {
+      recordAction({ type: 'remove', itemId, text: item.text, who: item.added_by });
     }
-  });
+    playRemoveSound();
+    vibrateRemove();
+    // Same local-patch treatment as qty +/- (see applyQuantityLocally) —
+    // a full renderList() here flashed "Loading list…" and dropped scroll
+    // position for what's visually just one row disappearing.
+    removeItemLocally(root, items, itemId);
+    showToast(`Removed "${item?.text || 'item'}"`, {
+      type: 'success',
+      actionLabel: 'Undo',
+      onAction: async () => {
+        await performUndo();
+        renderList(root);
+      },
+    });
+    return true;
+  } catch (err) {
+    showToast(`Could not remove: ${err.message}`);
+    btn.disabled = false;
+    return false;
+  }
+}
+
+// Swipe-to-remove (issue #28) — reuses toast.js's wireSwipeToDismiss gesture
+// language (drag-follows-finger, threshold-based commit on release) rather
+// than inventing a new one, but only follows a leftward drag: unlike a
+// toast, a row swiping right doesn't mean anything, so that direction just
+// rubber-bands back.
+//
+// Critical wrinkle (flagged in the issue): main.js listens for horizontal
+// swipes on #app itself to navigate List → Delivery → Settings. Since
+// touch events bubble from the row up through #app, every handler here
+// calls stopPropagation() so a swipe that starts on an item row is never
+// also seen by that view-nav listener — the row owns the gesture
+// exclusively once it starts there.
+const SWIPE_REMOVE_THRESHOLD_PX = 90; // more deliberate than the 60px toast/nav swipes — this one is destructive
+const SWIPE_REMOVE_FOLLOW_MAX_PX = 250; // roughly where the row visually bottoms out at opacity 0.25 mid-drag
+
+function wireSwipeToRemove(li, btn, root, items) {
+  let startX = 0;
+  let startY = 0;
+  let tracking = false;
+  let isHorizontal = false; // decided once |dx| clearly outpaces |dy|; false lets normal vertical scroll happen
+
+  li.addEventListener(
+    'touchstart',
+    (e) => {
+      if (e.touches.length !== 1) return;
+      e.stopPropagation();
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      tracking = true;
+      isHorizontal = false;
+    },
+    { passive: true }
+  );
+
+  li.addEventListener(
+    'touchmove',
+    (e) => {
+      if (!tracking) return;
+      e.stopPropagation();
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      if (!isHorizontal && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.5) isHorizontal = true;
+      if (!isHorizontal) return;
+      const clamped = Math.min(0, dx); // left only — a rightward drag doesn't move the row
+      li.style.transform = `translateX(${clamped}px)`;
+      li.style.opacity = String(Math.max(0.25, 1 - Math.abs(clamped) / SWIPE_REMOVE_FOLLOW_MAX_PX));
+      // Reddens toward the threshold so the drag itself previews "this is
+      // about to be removed" rather than just fading uniformly.
+      const progress = Math.min(1, Math.abs(clamped) / SWIPE_REMOVE_THRESHOLD_PX);
+      li.style.background = progress > 0 ? `color-mix(in oklch, var(--danger-bg) ${Math.round(progress * 70)}%, var(--card))` : '';
+    },
+    { passive: true }
+  );
+
+  li.addEventListener(
+    'touchend',
+    (e) => {
+      if (!tracking) return;
+      tracking = false;
+      e.stopPropagation();
+      const dx = e.changedTouches[0].clientX - startX;
+      if (isHorizontal && dx < -SWIPE_REMOVE_THRESHOLD_PX) {
+        commitSwipeRemove(li, btn, root, items);
+      } else {
+        snapBack(li);
+      }
+    },
+    { passive: true }
+  );
+
+  li.addEventListener(
+    'touchcancel',
+    (e) => {
+      tracking = false;
+      e.stopPropagation();
+      snapBack(li);
+    },
+    { passive: true }
+  );
+}
+
+function snapBack(li) {
+  li.style.transition = 'transform 0.15s ease, opacity 0.15s ease, background 0.15s ease';
+  li.style.transform = '';
+  li.style.opacity = '';
+  li.style.background = '';
+  setTimeout(() => (li.style.transition = ''), 150);
+}
+
+async function commitSwipeRemove(li, btn, root, items) {
+  li.style.transition = 'transform 0.18s ease, opacity 0.18s ease';
+  li.style.transform = 'translateX(-100%)';
+  li.style.opacity = '0';
+  const ok = await performRemove(btn, root, items);
+  // On success, performRemove's removeItemLocally() already pulled the row
+  // out of the DOM entirely — nothing left to reset. On failure, the row
+  // is still there (still in `items`, still in the DOM), so bring it back
+  // rather than leaving it looking gone while the item quietly isn't.
+  if (!ok) snapBack(li);
 }
 
 function wireQtyButton(btn, root, items) {
