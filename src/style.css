@@ -434,6 +434,13 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 @media (prefers-reduced-motion: reduce) {
   .result-card-enter { animation: none; }
 }
+/* Item rows added via the local-patch path (see addItemLocally in list.js)
+   reuse this same pop-in rather than inventing a second entrance animation
+   for what's visually the same "a card just appeared" moment. */
+.item-row-enter { animation: result-pop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .item-row-enter { animation: none; }
+}
 .result-card.picking { opacity: 0.5; pointer-events: none; }
 .result-card.added { box-shadow: 0 0 0 2px var(--list-btn); }
 .result-card.confirmed { box-shadow: 0 0 0 2px var(--search-btn); }

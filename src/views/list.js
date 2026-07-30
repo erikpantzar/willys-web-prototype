@@ -38,7 +38,7 @@ export async function renderList(root) {
     <div class="search-section">
       <form id="search-form" class="search-box">
         <svg width="18" height="18" viewBox="0 0 18 18" style="flex-shrink:0"><circle cx="8" cy="8" r="6" fill="none" stroke="var(--search-pill-fg)" stroke-width="2"></circle><line x1="12.2" y1="12.2" x2="16.5" y2="16.5" stroke="var(--search-pill-fg)" stroke-width="2" stroke-linecap="round"></line></svg>
-        <input id="search-input" type="text" placeholder="Find products… e.g. 2 mjölk" autocomplete="off" />
+        <input id="search-input" type="text" placeholder="Find products… e.g. 2 mjölk" autocomplete="off" autocapitalize="off" enterkeyhint="search" />
         <button type="button" id="search-clear" class="search-clear-btn" hidden aria-label="Clear search">✕</button>
       </form>
       <div id="search-results" class="results-grid"></div>
@@ -71,67 +71,9 @@ export async function renderList(root) {
 
   wireWhoPicker(root, items);
 
-  wireProductSearch(root);
+  wireProductSearch(root, items);
 
-  root.querySelectorAll('[data-remove]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const itemId = Number(btn.dataset.remove);
-      const item = items.find((i) => i.id === itemId);
-      btn.disabled = true;
-      const itemText = btn.closest('.item-row')?.querySelector('.item-text')?.textContent || 'item';
-      try {
-        await api.removeItem(itemId);
-        if (item) {
-          recordAction({ type: 'remove', itemId, text: item.text, who: item.added_by });
-        }
-        renderList(root);
-        showToast(`Removed "${item?.text || 'item'}"`, {
-          type: 'success',
-          actionLabel: 'Undo',
-          onAction: async () => {
-            await performUndo();
-            renderList(root);
-          },
-        });
-      } catch (err) {
-        showToast(`Could not remove: ${err.message}`);
-        btn.disabled = false;
-      }
-    });
-  });
-
-  root.querySelectorAll('[data-qty-step]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const id = Number(btn.dataset.id);
-      const delta = Number(btn.dataset.qtyStep);
-      const current = Number(btn.dataset.current);
-      const next = current + delta;
-      if (next < 1) return;
-      btn.disabled = true;
-      const itemText = btn.closest('.item-row')?.querySelector('.item-text')?.textContent || 'item';
-      try {
-        await api.setQuantity(id, next);
-        recordAction({ type: 'qty', itemId: id, previousValue: current });
-        if (delta > 0) playQtyUpSound(); else playQtyDownSound();
-        // Patch the DOM in place instead of a full renderList() — that was
-        // re-fetching + rebuilding the whole view on every +/- tap, which
-        // visibly flashed a "Loading list…" screen for a one-number change.
-        applyQuantityLocally(root, items, id, next);
-        btn.disabled = false;
-        showToast(`Quantity updated to ${next}`, {
-          type: 'success',
-          actionLabel: 'Undo',
-          onAction: async () => {
-            await performUndo();
-            renderList(root);
-          },
-        });
-      } catch (err) {
-        showToast(`Could not update quantity: ${err.message}`);
-        btn.disabled = false;
-      }
-    });
-  });
+  root.querySelectorAll('.item-row').forEach((li) => wireItemRow(li, root, items));
 
   root.querySelector('#reset-btn').addEventListener('click', async () => {
     const ok = await confirmDialog("Clear the whole list and start fresh? Can't be undone.", { confirmLabel: 'Clear list' });
@@ -253,10 +195,81 @@ function wireWhoPicker(root, items) {
   wire();
 }
 
+// Attaches the remove + qty-step handlers a row needs, whether it came from
+// renderList's initial batch or was just spliced in by addItemLocally() —
+// one wiring path for both so a freshly-added row behaves identically to
+// one that was there since page load.
+function wireItemRow(li, root, items) {
+  const removeBtn = li.querySelector('[data-remove]');
+  if (removeBtn) wireRemoveButton(removeBtn, root, items);
+  li.querySelectorAll('[data-qty-step]').forEach((btn) => wireQtyButton(btn, root, items));
+}
+
+function wireRemoveButton(btn, root, items) {
+  btn.addEventListener('click', async () => {
+    const itemId = Number(btn.dataset.remove);
+    const item = items.find((i) => i.id === itemId);
+    btn.disabled = true;
+    try {
+      await api.removeItem(itemId);
+      if (item) {
+        recordAction({ type: 'remove', itemId, text: item.text, who: item.added_by });
+      }
+      // Same local-patch treatment as qty +/- (see applyQuantityLocally) —
+      // a full renderList() here flashed "Loading list…" and dropped scroll
+      // position for what's visually just one row disappearing.
+      removeItemLocally(root, items, itemId);
+      showToast(`Removed "${item?.text || 'item'}"`, {
+        type: 'success',
+        actionLabel: 'Undo',
+        onAction: async () => {
+          await performUndo();
+          renderList(root);
+        },
+      });
+    } catch (err) {
+      showToast(`Could not remove: ${err.message}`);
+      btn.disabled = false;
+    }
+  });
+}
+
+function wireQtyButton(btn, root, items) {
+  btn.addEventListener('click', async () => {
+    const id = Number(btn.dataset.id);
+    const delta = Number(btn.dataset.qtyStep);
+    const current = Number(btn.dataset.current);
+    const next = current + delta;
+    if (next < 1) return;
+    btn.disabled = true;
+    try {
+      await api.setQuantity(id, next);
+      recordAction({ type: 'qty', itemId: id, previousValue: current });
+      if (delta > 0) playQtyUpSound(); else playQtyDownSound();
+      // Patch the DOM in place instead of a full renderList() — that was
+      // re-fetching + rebuilding the whole view on every +/- tap, which
+      // visibly flashed a "Loading list…" screen for a one-number change.
+      applyQuantityLocally(root, items, id, next);
+      btn.disabled = false;
+      showToast(`Quantity updated to ${next}`, {
+        type: 'success',
+        actionLabel: 'Undo',
+        onAction: async () => {
+          await performUndo();
+          renderList(root);
+        },
+      });
+    } catch (err) {
+      showToast(`Could not update quantity: ${err.message}`);
+      btn.disabled = false;
+    }
+  });
+}
+
 // Product-database search-and-add (the item-matcher-backed flow the
 // Telegram bot's inline-keyboard search maps to) — folded into the List
 // view instead of a separate Search tab.
-function wireProductSearch(root) {
+function wireProductSearch(root, items) {
   const input = root.querySelector('#search-input');
   const clearBtn = root.querySelector('#search-clear');
   const resultsEl = root.querySelector('#search-results');
@@ -339,7 +352,18 @@ function wireProductSearch(root) {
           renderList(root);
         },
       });
-      renderList(root);
+      // Local insert instead of a full renderList() — same reasoning as
+      // applyQuantityLocally: avoids the "Loading list…" flash and, here,
+      // avoids dropping focus/scroll too, which matters more for add since
+      // clearing-and-refocusing the search input is what makes adding
+      // several items back to back not need a re-tap each time.
+      addItemLocally(root, items, added);
+      clearTimeout(debounceTimer);
+      input.value = '';
+      clearBtn.hidden = true;
+      resultsEl.innerHTML = '';
+      currentResolution = null;
+      input.focus();
     } catch (err) {
       card.classList.remove('picking');
       showToast(`Could not add: ${err.message}`);
@@ -383,23 +407,13 @@ function updateCartBadge(totalQty) {
   }
 }
 
-// Patches just the changed item's row + the cart badge + the total in
-// place, instead of a full renderList() re-fetch/rebuild (which flashed a
-// "Loading list…" screen for a single +/- tap). Falls back to a full
-// renderList() only if the Total card needs to appear/disappear entirely
-// (e.g. the last priced item's quantity dropped to where rounding makes a
-// 0kr total — rare, not worth a bespoke DOM-insertion path for).
-function applyQuantityLocally(root, items, id, next) {
-  const item = items.find((i) => i.id === id);
-  if (!item) return;
-  item.quantity = next;
-
-  const row = root.querySelector(`[data-qty-step][data-id="${id}"]`)?.closest('.item-row');
-  if (row) {
-    row.querySelector('.qty-stepper span').textContent = next;
-    row.querySelectorAll('[data-qty-step]').forEach((b) => (b.dataset.current = String(next)));
-  }
-
+// Shared tail end of every local-patch path (qty change, add, remove):
+// refresh the cart badge and tween the total to match the now-mutated
+// `items` array. Falls back to a full renderList() only if the Total card
+// needs to appear/disappear entirely (e.g. the last priced item was
+// removed, or its quantity dropped to where rounding makes a 0kr total —
+// rare, not worth a bespoke DOM-insertion path for).
+function updateBadgeAndTotal(root, items) {
   const totalQty = items.reduce((sum, i) => sum + (i.quantity || 1), 0);
   updateCartBadge(totalQty);
 
@@ -413,6 +427,59 @@ function applyQuantityLocally(root, items, id, next) {
   } else if (pricedTotal > 0 !== Boolean(totalEl)) {
     renderList(root); // the Total card needs to appear or disappear — full rebuild
   }
+}
+
+// Patches just the changed item's row + the cart badge + the total in
+// place, instead of a full renderList() re-fetch/rebuild (which flashed a
+// "Loading list…" screen for a single +/- tap).
+function applyQuantityLocally(root, items, id, next) {
+  const item = items.find((i) => i.id === id);
+  if (!item) return;
+  item.quantity = next;
+
+  const row = root.querySelector(`[data-qty-step][data-id="${id}"]`)?.closest('.item-row');
+  if (row) {
+    row.querySelector('.qty-stepper span').textContent = next;
+    row.querySelectorAll('[data-qty-step]').forEach((b) => (b.dataset.current = String(next)));
+  }
+
+  updateBadgeAndTotal(root, items);
+}
+
+// Splices a freshly-added item into the in-memory list and inserts its row
+// with the same entrance animation search-result cards use, instead of a
+// full renderList() (see addFromSearch — that flashed "Loading list…" and,
+// worse, dropped focus out of the search input between successive adds).
+function addItemLocally(root, items, item) {
+  items.push(item);
+  const list = root.querySelector('.item-list');
+  if (!list) return;
+
+  list.querySelector('.empty-state')?.remove();
+
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = itemRow(item);
+  const li = wrapper.firstElementChild;
+  li.classList.add('item-row-enter');
+  list.appendChild(li);
+  wireItemRow(li, root, items);
+
+  updateBadgeAndTotal(root, items);
+}
+
+// Removes the row from both the in-memory list and the DOM in place —
+// counterpart to addItemLocally, same reasoning (see wireRemoveButton).
+function removeItemLocally(root, items, itemId) {
+  const idx = items.findIndex((i) => i.id === itemId);
+  if (idx === -1) return;
+  items.splice(idx, 1);
+
+  root.querySelector(`[data-remove="${itemId}"]`)?.closest('.item-row')?.remove();
+
+  const list = root.querySelector('.item-list');
+  if (list && items.length === 0) list.innerHTML = emptyState();
+
+  updateBadgeAndTotal(root, items);
 }
 
 // Rolls the displayed total from its current value to the new one over a
