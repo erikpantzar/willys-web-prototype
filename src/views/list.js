@@ -10,6 +10,8 @@ import { pixelLoaderHtml } from '../loader.js';
 import { playAddSound, playQtyUpSound, playQtyDownSound, playRemoveSound, vibrateAdd, vibrateRemove } from '../sound.js';
 import dialogStyles from '../dialog.module.css';
 import itemRowStyles from '../components/ItemRow.module.css';
+import searchBoxStyles from '../components/SearchBox.module.css';
+import resultCardStyles from '../components/ResultCard.module.css';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const SEARCH_RESULT_LIMIT = 15;
@@ -275,13 +277,13 @@ export async function renderList(root) {
 
   root.innerHTML = `
     <div class="view-body view-body-top list-view-body">
-    <div class="search-section">
-      <form id="search-form" class="search-box">
+    <div class="${searchBoxStyles['search-section']}">
+      <form id="search-form" class="${searchBoxStyles['search-box']}">
         <svg width="18" height="18" viewBox="0 0 18 18" style="flex-shrink:0"><circle cx="8" cy="8" r="6" fill="none" stroke="var(--search-pill-fg)" stroke-width="2"></circle><line x1="12.2" y1="12.2" x2="16.5" y2="16.5" stroke="var(--search-pill-fg)" stroke-width="2" stroke-linecap="round"></line></svg>
         <input id="search-input" type="text" placeholder="Find products… e.g. 2 mjölk" autocomplete="off" autocapitalize="off" enterkeyhint="search" />
-        <button type="button" id="search-clear" class="search-clear-btn" hidden aria-label="Clear search">✕</button>
+        <button type="button" id="search-clear" class="${searchBoxStyles['search-clear-btn']}" hidden aria-label="Clear search">✕</button>
       </form>
-      <div id="search-results" class="results-grid"></div>
+      <div id="search-results" class="${searchBoxStyles['results-grid']}"></div>
     </div>
 
     <div class="list-rail">
@@ -818,25 +820,25 @@ function wireProductSearch(root, items) {
 }
 
 function resultCard(c, i, confirmedUrl) {
-  const size = c.size ? `<div class="result-size">${escapeHtml(c.size)}</div>` : '';
-  const price = c.price ? `<div class="result-price">${escapeHtml(c.price)} kr${c.priceUnit === 'kg' ? '/kg' : ''}</div>` : '';
+  const size = c.size ? `<div class="${resultCardStyles['result-size']}">${escapeHtml(c.size)}</div>` : '';
+  const price = c.price ? `<div class="${resultCardStyles['result-price']}">${escapeHtml(c.price)} kr${c.priceUnit === 'kg' ? '/kg' : ''}</div>` : '';
   const img = c.imageUrl
-    ? `<img class="result-img" src="${escapeHtml(c.imageUrl)}" loading="lazy" alt="" />`
-    : `<div class="result-img placeholder"></div>`;
+    ? `<img class="${resultCardStyles['result-img']}" src="${escapeHtml(c.imageUrl)}" loading="lazy" alt="" />`
+    : `<div class="${resultCardStyles['result-img']} placeholder"></div>`;
   const isConfirmed = confirmedUrl && c.url && c.url === confirmedUrl;
   const confirmedClass = isConfirmed ? ' confirmed' : '';
   // Staggered entrance (issue #24) — capped delay so a long result list
   // doesn't make the bottom cards visibly lag behind the search.
   const delay = Math.min(i, 8) * 40;
   return `
-    <div class="result-card${confirmedClass} result-card-enter" data-pick="${i}" style="animation-delay: ${delay}ms">
+    <div class="${resultCardStyles['result-card']}${confirmedClass} result-card-enter" data-pick="${i}" style="animation-delay: ${delay}ms">
       ${img}
-      ${isConfirmed ? '<div class="result-confirmed-badge">✓</div>' : ''}
-      <div class="result-info">
-        <div class="result-name">${escapeHtml(c.text || c.name)}</div>
+      ${isConfirmed ? `<div class="${resultCardStyles['result-confirmed-badge']}">✓</div>` : ''}
+      <div class="${resultCardStyles['result-info']}">
+        <div class="${resultCardStyles['result-name']}">${escapeHtml(c.text || c.name)}</div>
         ${size}
         ${price}
-        <div class="result-status"></div>
+        <div class="${resultCardStyles['result-status']}"></div>
       </div>
     </div>
   `;

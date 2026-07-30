@@ -1,0 +1,50 @@
+/* Search-result card (see resultCard() in list.js) — the item-matcher
+   candidate a search returns, before it's been added to the list. */
+.result-card {
+  touch-action: manipulation;
+  border: none;
+  border-radius: 1.25rem;
+  padding: 0.75rem;
+  background: var(--card);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.result-card:active { transform: scale(0.985); }
+/* State classes toggled via plain classList.add/remove (see addFromSearch)
+   and the confirmedClass string in resultCard() — :global since the state
+   token itself isn't looked up through this module, only combined with
+   the module's own .result-card. .result-card-enter/@keyframes result-pop
+   stay in style.css (shared with .item-row-enter's identical animation —
+   see ItemRow's migration for the same reasoning), so they're deliberately
+   not part of this module. */
+.result-card:global(.picking) { opacity: 0.5; pointer-events: none; }
+.result-card:global(.added) { box-shadow: 0 0 0 2px var(--list-btn); }
+.result-card:global(.confirmed) { box-shadow: 0 0 0 2px var(--search-btn); }
+.result-confirmed-badge {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  background: var(--search-btn);
+  color: white;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.result-img { width: 4rem; height: 4rem; flex-shrink: 0; object-fit: contain; background: white; border-radius: 0.9rem; }
+.result-img:global(.placeholder) { background: var(--tab-inactive-bg); }
+.result-info { flex: 1; min-width: 0; }
+.result-name { font-size: 0.95rem; font-weight: 700; font-family: 'Baloo 2', sans-serif; color: var(--ink); line-height: 1.2; }
+.result-size, .result-price { font-size: 0.78rem; color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 0.1rem; }
+.result-price { font-size: 0.9rem; color: var(--ink-soft); font-weight: 800; }
+.result-status { font-size: 0.75rem; color: var(--list-pill-fg); min-height: 1em; font-weight: 700; }

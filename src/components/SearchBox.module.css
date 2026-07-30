@@ -1,0 +1,25 @@
+/* Product-database search-and-add, folded into the List view (the
+   item-matcher-backed flow the Telegram bot's inline-keyboard search
+   maps to) rather than a separate Search tab. */
+.search-section { margin-bottom: 0.9rem; }
+.search-box {
+  background: var(--card); border: 2px solid var(--search-pill-bg); border-radius: 1.1rem; padding: 0.65rem 0.9rem;
+  display: flex; align-items: center; gap: 0.6rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+.search-box input { border: none; outline: none; background: transparent; padding: 0; }
+.search-clear-btn[hidden] { display: none; }
+.search-clear-btn {
+  flex-shrink: 0; width: 1.4rem; height: 1.4rem; padding: 0; border-radius: 50%;
+  border: none; background: var(--tab-inactive-bg); color: var(--muted);
+  font-size: 0.7rem; display: flex; align-items: center; justify-content: center;
+}
+.results-grid { display: flex; flex-direction: column; gap: 0.7rem; }
+.search-section .results-grid { margin-top: 0.6rem; }
+.search-section .results-grid:empty { margin-top: 0; }
+
+/* Tablet/desktop layout (issue #31) — .list-view-body/.list-rail stay
+   global (style.css), only the search-section side of this rule is local
+   to this component now. */
+@media (min-width: 900px) {
+  :global(.list-view-body) .search-section { flex: 0 0 400px; max-width: 400px; margin-bottom: 0; }
+}

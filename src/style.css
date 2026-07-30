@@ -78,13 +78,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 h1, h2, h3, button, .heading-font { font-family: 'Baloo 2', ui-sans-serif, sans-serif; }
-button, a, input[type="text"], .result-card, .slot-buttons button {
+button, a, input[type="text"], .slot-buttons button {
   touch-action: manipulation;
 }
 button { user-select: none; }
 button:active { transform: scale(0.96); }
-.result-card:active { transform: scale(0.985); }
-button, .result-card { transition: transform 0.1s ease; }
+button { transition: transform 0.1s ease; }
 
 /* #app fills exactly the viewport below the fixed .topnav — a frame, not a
    scroller itself. Views are permanent side-by-side panes inside it
@@ -142,7 +141,6 @@ button, .result-card { transition: transform 0.1s ease; }
     align-items: flex-start;
     gap: 2rem;
   }
-  .list-view-body .search-section { flex: 0 0 400px; max-width: 400px; margin-bottom: 0; }
   .list-view-body .list-rail { flex: 1 1 480px; max-width: 520px; min-width: 0; }
 }
 
@@ -169,23 +167,6 @@ button, .result-card { transition: transform 0.1s ease; }
   cursor: pointer; flex-shrink: 0;
 }
 
-/* Product-database search-and-add, folded into the List view (the
-   item-matcher-backed flow the Telegram bot's inline-keyboard search
-   maps to) rather than a separate Search tab. */
-.search-section { margin-bottom: 0.9rem; }
-.search-box {
-  background: var(--card); border: 2px solid var(--search-pill-bg); border-radius: 1.1rem; padding: 0.65rem 0.9rem;
-  display: flex; align-items: center; gap: 0.6rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-.search-box input { border: none; outline: none; background: transparent; padding: 0; }
-.search-clear-btn[hidden] { display: none; }
-.search-clear-btn {
-  flex-shrink: 0; width: 1.4rem; height: 1.4rem; padding: 0; border-radius: 50%;
-  border: none; background: var(--tab-inactive-bg); color: var(--muted);
-  font-size: 0.7rem; display: flex; align-items: center; justify-content: center;
-}
-.search-section .results-grid { margin-top: 0.6rem; }
-.search-section .results-grid:empty { margin-top: 0; }
 
 /* Top, not bottom (was a fixed bottom bar — iOS pushes that up above the
    keyboard while typing, a poor experience; a top bar never fights the
@@ -534,20 +515,6 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 .list-status { margin-top: 0.7rem; font-size: 0.78rem; color: var(--muted); font-weight: 700; }
 .list-actions { margin-top: 1rem; }
 
-.results-grid { display: flex; flex-direction: column; gap: 0.7rem; }
-.result-card {
-  border: none;
-  border-radius: 1.25rem;
-  padding: 0.75rem;
-  background: var(--card);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  cursor: pointer;
-  transition: opacity 0.15s;
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
 /* Playful staggered entrance as results land (issue #24) — each card's
    animation-delay is set inline per-index in list.js's resultCard(). */
 .result-card-enter { animation: result-pop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
@@ -565,33 +532,6 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 @media (prefers-reduced-motion: reduce) {
   .item-row-enter { animation: none; }
 }
-.result-card.picking { opacity: 0.5; pointer-events: none; }
-.result-card.added { box-shadow: 0 0 0 2px var(--list-btn); }
-.result-card.confirmed { box-shadow: 0 0 0 2px var(--search-btn); }
-.result-confirmed-badge {
-  position: absolute;
-  top: 0.4rem;
-  right: 0.4rem;
-  background: var(--search-btn);
-  color: white;
-  width: 1.3rem;
-  height: 1.3rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-.result-img { width: 4rem; height: 4rem; flex-shrink: 0; object-fit: contain; background: white; border-radius: 0.9rem; }
-.result-img.placeholder { background: var(--tab-inactive-bg); }
-.result-info { flex: 1; min-width: 0; }
-.result-name { font-size: 0.95rem; font-weight: 700; font-family: 'Baloo 2', sans-serif; color: var(--ink); line-height: 1.2; }
-.result-size, .result-price { font-size: 0.78rem; color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 0.1rem; }
-.result-price { font-size: 0.9rem; color: var(--ink-soft); font-weight: 800; }
-.result-status { font-size: 0.75rem; color: var(--list-pill-fg); min-height: 1em; font-weight: 700; }
-
 /* Soonest-available shortcut, above the full date-group list — surfaces the
    single fastest slot so picking it doesn't require scanning every group
    first. The matching slot is also marked with ⚡ where it appears in its
