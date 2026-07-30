@@ -5,6 +5,19 @@ A small installable PWA front-end for the Willys shopping list — everything th
 with an always-visible list (remove/qty buttons instead of `/remove <n>`), a richer
 search-as-you-type with images and more results, and a wider delivery-time picker.
 
+## Try it without Tailscale
+
+**[erikpantzar.github.io/willys-web-prototype/?demo=1](https://erikpantzar.github.io/willys-web-prototype/?demo=1)**
+— runs entirely on seeded sample data (`src/fakeData.js`), no tailnet
+connection needed. Good for trying the interactions/design, or just showing
+someone what this is without giving them tailnet access. It's the exact
+same build as the real thing — just swaps the backend calls in `src/api.js`
+for an in-memory fake (see `src/api.fake.js`), no server, no database.
+
+The `?demo=1` sticks around in `localStorage` once it's set, so after that
+first visit the plain root URL also stays in demo mode until it's toggled
+off in Settings (⚙).
+
 ## How it reaches the backend
 
 This is a static site (deployed to GitHub Pages) that talks directly, from the browser, to three
@@ -27,6 +40,16 @@ this public repo, since it's not needed by anyone off the tailnet anyway.
 npm install
 npm run dev
 ```
+
+Open the printed local URL with `?demo=1` appended (e.g.
+`http://localhost:5173/?demo=1`) to develop or poke around against the same
+seeded sample data as the [public demo](#try-it-without-tailscale) above —
+the whole app, on any machine, no Tailscale or backend reachable at all.
+Nothing under `src/` makes a real network call in that mode except to fetch
+its own JS/CSS.
+
+`npm test` runs the unit tests (`src/format.test.js`) — also fully offline,
+no server, no tailnet, no database, works the same on any machine.
 
 ## Deploy
 

@@ -8,19 +8,59 @@ function svgIcon(emoji, bg) {
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
+// A broader catalog than the original 12-item seed — enough spread across
+// categories (dairy, produce, bakery, meat/deli, pantry, drinks, household)
+// that a visitor trying the demo can search for more or less whatever
+// grocery item comes to mind and actually get a result, not just the
+// handful of items the rest of the seed data happens to reference.
 export const CATALOG = [
+  // Dairy & eggs
   { name: 'Mjölk Färsk 3%, Arla', url: '/p/mjolk-3', price: '26,90', priceUnit: 'st', size: '3l', imageUrl: svgIcon('🥛', '#eaf3ee') },
   { name: 'Mjölk Färsk 1,5%, Arla', url: '/p/mjolk-15', price: '12,90', priceUnit: 'st', size: '1l', imageUrl: svgIcon('🥛', '#eaf3ee') },
   { name: 'Havredryck, Oatly', url: '/p/oatly', price: '24,90', priceUnit: 'st', size: '1l', imageUrl: svgIcon('🌾', '#f3efe2') },
+  { name: 'Filmjölk 3%, Arla', url: '/p/filmjolk', price: '15,90', priceUnit: 'st', size: '1l', imageUrl: svgIcon('🥣', '#eaf3ee') },
+  { name: 'Yoghurt Naturell 3%, Skånemejerier', url: '/p/yoghurt', price: '22,90', priceUnit: 'st', size: '1kg', imageUrl: svgIcon('🥣', '#eaf3ee') },
+  { name: 'Smör Normalsaltat 82%, Svenskt Smör', url: '/p/smor', price: '37,50', priceUnit: 'st', size: '250g', imageUrl: svgIcon('🧈', '#fbf3d8') },
+  { name: 'Ägg, 12-pack, Kronägg', url: '/p/agg', price: '42,90', priceUnit: 'st', size: '12st', imageUrl: svgIcon('🥚', '#f6ece0') },
+  { name: 'Grädde Vispgrädde 40%, Arla', url: '/p/gradde', price: '28,90', priceUnit: 'st', size: '5dl', imageUrl: svgIcon('🥛', '#eaf3ee') },
+  { name: 'Riven Ost Prästost 26%, Arla', url: '/p/ost', price: '54,90', priceUnit: 'st', size: '400g', imageUrl: svgIcon('🧀', '#fbf3d8') },
+
+  // Produce
   { name: 'Äpple Royal Gala Klass 1', url: '/p/apple', price: '26,90', priceUnit: 'kg', size: '~200g/st, priced /kg (weight varies)', imageUrl: svgIcon('🍎', '#fbeaea') },
+  { name: 'Bananer Fairtrade', url: '/p/banan', price: '19,90', priceUnit: 'kg', size: '~140g/st, priced /kg (weight varies)', imageUrl: svgIcon('🍌', '#fbf3d8') },
   { name: 'Gurka Sverige Klass 1', url: '/p/gurka', price: '14,90', priceUnit: 'st', size: '1st', imageUrl: svgIcon('🥒', '#eaf3ee') },
+  { name: 'Tomater Cocktail Klass 1', url: '/p/tomat', price: '29,90', priceUnit: 'st', size: '350g', imageUrl: svgIcon('🍅', '#fbeaea') },
+  { name: 'Avokado Klass 1', url: '/p/avokado', price: '17,90', priceUnit: 'st', size: '1st', imageUrl: svgIcon('🥑', '#eaf3ee') },
+  { name: 'Potatis Fast, Sverige', url: '/p/potatis', price: '24,90', priceUnit: 'st', size: '2kg', imageUrl: svgIcon('🥔', '#f6ece0') },
+  { name: 'Lök Gul, Sverige', url: '/p/lok', price: '12,90', priceUnit: 'kg', size: '~110g/st, priced /kg (weight varies)', imageUrl: svgIcon('🧅', '#f6ece0') },
+  { name: 'Citron Klass 1', url: '/p/citron', price: '6,90', priceUnit: 'st', size: '1st', imageUrl: svgIcon('🍋', '#fbf3d8') },
+
+  // Bakery
+  { name: 'Bondbröd Runt, Östras Bröd', url: '/p/brod', price: '34,92', priceUnit: 'st', size: '1kg', imageUrl: svgIcon('🍞', '#f6ece0') },
+  { name: 'Kanelbullar, Pågen', url: '/p/kanelbullar', price: '29,90', priceUnit: 'st', size: '6-pack', imageUrl: svgIcon('🥐', '#f6ece0') },
+  { name: 'Croissant, Pågen', url: '/p/croissant', price: '26,90', priceUnit: 'st', size: '4-pack', imageUrl: svgIcon('🥐', '#f6ece0') },
+
+  // Meat & deli
   { name: 'Kebab Klassisk, Schysst Käk', url: '/p/kebab', price: '48,73', priceUnit: 'st', size: '275g', imageUrl: svgIcon('🥙', '#f6ece0') },
   { name: 'Het Kebabsås', url: '/p/kebabsas', price: '28,29', priceUnit: 'st', size: '335ml', imageUrl: svgIcon('🌶️', '#fbeaea') },
-  { name: 'Bondbröd Runt, Östras Bröd', url: '/p/brod', price: '34,92', priceUnit: 'st', size: '1kg', imageUrl: svgIcon('🍞', '#f6ece0') },
-  { name: 'Smör Normalsaltat 82%, Svenskt Smör', url: '/p/smor', price: '37,50', priceUnit: 'st', size: '250g', imageUrl: svgIcon('🧈', '#fbf3d8') },
-  { name: 'Filmjölk 3%, Arla', url: '/p/filmjolk', price: '15,90', priceUnit: 'st', size: '1l', imageUrl: svgIcon('🥣', '#eaf3ee') },
-  { name: 'Ägg, 12-pack, Kronägg', url: '/p/agg', price: '42,90', priceUnit: 'st', size: '12st', imageUrl: svgIcon('🥚', '#f6ece0') },
-  { name: 'Bananer Fairtrade', url: '/p/banan', price: '19,90', priceUnit: 'kg', size: '~140g/st, priced /kg (weight varies)', imageUrl: svgIcon('🍌', '#fbf3d8') },
+  { name: 'Kycklingfilé, Kronfågel', url: '/p/kyckling', price: '89,90', priceUnit: 'st', size: '900g', imageUrl: svgIcon('🍗', '#f6ece0') },
+  { name: 'Nötfärs 12%, Sverige', url: '/p/notfars', price: '69,90', priceUnit: 'st', size: '500g', imageUrl: svgIcon('🥩', '#fbeaea') },
+  { name: 'Bacon Skivat, Scan', url: '/p/bacon', price: '32,90', priceUnit: 'st', size: '140g', imageUrl: svgIcon('🥓', '#fbeaea') },
+  { name: 'Falukorv, Scan', url: '/p/falukorv', price: '24,90', priceUnit: 'st', size: '800g', imageUrl: svgIcon('🌭', '#fbeaea') },
+
+  // Pantry
+  { name: 'Pasta Spaghetti, Barilla', url: '/p/pasta', price: '18,90', priceUnit: 'st', size: '500g', imageUrl: svgIcon('🍝', '#f3efe2') },
+  { name: 'Ris Jasminris, Kung Markatta', url: '/p/ris', price: '32,90', priceUnit: 'st', size: '1kg', imageUrl: svgIcon('🍚', '#f3efe2') },
+  { name: 'Krossade Tomater, Bruna Bönor', url: '/p/tomatkross', price: '11,90', priceUnit: 'st', size: '400g', imageUrl: svgIcon('🥫', '#fbeaea') },
+  { name: 'Olivolja Extra Virgin, Zeta', url: '/p/olivolja', price: '69,90', priceUnit: 'st', size: '500ml', imageUrl: svgIcon('🫒', '#f3efe2') },
+  { name: 'Kaffe Bryggmalet, Gevalia', url: '/p/kaffe', price: '59,90', priceUnit: 'st', size: '450g', imageUrl: svgIcon('☕', '#f6ece0') },
+  { name: 'Diskmedel Original, Yes', url: '/p/diskmedel', price: '29,90', priceUnit: 'st', size: '500ml', imageUrl: svgIcon('🧴', '#eaf3ee') },
+  { name: 'Toalettpapper, Lambi', url: '/p/toapapper', price: '54,90', priceUnit: 'st', size: '8-pack', imageUrl: svgIcon('🧻', '#f3efe2') },
+
+  // Drinks & snacks
+  { name: 'Läsk Cola, Coca-Cola', url: '/p/cola', price: '22,90', priceUnit: 'st', size: '1,5l', imageUrl: svgIcon('🥤', '#fbeaea') },
+  { name: 'Chips Original, OLW', url: '/p/chips', price: '26,90', priceUnit: 'st', size: '275g', imageUrl: svgIcon('🍟', '#fbf3d8') },
+  { name: 'Chokladkaka Mjölkchoklad, Marabou', url: '/p/choklad', price: '32,90', priceUnit: 'st', size: '200g', imageUrl: svgIcon('🍫', '#f6ece0') },
 ];
 
 // Demo mode: track confirmed matches by query (normalized lowercase) → URL.
@@ -29,6 +69,12 @@ export const demoConfirmedByQuery = new Map([
   ['mjölk', '/p/mjolk-3'],
   ['gurka', '/p/gurka'],
   ['kebab', '/p/kebab'],
+  ['bröd', '/p/brod'],
+  ['ägg', '/p/agg'],
+  ['smör', '/p/smor'],
+  ['banan', '/p/banan'],
+  ['kaffe', '/p/kaffe'],
+  ['pasta', '/p/pasta'],
 ]);
 
 export function seedListItems() {
