@@ -11,6 +11,7 @@ import { burstConfetti } from '../confetti.js';
 import itemRowStyles from '../components/ItemRow.module.css';
 import iconButtonStyles from '../components/IconButton.module.css';
 import deliverySlotsStyles from '../components/DeliverySlots.module.css';
+import fullscreenModalStyles from '../components/FullscreenModal.module.css';
 
 // Delivery status state: 'idle' | 'loading' | 'ready'
 let deliveryStatus = 'idle';
@@ -290,7 +291,7 @@ async function openConfirmModal(root, slot, slotBtn) {
   }
 
   const backdrop = document.createElement('div');
-  backdrop.className = 'fullscreen-modal-backdrop';
+  backdrop.className = fullscreenModalStyles['fullscreen-modal-backdrop'];
   const who = getIdentity();
   const totalQty = items.reduce((sum, i) => sum + (i.quantity || 1), 0);
   const pricedTotal = items.reduce((sum, i) => {
@@ -300,11 +301,11 @@ async function openConfirmModal(root, slot, slotBtn) {
 
   function renderBody(inner) {
     backdrop.innerHTML = `
-      <div class="fullscreen-modal-header">
-        <div class="fullscreen-modal-title">Confirm order</div>
+      <div class="${fullscreenModalStyles['fullscreen-modal-header']}">
+        <div class="${fullscreenModalStyles['fullscreen-modal-title']}">Confirm order</div>
         <button class="${iconButtonStyles['toolbar-icon-btn']}" id="modal-close" title="Cancel">✕</button>
       </div>
-      <div class="fullscreen-modal-body">${inner}</div>
+      <div class="${fullscreenModalStyles['fullscreen-modal-body']}">${inner}</div>
     `;
     backdrop.querySelector('#modal-close')?.addEventListener('click', cancel);
   }
@@ -340,7 +341,7 @@ async function openConfirmModal(root, slot, slotBtn) {
     <div class="signoff-row muted">
       Confirming as <strong>${escapeHtml(who)}</strong>. This sends the list for shopping and starts a fresh one — can't be undone.
     </div>
-    <div class="fullscreen-modal-actions">
+    <div class="${fullscreenModalStyles['fullscreen-modal-actions']}">
       <button id="confirm-yes" class="btn-send">🎉 Send it!</button>
       <button id="confirm-no">Cancel</button>
     </div>
@@ -358,7 +359,7 @@ async function openConfirmModal(root, slot, slotBtn) {
       try {
         verified = await verifySlotStillAvailable(slot);
       } catch (err) {
-        renderBody(`<div class="error">Could not re-check availability: ${escapeHtml(err.message)}</div><div class="fullscreen-modal-actions"><button id="modal-close-2">Close</button></div>`);
+        renderBody(`<div class="error">Could not re-check availability: ${escapeHtml(err.message)}</div><div class="${fullscreenModalStyles['fullscreen-modal-actions']}"><button id="modal-close-2">Close</button></div>`);
         backdrop.querySelector('#modal-close-2').addEventListener('click', cancel);
         return;
       }
@@ -382,7 +383,7 @@ async function openConfirmModal(root, slot, slotBtn) {
       setDeliveryStatus('idle');
       renderCelebration(backdrop, root, finalSlot, who, totalQty, pricedTotal);
     } catch (err) {
-      renderBody(`<div class="error">Could not finalize: ${escapeHtml(err.message)}</div><div class="fullscreen-modal-actions"><button id="modal-close-2">Close</button></div>`);
+      renderBody(`<div class="error">Could not finalize: ${escapeHtml(err.message)}</div><div class="${fullscreenModalStyles['fullscreen-modal-actions']}"><button id="modal-close-2">Close</button></div>`);
       backdrop.querySelector('#modal-close-2').addEventListener('click', cancel);
     }
   });
@@ -396,11 +397,11 @@ async function openConfirmModal(root, slot, slotBtn) {
 // closes it back to a quieter confirmation in the pane itself.
 function renderCelebration(backdrop, root, finalSlot, who, totalQty, pricedTotal) {
   backdrop.innerHTML = `
-    <div class="fullscreen-modal-header">
-      <div class="fullscreen-modal-title">🎉 Order sent!</div>
+    <div class="${fullscreenModalStyles['fullscreen-modal-header']}">
+      <div class="${fullscreenModalStyles['fullscreen-modal-title']}">🎉 Order sent!</div>
       <button class="${iconButtonStyles['toolbar-icon-btn']}" id="celebration-done" title="Done">✕</button>
     </div>
-    <div class="fullscreen-modal-body celebration-body">
+    <div class="${fullscreenModalStyles['fullscreen-modal-body']} celebration-body">
       <div class="celebration-badge">✓</div>
       <div class="celebration-message">Nice one, ${escapeHtml(who)}! Delivery is on its way.</div>
       <div class="receipt-card">
