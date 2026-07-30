@@ -31,3 +31,9 @@ npm run dev
 ## Deploy
 
 Push to `main` — `.github/workflows/deploy.yml` builds with Vite and publishes to GitHub Pages.
+
+## Components
+
+New UI work follows [docs/COMPONENTS.md](docs/COMPONENTS.md) — one file pair (JS + CSS Module)
+per component, simple props-in/callback-out interfaces. `style.css` is migrating toward this
+incrementally — see willys-web-prototype#43 for the checklist.
