@@ -7,7 +7,7 @@ import { getWho, getIdentity, setWho } from '../who.js';
 import { FAMILY_MEMBERS, personaFor, personaBadgeHtml } from '../personas.js';
 import { recordAction, performUndo } from '../undo.js';
 import { pixelLoaderHtml } from '../loader.js';
-import { playAddSound, playQtyUpSound, playQtyDownSound, vibrateAdd } from '../sound.js';
+import { playAddSound, playQtyUpSound, playQtyDownSound, playRemoveSound, vibrateAdd, vibrateRemove } from '../sound.js';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const SEARCH_RESULT_LIMIT = 15;
@@ -215,6 +215,8 @@ function wireRemoveButton(btn, root, items) {
       if (item) {
         recordAction({ type: 'remove', itemId, text: item.text, who: item.added_by });
       }
+      playRemoveSound();
+      vibrateRemove();
       // Same local-patch treatment as qty +/- (see applyQuantityLocally) —
       // a full renderList() here flashed "Loading list…" and dropped scroll
       // position for what's visually just one row disappearing.
