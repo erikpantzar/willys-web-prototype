@@ -272,15 +272,7 @@ export async function renderList(root) {
   const activeSortMode = SORT_MODES.find((m) => m.id === sortMode);
 
   root.innerHTML = `
-    <div class="view-body view-body-top">
-    <div class="view-toolbar list-toolbar">
-      <button type="button" class="toolbar-icon-btn" id="sort-btn" title="Sort: ${escapeHtml(activeSortMode.label)} (tap to cycle)">${escapeHtml(activeSortMode.glyph)}</button>
-      <button type="button" class="toolbar-icon-btn${isFilterActive(filterState) ? ' active' : ''}" id="filter-btn" title="Filter list">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M8 12h8M11 18h2" stroke="var(--list-pill-fg)" stroke-width="2" stroke-linecap="round"></path></svg>
-        ${isFilterActive(filterState) ? `<span class="filter-count-badge">${activeFilterCount(filterState)}</span>` : ''}
-      </button>
-    </div>
-    ${isFilterActive(filterState) ? `<div class="filter-banner" id="filter-banner"><span>${escapeHtml(filterBannerText())}</span><button type="button" class="filter-banner-clear-btn" aria-label="Clear filters">✕</button></div>` : ''}
+    <div class="view-body view-body-top list-view-body">
     <div class="search-section">
       <form id="search-form" class="search-box">
         <svg width="18" height="18" viewBox="0 0 18 18" style="flex-shrink:0"><circle cx="8" cy="8" r="6" fill="none" stroke="var(--search-pill-fg)" stroke-width="2"></circle><line x1="12.2" y1="12.2" x2="16.5" y2="16.5" stroke="var(--search-pill-fg)" stroke-width="2" stroke-linecap="round"></line></svg>
@@ -289,6 +281,16 @@ export async function renderList(root) {
       </form>
       <div id="search-results" class="results-grid"></div>
     </div>
+
+    <div class="list-rail">
+    <div class="view-toolbar list-toolbar">
+      <button type="button" class="toolbar-icon-btn" id="sort-btn" title="Sort: ${escapeHtml(activeSortMode.label)} (tap to cycle)">${escapeHtml(activeSortMode.glyph)}</button>
+      <button type="button" class="toolbar-icon-btn${isFilterActive(filterState) ? ' active' : ''}" id="filter-btn" title="Filter list">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M8 12h8M11 18h2" stroke="var(--list-pill-fg)" stroke-width="2" stroke-linecap="round"></path></svg>
+        ${isFilterActive(filterState) ? `<span class="filter-count-badge">${activeFilterCount(filterState)}</span>` : ''}
+      </button>
+    </div>
+    ${isFilterActive(filterState) ? `<div class="filter-banner" id="filter-banner"><span>${escapeHtml(filterBannerText())}</span><button type="button" class="filter-banner-clear-btn" aria-label="Clear filters">✕</button></div>` : ''}
 
     <ul class="item-list">
       ${items.length === 0 ? emptyState() : visibleItems.length === 0 ? filteredEmptyState() : visibleItems.map(itemRow).join('')}
@@ -311,6 +313,7 @@ export async function renderList(root) {
 
     <div class="list-actions">
       <button id="reset-btn" class="danger">Reset list</button>
+    </div>
     </div>
     </div>
   `;

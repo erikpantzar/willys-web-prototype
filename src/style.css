@@ -124,6 +124,28 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
 
 .view-body { padding: 0 1rem 1.5rem; max-width: 640px; margin: 0 auto; }
 
+/* Tablet/desktop layout (issue #31) — above this breakpoint, the List
+   view's fixed 640px centered column (same as phone) wastes the extra
+   width instead of using it. Search + results move into a left rail,
+   the running list into a right rail, so adding an item is no longer a
+   separate "mode" from looking at what's already in the cart the way it
+   functionally is on a single phone-width column. Both rails still have
+   a bounded max-width — this isn't "stretch the content to fill the
+   screen", same tap-target/line-length reasoning as phone, just laid
+   out side by side instead of stacked. Below the breakpoint, .list-rail
+   is a no-op wrapper (it wasn't there at all before #31; on phone it
+   just contributes no layout of its own, same DOM order as always). */
+@media (min-width: 900px) {
+  .list-view-body {
+    max-width: 960px;
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+  }
+  .list-view-body .search-section { flex: 0 0 400px; max-width: 400px; margin-bottom: 0; }
+  .list-view-body .list-rail { flex: 1 1 480px; max-width: 520px; min-width: 0; }
+}
+
 .demo-banner {
   background: var(--list-btn);
   color: white;
