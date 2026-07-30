@@ -1,12 +1,13 @@
 'use strict';
 import * as api from '../api.js';
-import { extractPrice, isVariableWeight, formatSum, parseQuantity, formatProduct } from '../format.js';
+import { extractPrice, isVariableWeight, formatSum, parseQuantity, formatProduct, groupByDepartment } from '../format.js';
 import { showToast } from '../toast.js';
 import { confirmDialog } from '../dialog.js';
 import { getWho, getIdentity, setWho } from '../who.js';
 import { recordAction, performUndo } from '../undo.js';
 import { pixelLoaderHtml } from '../loader.js';
 import { playAddSound, playQtyUpSound, playQtyDownSound, vibrateAdd } from '../sound.js';
+import { getGroupByDepartment, setGroupByDepartment } from '../settings.js';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const SEARCH_RESULT_LIMIT = 15;
@@ -32,8 +33,17 @@ export async function renderList(root) {
   const totalQty = items.reduce((sum, i) => sum + (i.quantity || 1), 0);
   updateCartBadge(totalQty);
 
+  const grouped = getGroupByDepartment();
+
   root.innerHTML = `
     <div class="view-body view-body-top">
+    ${items.length > 0 ? `
+      <div class="view-toolbar">
+        <button class="toolbar-icon-btn${grouped ? ' active' : ''}" id="group-toggle" title="${grouped ? 'Show as one list' : 'Group by department'}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="var(--list-pill-fg)" stroke-width="2"></rect><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="var(--list-pill-fg)" stroke-width="2"></rect><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="var(--list-pill-fg)" stroke-width="2"></rect><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="var(--list-pill-fg)" stroke-width="2"></rect></svg>
+        </button>
+      </div>
+    ` : ''}
     <div class="search-section">
       <form id="search-form" class="search-box">
         <svg width="18" height="18" viewBox="0 0 18 18" style="flex-shrink:0"><circle cx="8" cy="8" r="6" fill="none" stroke="var(--search-pill-fg)" stroke-width="2"></circle><line x1="12.2" y1="12.2" x2="16.5" y2="16.5" stroke="var(--search-pill-fg)" stroke-width="2" stroke-linecap="round"></line></svg>
@@ -44,7 +54,7 @@ export async function renderList(root) {
     </div>
 
     <ul class="item-list">
-      ${items.length === 0 ? emptyState() : items.map(itemRow).join('')}
+      ${items.length === 0 ? emptyState() : grouped ? groupedItemsHtml(items) : items.map(itemRow).join('')}
     </ul>
 
     ${pricedTotal > 0 ? `
@@ -89,6 +99,11 @@ export async function renderList(root) {
   });
 
   wireProductSearch(root);
+
+  root.querySelector('#group-toggle')?.addEventListener('click', () => {
+    setGroupByDepartment(!grouped);
+    renderList(root);
+  });
 
   root.querySelectorAll('[data-remove]').forEach((btn) => {
     btn.addEventListener('click', async () => {
@@ -362,6 +377,21 @@ function emptyState() {
       <div class="empty-state-subtitle">Search for groceries above to start adding!</div>
     </li>
   `;
+}
+
+// Header `<li>`s interspersed with the same itemRow() markup used by the
+// flat view — no change to item rows themselves, so qty-stepper/remove
+// wiring (which just queries [data-qty-step]/[data-remove] across the
+// whole list) needs no changes either.
+function groupedItemsHtml(items) {
+  return groupByDepartment(items)
+    .map(
+      ({ name, items: groupItems }) => `
+        <li class="department-header" style="list-style: none">${escapeHtml(name)} <span class="department-count">${groupItems.length}</span></li>
+        ${groupItems.map(itemRow).join('')}
+      `
+    )
+    .join('');
 }
 
 function itemRow(item) {

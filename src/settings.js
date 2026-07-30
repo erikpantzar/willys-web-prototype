@@ -48,3 +48,19 @@ export function setDemoMode(on) {
   if (on) localStorage.setItem(DEMO_KEY, '1');
   else localStorage.removeItem(DEMO_KEY);
 }
+
+// Whether the list view groups items by department (see
+// willys-web-prototype#41) — off by default: right after the backend piece
+// (willys-item-matcher#1) ships, most items won't have a department yet,
+// so a grouped-by-default view would mostly show one big "Övrigt" bucket.
+// A device-local preference, same as demo mode, not a server-side setting.
+const GROUP_BY_DEPARTMENT_KEY = 'willys.groupByDepartment';
+
+export function getGroupByDepartment() {
+  return localStorage.getItem(GROUP_BY_DEPARTMENT_KEY) === '1';
+}
+
+export function setGroupByDepartment(on) {
+  if (on) localStorage.setItem(GROUP_BY_DEPARTMENT_KEY, '1');
+  else localStorage.removeItem(GROUP_BY_DEPARTMENT_KEY);
+}

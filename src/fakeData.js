@@ -31,14 +31,19 @@ export const demoConfirmedByQuery = new Map([
   ['kebab', '/p/kebab'],
 ]);
 
+// department_name seeded on most items (see willys-item-matcher#1 for where
+// this comes from for real) so demo mode (?demo=1) actually shows the
+// grouped view populated, not just one big "Övrigt" bucket — item 6 is
+// deliberately left without one, the same way a real freeform/unconfirmed
+// item would be, so the fallback bucket is demonstrable too.
 export function seedListItems() {
   const now = Date.now();
   return [
-    { id: 1, text: 'Kebab Klassisk, Schysst Käk (275g) — 48,73 kr', added_by: 'erik', added_at: new Date(now - 3600e3).toISOString(), done: 0, checked: 0, quantity: 1 },
-    { id: 2, text: 'Het Kebabsås (335ml) — 28,29 kr', added_by: 'erik', added_at: new Date(now - 3500e3).toISOString(), done: 0, checked: 0, quantity: 1 },
-    { id: 3, text: 'Bondbröd Runt (Östras Bröd 1kg) — 34,92 kr', added_by: 'anna', added_at: new Date(now - 3000e3).toISOString(), done: 0, checked: 0, quantity: 1 },
-    { id: 4, text: 'Smör Normalsaltat 82% (Svenskt Smör 250g) — 37,50 kr', added_by: 'anna', added_at: new Date(now - 2000e3).toISOString(), done: 0, checked: 0, quantity: 2 },
-    { id: 5, text: 'Äpple Royal Gala Klass 1 (~200g/st, priced /kg (weight varies)) — 26,90 kr/kg', added_by: 'erik', added_at: new Date(now - 1000e3).toISOString(), done: 0, checked: 0, quantity: 6 },
+    { id: 1, text: 'Kebab Klassisk, Schysst Käk (275g) — 48,73 kr', added_by: 'erik', added_at: new Date(now - 3600e3).toISOString(), done: 0, checked: 0, quantity: 1, department_name: 'Kött, chark & fågel' },
+    { id: 2, text: 'Het Kebabsås (335ml) — 28,29 kr', added_by: 'erik', added_at: new Date(now - 3500e3).toISOString(), done: 0, checked: 0, quantity: 1, department_name: 'Skafferi' },
+    { id: 3, text: 'Bondbröd Runt (Östras Bröd 1kg) — 34,92 kr', added_by: 'anna', added_at: new Date(now - 3000e3).toISOString(), done: 0, checked: 0, quantity: 1, department_name: 'Bröd & Kakor' },
+    { id: 4, text: 'Smör Normalsaltat 82% (Svenskt Smör 250g) — 37,50 kr', added_by: 'anna', added_at: new Date(now - 2000e3).toISOString(), done: 0, checked: 0, quantity: 2, department_name: 'Mejeri, ost & ägg' },
+    { id: 5, text: 'Äpple Royal Gala Klass 1 (~200g/st, priced /kg (weight varies)) — 26,90 kr/kg', added_by: 'erik', added_at: new Date(now - 1000e3).toISOString(), done: 0, checked: 0, quantity: 6, department_name: 'Frukt & Grönt' },
     { id: 6, text: 'Diskmedel', added_by: 'erik', added_at: new Date(now - 500e3).toISOString(), done: 0, checked: 0, quantity: 1 },
   ];
 }

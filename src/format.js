@@ -48,3 +48,25 @@ export function isVariableWeight(text) {
 export function formatSum(total) {
   return total.toFixed(2).replace('.', ',');
 }
+
+// Buckets items by `department_name` (see willys-item-matcher#1 — not
+// populated on every item yet, only ones confirmed via the catalog path
+// after that ships) into an "Övrigt" catch-all for anything without one,
+// so a partially-migrated list never hides or breaks on missing data.
+// Groups sort alphabetically (Swedish collation) with Övrigt always last —
+// Willys' own site-menu order would be the ideal group order (see the
+// issue), but that ordering isn't exposed to this client by any endpoint
+// today, so this is the pragmatic stand-in until it is. Items keep their
+// existing relative order within each group.
+const UNCATEGORIZED = 'Övrigt';
+export function groupByDepartment(items) {
+  const groups = new Map();
+  for (const item of items) {
+    const key = item.department_name || UNCATEGORIZED;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  }
+  const names = [...groups.keys()].filter((k) => k !== UNCATEGORIZED).sort((a, b) => a.localeCompare(b, 'sv'));
+  if (groups.has(UNCATEGORIZED)) names.push(UNCATEGORIZED);
+  return names.map((name) => ({ name, items: groups.get(name) }));
+}

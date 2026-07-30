@@ -7,6 +7,7 @@ import {
   extractPrice,
   isVariableWeight,
   formatSum,
+  groupByDepartment,
 } from './format.js';
 
 describe('parseQuantity', () => {
@@ -261,5 +262,60 @@ describe('formatSum', () => {
   it('rounds to 2 decimal places', () => {
     expect(formatSum(15.999)).toBe('16,00');
     expect(formatSum(11.111)).toBe('11,11');
+  });
+});
+
+describe('groupByDepartment', () => {
+  function item(id, department_name) {
+    return { id, text: `item ${id}`, department_name };
+  }
+
+  it('groups items under their department_name', () => {
+    const groups = groupByDepartment([
+      item(1, 'Mejeri, ost & ägg'),
+      item(2, 'Skafferi'),
+      item(3, 'Mejeri, ost & ägg'),
+    ]);
+    expect(groups).toEqual([
+      { name: 'Mejeri, ost & ägg', items: [item(1, 'Mejeri, ost & ägg'), item(3, 'Mejeri, ost & ägg')] },
+      { name: 'Skafferi', items: [item(2, 'Skafferi')] },
+    ]);
+  });
+
+  it('sorts groups alphabetically using Swedish collation (å/ä/ö sort after z)', () => {
+    const groups = groupByDepartment([item(1, 'Ägg & Mejeri'), item(2, 'Bröd'), item(3, 'Skafferi')]);
+    expect(groups.map((g) => g.name)).toEqual(['Bröd', 'Skafferi', 'Ägg & Mejeri']);
+  });
+
+  it('buckets items with no department_name into "Övrigt"', () => {
+    const groups = groupByDepartment([item(1, undefined), item(2, 'Skafferi')]);
+    expect(groups.map((g) => g.name)).toEqual(['Skafferi', 'Övrigt']);
+    expect(groups[1].items).toEqual([item(1, undefined)]);
+  });
+
+  it('places "Övrigt" last even when it would sort first alphabetically', () => {
+    const groups = groupByDepartment([item(1, undefined), item(2, 'Äpplen')]);
+    expect(groups.map((g) => g.name)).toEqual(['Äpplen', 'Övrigt']);
+  });
+
+  it('omits the "Övrigt" group entirely when every item has a department', () => {
+    const groups = groupByDepartment([item(1, 'Skafferi')]);
+    expect(groups.map((g) => g.name)).toEqual(['Skafferi']);
+  });
+
+  it('preserves each item\'s relative order within its group', () => {
+    const a = item(1, 'Skafferi');
+    const b = item(2, 'Skafferi');
+    const groups = groupByDepartment([a, b]);
+    expect(groups[0].items).toEqual([a, b]);
+  });
+
+  it('returns an empty array for an empty item list', () => {
+    expect(groupByDepartment([])).toEqual([]);
+  });
+
+  it('treats an empty-string department_name the same as missing (falls into Övrigt)', () => {
+    const groups = groupByDepartment([item(1, '')]);
+    expect(groups.map((g) => g.name)).toEqual(['Övrigt']);
   });
 });

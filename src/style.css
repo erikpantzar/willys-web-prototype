@@ -146,6 +146,12 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
   background: var(--delivery-pill-bg); display: flex; align-items: center; justify-content: center;
   cursor: pointer; flex-shrink: 0;
 }
+/* Toggled-on state (e.g. the List view's group-by-department toggle,
+   willys-web-prototype#41) — filled with the view's own stronger accent
+   color instead of its pale pill background, so "on" reads as a real state
+   change, not a neutral button like every other toolbar icon. */
+.toolbar-icon-btn.active { background: var(--list-btn); }
+.toolbar-icon-btn.active svg rect { stroke: white; }
 
 /* Product-database search-and-add, folded into the List view (the
    item-matcher-backed flow the Telegram bot's inline-keyboard search
@@ -316,6 +322,20 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 .who-row label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.78rem; font-weight: 700; color: var(--muted); }
 
 .item-list { list-style: none; margin: 0.75rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.55rem; }
+
+/* Grouped-by-department view (see willys-web-prototype#41) — a plain text
+   header between item rows, not a collapsible accordion: the list isn't
+   long enough to need collapsing, and item rows underneath render exactly
+   as they do in the flat view. */
+.department-header {
+  display: flex; align-items: baseline; gap: 0.4rem;
+  margin: 0.9rem 0 -0.15rem; padding: 0 0.15rem;
+  font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em;
+  color: var(--muted);
+}
+.department-header:first-child { margin-top: 0; }
+.department-count { font-weight: 700; color: var(--muted); opacity: 0.7; }
+
 .item-row {
   display: flex;
   align-items: center;
