@@ -18,7 +18,10 @@
        (see main.js) is the other way to move between them. -->
   <nav class="topnav">
     <button data-route="list" class="tab active">
-      List
+      <!-- "List" wrapped so it (not the whole button) can flex-grow and
+           stay centered in the remaining space as the badge next to it
+           changes width (issue #38) — see .tab-label in style.css. -->
+      <span class="tab-label">List</span>
       <span id="cart-badge" class="cart-badge" hidden></span>
     </button>
     <button data-route="delivery" class="tab">
