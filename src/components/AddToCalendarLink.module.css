@@ -1,0 +1,10 @@
+/* "Add to calendar" link on the post-order celebration screen (see
+   delivery.js's renderCelebration). .celebration-actions stays global —
+   layout container, not part of this migration's listed class set. */
+.add-to-calendar-link {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.6rem 0.95rem; border-radius: 1rem;
+  background: var(--delivery-pill-bg); color: var(--delivery-pill-fg);
+  font-weight: 700; font-size: 0.85rem; text-decoration: none;
+}
+:global(.celebration-actions) .add-to-calendar-link { justify-content: center; width: 100%; }

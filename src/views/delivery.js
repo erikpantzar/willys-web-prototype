@@ -12,6 +12,7 @@ import itemRowStyles from '../components/ItemRow.module.css';
 import iconButtonStyles from '../components/IconButton.module.css';
 import deliverySlotsStyles from '../components/DeliverySlots.module.css';
 import fullscreenModalStyles from '../components/FullscreenModal.module.css';
+import addToCalendarLinkStyles from '../components/AddToCalendarLink.module.css';
 
 // Delivery status state: 'idle' | 'loading' | 'ready'
 let deliveryStatus = 'idle';
@@ -409,7 +410,7 @@ function renderCelebration(backdrop, root, finalSlot, who, totalQty, pricedTotal
         <div class="receipt-sub muted">${totalQty} item${totalQty === 1 ? '' : 's'}${pricedTotal > 0 ? ` · ${formatSum(pricedTotal)} kr` : ''}</div>
       </div>
       <div class="celebration-actions">
-        <a class="add-to-calendar-link" href="${buildDeliveryIcsDataUrl(finalSlot)}" download="willys-delivery.ics">📅 Add to calendar</a>
+        <a class="${addToCalendarLinkStyles['add-to-calendar-link']}" href="${buildDeliveryIcsDataUrl(finalSlot)}" download="willys-delivery.ics">📅 Add to calendar</a>
         ${navigator.share ? `<button id="share-order" class="share-btn">📤 Share with the household</button>` : ''}
       </div>
     </div>

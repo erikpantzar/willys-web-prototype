@@ -510,7 +510,6 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 .receipt-time { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 1.1rem; color: var(--delivery-pill-fg); }
 .receipt-sub { margin-top: 0.25rem; }
 .celebration-actions { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; max-width: 340px; }
-.celebration-actions .add-to-calendar-link { justify-content: center; width: 100%; }
 .share-btn { width: 100%; background: var(--search-pill-bg); color: var(--search-pill-fg); font-weight: 700; }
 .confetti-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
 @media (prefers-reduced-motion: reduce) {
@@ -525,13 +524,6 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 .error { color: var(--danger-fg); }
 .success { color: var(--list-pill-fg); }
 .empty.small { padding: 0.2rem 0; }
-
-.add-to-calendar-link {
-  display: inline-flex; align-items: center; gap: 0.4rem;
-  padding: 0.6rem 0.95rem; border-radius: 1rem;
-  background: var(--delivery-pill-bg); color: var(--delivery-pill-fg);
-  font-weight: 700; font-size: 0.85rem; text-decoration: none;
-}
 
 
 .confirm-time-banner {
