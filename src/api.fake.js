@@ -110,6 +110,15 @@ export async function confirm(resolutionId, choice) {
   return { name: candidate.name, url: candidate.url, price: candidate.price, priceUnit: candidate.priceUnit, size: candidate.size, imageUrl: candidate.imageUrl };
 }
 
+// Demo mode has no real backend/GitHub token to actually file anything
+// against — simulate success so the button/toast still behaves the same
+// way a real report would, without pretending to have created a real
+// issue anyone could click through to.
+export async function reportProductIssue() {
+  await delay(300);
+  return { url: null };
+}
+
 // --- delivery ---
 export async function getDeliveryTimesWide() {
   await delay(1800); // the real call launches a headless browser — slow enough that the loader matters
