@@ -1,6 +1,7 @@
 'use strict';
 import { getBaseUrl, setBaseUrl, isDemoMode, setDemoMode, isConnectionVerified, setConnectionVerified } from '../settings.js';
 import { healthCheck } from '../api.js';
+import styles from '../components/SettingsForm.module.css';
 
 export function renderSettings(root) {
   const demo = isDemoMode();
@@ -31,12 +32,12 @@ export function renderSettings(root) {
         ${demo ? '' : `
           <p class="muted">This only works on a device connected to your Tailscale network — the base URL is your home server's tailnet HTTPS address (see home-server/SPEC.md).</p>
           <label style="margin-top: 1rem">Backend base URL</label>
-          <div class="url-input-group">
-            <span class="url-prefix">https://</span>
+          <div class="${styles['url-input-group']}">
+            <span class="${styles['url-prefix']}">https://</span>
             <input id="base-url" type="text" value="${escapeHtml(urlHost)}" />
           </div>
           ${verified ? `<div class="success">✓ Connection verified</div>` : ''}
-          <div class="settings-actions" style="margin-top: 0.85rem">
+          <div class="${styles['settings-actions']}" style="margin-top: 0.85rem">
             <button id="save-url">Save</button>
             <button id="check-health">Test connection</button>
           </div>
@@ -69,12 +70,12 @@ export function renderSettings(root) {
       let html = '';
 
       // Per-service status
-      html += '<div class="health-services">';
+      html += `<div class="${styles['health-services']}">`;
       for (const service of services) {
         const icon = service.ok ? '✓' : '✕';
         const className = service.ok ? 'success' : 'error';
         const statusText = service.ok ? 'OK' : (service.kind === 'unreachable' ? 'Unreachable' : 'Error');
-        html += `<div class="health-line"><span class="${className}">${icon} ${service.service}: ${statusText}</span>`;
+        html += `<div class="${styles['health-line']}"><span class="${className}">${icon} ${service.service}: ${statusText}</span>`;
         if (service.detail) {
           html += `<span class="muted" style="display: block; margin-top: 0.2rem; margin-left: 1.2rem; font-size: 0.75rem;">${escapeHtml(service.detail)}</span>`;
         }
@@ -91,7 +92,7 @@ export function renderSettings(root) {
       } else {
         // Troubleshooting checklist if any service failed
         html += `
-          <details class="troubleshooting" open>
+          <details class="${styles['troubleshooting']}" open>
             <summary>Troubleshooting checklist</summary>
             <ul class="checklist">
               <li>Tailscale app is open and connected on this device</li>

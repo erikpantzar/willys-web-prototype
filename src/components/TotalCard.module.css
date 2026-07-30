@@ -1,0 +1,18 @@
+/* Running priced total shown at the bottom of the list (see list.js's
+   renderList) — #total-amount stays an ID selector in style.css since
+   IDs aren't scoped by CSS Modules and its pop animation has no reason
+   to move. */
+.total {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 1.1rem;
+  background: var(--card);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  font-weight: 800;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  justify-content: space-between;
+}
+.total .note { font-weight: normal; font-family: 'Nunito', sans-serif; font-size: 0.72rem; color: var(--muted); display: block; margin-top: 0.2rem; }

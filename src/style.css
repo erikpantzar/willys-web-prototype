@@ -6,65 +6,7 @@
    body text. See the mockup this was translated from for the original
    static reference. */
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap');
-
-:root {
-  color-scheme: light dark;
-  --bg: oklch(96% 0.015 85);
-  --ink: oklch(28% 0.03 50);
-  --ink-soft: oklch(45% 0.03 50);
-  --muted: oklch(55% 0.02 50);
-  --border: oklch(90% 0.01 85);
-  --card: #ffffff;
-
-  --danger-bg: oklch(95% 0.02 30);
-  --danger-fg: oklch(50% 0.15 30);
-
-  --search-grad-1: oklch(78% 0.14 40);
-  --search-grad-2: oklch(82% 0.12 45);
-  --search-btn: oklch(70% 0.17 35);
-  --search-pill-bg: oklch(93% 0.05 40);
-  --search-pill-fg: oklch(50% 0.15 40);
-
-  --list-btn: oklch(62% 0.14 155);
-  --list-pill-bg: oklch(93% 0.05 155);
-  --list-pill-fg: oklch(45% 0.14 155);
-
-  --delivery-btn: oklch(58% 0.13 245);
-  --delivery-pill-bg: oklch(93% 0.05 245);
-  --delivery-pill-fg: oklch(45% 0.13 245);
-
-  --tab-inactive-bg: oklch(96% 0.01 85);
-  --tab-inactive-fg: oklch(58% 0.02 50);
-
-  /* Kept for components not yet re-themed (health check, dialogs) */
-  --accent: var(--list-btn);
-  --accent-ink: var(--list-pill-fg);
-  --danger: var(--danger-fg);
-  --fg: var(--ink);
-  --pixel-off: var(--border);
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: oklch(22% 0.015 85);
-    --ink: oklch(92% 0.02 85);
-    --ink-soft: oklch(80% 0.02 85);
-    --muted: oklch(68% 0.02 85);
-    --border: oklch(32% 0.01 85);
-    --card: oklch(27% 0.015 85);
-    --tab-inactive-bg: oklch(30% 0.01 85);
-    --tab-inactive-fg: oklch(68% 0.02 85);
-  }
-}
-:root[data-theme="dark"] {
-  --bg: oklch(22% 0.015 85); --ink: oklch(92% 0.02 85); --ink-soft: oklch(80% 0.02 85);
-  --muted: oklch(68% 0.02 85); --border: oklch(32% 0.01 85); --card: oklch(27% 0.015 85);
-  --tab-inactive-bg: oklch(30% 0.01 85); --tab-inactive-fg: oklch(68% 0.02 85);
-}
-:root[data-theme="light"] {
-  --bg: oklch(96% 0.015 85); --ink: oklch(28% 0.03 50); --ink-soft: oklch(45% 0.03 50);
-  --muted: oklch(55% 0.02 50); --border: oklch(90% 0.01 85); --card: #ffffff;
-  --tab-inactive-bg: oklch(96% 0.01 85); --tab-inactive-fg: oklch(58% 0.02 50);
-}
+@import './tokens.css';
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; padding: 0; overscroll-behavior-y: none; height: 100%; }
@@ -78,13 +20,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 h1, h2, h3, button, .heading-font { font-family: 'Baloo 2', ui-sans-serif, sans-serif; }
-button, a, input[type="text"], .item-row, .result-card, .slot-buttons button {
+button, a, input[type="text"] {
   touch-action: manipulation;
 }
 button { user-select: none; }
 button:active { transform: scale(0.96); }
-.result-card:active, .item-row:active { transform: scale(0.985); }
-button, .result-card, .item-row { transition: transform 0.1s ease; }
+button { transition: transform 0.1s ease; }
 
 /* #app fills exactly the viewport below the fixed .topnav — a frame, not a
    scroller itself. Views are permanent side-by-side panes inside it
@@ -142,7 +83,6 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
     align-items: flex-start;
     gap: 2rem;
   }
-  .list-view-body .search-section { flex: 0 0 400px; max-width: 400px; margin-bottom: 0; }
   .list-view-body .list-rail { flex: 1 1 480px; max-width: 520px; min-width: 0; }
 }
 
@@ -162,30 +102,6 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
    that view's color identity (see .tab rules), so the view itself can
    start right at the top with its main content, no separate header. */
 .view-body-top { padding-top: 1rem; }
-.view-toolbar { display: flex; justify-content: flex-end; margin-bottom: 0.5rem; }
-.toolbar-icon-btn {
-  width: 2.2rem; height: 2.2rem; border-radius: 0.75rem; border: none;
-  background: var(--delivery-pill-bg); display: flex; align-items: center; justify-content: center;
-  cursor: pointer; flex-shrink: 0;
-}
-
-/* Product-database search-and-add, folded into the List view (the
-   item-matcher-backed flow the Telegram bot's inline-keyboard search
-   maps to) rather than a separate Search tab. */
-.search-section { margin-bottom: 0.9rem; }
-.search-box {
-  background: var(--card); border: 2px solid var(--search-pill-bg); border-radius: 1.1rem; padding: 0.65rem 0.9rem;
-  display: flex; align-items: center; gap: 0.6rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-.search-box input { border: none; outline: none; background: transparent; padding: 0; }
-.search-clear-btn[hidden] { display: none; }
-.search-clear-btn {
-  flex-shrink: 0; width: 1.4rem; height: 1.4rem; padding: 0; border-radius: 50%;
-  border: none; background: var(--tab-inactive-bg); color: var(--muted);
-  font-size: 0.7rem; display: flex; align-items: center; justify-content: center;
-}
-.search-section .results-grid { margin-top: 0.6rem; }
-.search-section .results-grid:empty { margin-top: 0; }
 
 /* Top, not bottom (was a fixed bottom bar — iOS pushes that up above the
    keyboard while typing, a poor experience; a top bar never fights the
@@ -486,16 +402,6 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 .item-list .item-persona-badge { cursor: pointer; }
 
 .item-list { list-style: none; margin: 0.75rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; }
-.item-row {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.65rem 0.7rem;
-  border-radius: 1.1rem;
-  background: var(--card);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
 /* Corner badge replacing the old "added by <name>" caption (issue #30) —
    sits on the card corner rather than taking a line of its own, so it
    reads as "whose item this is" without competing with the item text or
@@ -516,26 +422,6 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2), 0 0 0 2px var(--bg);
   z-index: 1;
 }
-.item-main { flex: 1; min-width: 0; }
-.item-text { word-break: break-word; font-size: 0.9rem; font-weight: 700; font-family: 'Baloo 2', sans-serif; color: var(--ink); }
-.qty-stepper { display: flex; align-items: center; gap: 0.3rem; background: var(--list-pill-bg); border-radius: 0.95rem; padding: 0.25rem; }
-.qty-stepper button { padding: 0; width: 2.1rem; height: 2.1rem; border-radius: 0.7rem; background: #fff; color: var(--list-pill-fg); font-variant-numeric: tabular-nums; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
-.qty-stepper span { font-variant-numeric: tabular-nums; min-width: 1.4ch; text-align: center; font-weight: 800; color: var(--list-pill-fg); }
-.remove-btn { background: var(--danger-bg); border: none; color: var(--danger-fg); font-size: 0.9rem; width: 2.1rem; height: 2.1rem; border-radius: 0.7rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-
-.total {
-  margin-top: 1rem;
-  padding: 0.9rem 1rem;
-  border-radius: 1.1rem;
-  background: var(--card);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  font-weight: 800;
-  font-family: 'Baloo 2', sans-serif;
-  font-size: 0.95rem;
-  font-variant-numeric: tabular-nums;
-  display: flex;
-  justify-content: space-between;
-}
 /* Small pop when the rolling total updates (see list.js's animateTotal) —
    the number itself counts up/down over the same window. */
 #total-amount { display: inline-block; }
@@ -547,24 +433,9 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 @media (prefers-reduced-motion: reduce) {
   #total-amount.total-pop { animation: none; }
 }
-.total .note { font-weight: normal; font-family: 'Nunito', sans-serif; font-size: 0.72rem; color: var(--muted); display: block; margin-top: 0.2rem; }
 .list-status { margin-top: 0.7rem; font-size: 0.78rem; color: var(--muted); font-weight: 700; }
 .list-actions { margin-top: 1rem; }
 
-.results-grid { display: flex; flex-direction: column; gap: 0.7rem; }
-.result-card {
-  border: none;
-  border-radius: 1.25rem;
-  padding: 0.75rem;
-  background: var(--card);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  cursor: pointer;
-  transition: opacity 0.15s;
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
 /* Playful staggered entrance as results land (issue #24) — each card's
    animation-delay is set inline per-index in list.js's resultCard(). */
 .result-card-enter { animation: result-pop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
@@ -582,33 +453,6 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 @media (prefers-reduced-motion: reduce) {
   .item-row-enter { animation: none; }
 }
-.result-card.picking { opacity: 0.5; pointer-events: none; }
-.result-card.added { box-shadow: 0 0 0 2px var(--list-btn); }
-.result-card.confirmed { box-shadow: 0 0 0 2px var(--search-btn); }
-.result-confirmed-badge {
-  position: absolute;
-  top: 0.4rem;
-  right: 0.4rem;
-  background: var(--search-btn);
-  color: white;
-  width: 1.3rem;
-  height: 1.3rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-.result-img { width: 4rem; height: 4rem; flex-shrink: 0; object-fit: contain; background: white; border-radius: 0.9rem; }
-.result-img.placeholder { background: var(--tab-inactive-bg); }
-.result-info { flex: 1; min-width: 0; }
-.result-name { font-size: 0.95rem; font-weight: 700; font-family: 'Baloo 2', sans-serif; color: var(--ink); line-height: 1.2; }
-.result-size, .result-price { font-size: 0.78rem; color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 0.1rem; }
-.result-price { font-size: 0.9rem; color: var(--ink-soft); font-weight: 800; }
-.result-status { font-size: 0.75rem; color: var(--list-pill-fg); min-height: 1em; font-weight: 700; }
-
 /* Soonest-available shortcut, above the full date-group list — surfaces the
    single fastest slot so picking it doesn't require scanning every group
    first. The matching slot is also marked with ⚡ where it appears in its
@@ -633,15 +477,6 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 .soonest-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.88; }
 .soonest-time { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
 .soonest-arrow { font-size: 1.2rem; opacity: 0.85; flex-shrink: 0; }
-
-.delivery-group { margin-bottom: 1.2rem; }
-.delivery-group h3 { font-family: 'Baloo 2', sans-serif; font-size: 0.9rem; font-weight: 600; margin: 0 0 0.6rem; color: var(--ink-soft); text-transform: none; letter-spacing: 0; }
-.slot-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.slot-buttons button { font-variant-numeric: tabular-nums; background: var(--card); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04); }
-.slot-buttons button.sel { background: var(--delivery-btn); color: white; }
-.slot-buttons button.is-soonest { box-shadow: 0 0 0 2px var(--delivery-btn); font-weight: 800; color: var(--delivery-pill-fg); }
-.confirm-dialog { margin-top: 1rem; padding: 1rem 1.1rem; border: none; border-radius: 1.1rem; background: var(--card); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06); }
-.confirm-actions { display: flex; gap: 0.5rem; margin-top: 0.85rem; }
 
 /* Confirm-order hero — a truck icon, the time, and a quick item-count/total
    stat row, so the last checkpoint before sending reads as a real order
@@ -675,7 +510,6 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 .receipt-time { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 1.1rem; color: var(--delivery-pill-fg); }
 .receipt-sub { margin-top: 0.25rem; }
 .celebration-actions { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; max-width: 340px; }
-.celebration-actions .add-to-calendar-link { justify-content: center; width: 100%; }
 .share-btn { width: 100%; background: var(--search-pill-bg); color: var(--search-pill-fg); font-weight: 700; }
 .confetti-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
 @media (prefers-reduced-motion: reduce) {
@@ -683,36 +517,7 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 }
 
 .settings-panel label { display: flex; flex-direction: column; gap: 0.3rem; margin: 0.7rem 0; font-weight: 700; }
-.url-input-group { display: flex; align-items: center; gap: 0; }
-.url-prefix {
-  display: flex;
-  align-items: center;
-  padding: 0.7rem 0.75rem;
-  background: var(--tab-inactive-bg);
-  color: var(--muted);
-  font-weight: 700;
-  font-family: ui-monospace, monospace;
-  border: 2px solid var(--border);
-  border-right: none;
-  border-radius: 1rem 0 0 1rem;
-  font-size: 0.9rem;
-}
-.url-input-group input {
-  border-radius: 0 1rem 1rem 0;
-  margin: 0;
-  font-family: ui-monospace, monospace;
-}
-.settings-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 #health-result { margin-top: 0.7rem; font-size: 0.85rem; }
-
-.health-services { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 0.8rem; }
-.health-line { font-size: 0.85rem; }
-
-.troubleshooting { margin-top: 0.8rem; border: none; border-radius: 1rem; padding: 0.7rem 0.9rem; background: var(--card); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); }
-.troubleshooting summary { cursor: pointer; font-weight: 700; font-family: 'Baloo 2', sans-serif; font-size: 0.85rem; user-select: none; }
-.troubleshooting summary:hover { color: var(--delivery-pill-fg); }
-.troubleshooting ul.checklist { list-style: disc inside; margin: 0.6rem 0 0 0; padding: 0; font-size: 0.8rem; color: var(--ink); }
-.troubleshooting ul.checklist li { margin-bottom: 0.3rem; }
 
 .muted { color: var(--muted); font-weight: 700; font-size: 0.8rem; }
 .loading, .empty, .error, .success { padding: 0.9rem 0; color: var(--muted); font-size: 0.85rem; font-weight: 700; }
@@ -720,131 +525,6 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 .success { color: var(--list-pill-fg); }
 .empty.small { padding: 0.2rem 0; }
 
-.add-to-calendar-link {
-  display: inline-flex; align-items: center; gap: 0.4rem;
-  padding: 0.6rem 0.95rem; border-radius: 1rem;
-  background: var(--delivery-pill-bg); color: var(--delivery-pill-fg);
-  font-weight: 700; font-size: 0.85rem; text-decoration: none;
-}
-
-.empty-state {
-  text-align: center; padding: 3rem 1.25rem; color: var(--muted);
-}
-.empty-state-icon {
-  width: 4.5rem; height: 4.5rem; border-radius: 50%; margin: 0 auto 0.9rem;
-  display: flex; align-items: center; justify-content: center;
-}
-.empty-state-title { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 1.05rem; color: var(--ink-soft); margin-bottom: 0.25rem; }
-.empty-state-subtitle { font-size: 0.85rem; font-weight: 700; }
-
-/* Bouncing-dot loader, replacing the old 8-bit segmented bar to match the
-   new playful design language — used for the two genuinely slow calls
-   (delivery-time preview, ~20s; a live catalog-fallback search). Same
-   pixelLoaderHtml() export/markup contract as before, restyled. */
-.pixel-loader { display: flex; flex-direction: column; align-items: center; padding: 2.5rem 1.25rem; text-align: center; }
-.pixel-loader .bar { display: flex; gap: 6px; margin-bottom: 0.5rem; }
-.pixel-loader .bar i {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--delivery-btn);
-  font-style: normal;
-  animation: fs-pop 1s ease-in-out infinite;
-}
-.pixel-loader .bar i:nth-child(2) { animation-delay: 0.2s; }
-.pixel-loader .bar i:nth-child(3) { animation-delay: 0.4s; }
-.pixel-loader .bar i:nth-child(n+4) { display: none; }
-@keyframes fs-pop { 0%, 100% { transform: scale(0.7); opacity: 0.6; } 50% { transform: scale(1); opacity: 1; } }
-.pixel-loader .label { font-size: 0.82rem; color: var(--ink-soft); font-weight: 700; margin-top: 0.3rem; font-family: 'Baloo 2', sans-serif; }
-@media (prefers-reduced-motion: reduce) {
-  .pixel-loader .bar i { animation: none; opacity: 1; transform: none; }
-}
-
-/* In-app toast/dialog, replacing native alert()/confirm() (issue #3) —
-   same card + button vocabulary as the rest of the design. */
-.toast-container {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: calc(1.25rem + env(safe-area-inset-bottom));
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0 1rem;
-  z-index: 100;
-  pointer-events: none;
-}
-.toast {
-  max-width: 640px;
-  width: 100%;
-  padding: 0.7rem 0.9rem;
-  border-radius: 1.1rem;
-  border: none;
-  background: var(--card);
-  color: var(--ink);
-  font-size: 0.85rem;
-  font-weight: 700;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-.toast > div {
-  flex: 1;
-}
-.toast-action {
-  font-size: 0.75rem;
-  padding: 0.4rem 0.7rem;
-  border-radius: 0.7rem;
-  border: none;
-  background: var(--tab-inactive-bg);
-  color: var(--ink);
-  cursor: pointer;
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-.toast-action:active { opacity: 0.7; }
-.toast-error { box-shadow: 0 0 0 2px var(--danger-fg), 0 4px 14px rgba(0, 0, 0, 0.15); color: var(--danger-fg); }
-.toast-error .toast-action { color: var(--danger-fg); background: var(--danger-bg); }
-.toast-success { box-shadow: 0 0 0 2px var(--list-btn), 0 4px 14px rgba(0, 0, 0, 0.15); color: var(--list-pill-fg); }
-.toast-success .toast-action { color: var(--list-pill-fg); background: var(--list-pill-bg); }
-
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  z-index: 200;
-}
-.modal-backdrop .confirm-dialog { max-width: 400px; width: 100%; margin: 0; }
-
-/* Fullscreen order-confirm modal (issue: delivery slot confirmation) —
-   the last checkpoint before a real order goes out, so it gets the whole
-   screen and the full list, not a small centered "are you sure?" card. */
-.fullscreen-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 300;
-  background: var(--bg);
-  display: flex;
-  flex-direction: column;
-}
-.fullscreen-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: calc(1rem + env(safe-area-inset-top)) 1.25rem 0.75rem 1.25rem;
-  flex-shrink: 0;
-}
-.fullscreen-modal-title { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 1.3rem; }
-.fullscreen-modal-body { flex: 1; overflow-y: auto; padding: 0 1.25rem calc(1.5rem + env(safe-area-inset-bottom)); max-width: 640px; margin: 0 auto; width: 100%; }
-.fullscreen-modal-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
-.fullscreen-modal-actions button { flex: 1; padding: 0.85rem 0; }
 
 .confirm-time-banner {
   background: var(--delivery-pill-bg);
@@ -878,5 +558,3 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 .setup-subtitle { font-size: 0.88rem; color: var(--ink-soft); font-weight: 700; margin-top: 0.4rem; max-width: 300px; line-height: 1.4; }
 .setup-form { width: 100%; max-width: 320px; margin-top: 1.75rem; text-align: left; }
 .setup-form label { display: block; font-family: 'Baloo 2', sans-serif; font-weight: 600; font-size: 0.85rem; color: var(--ink-soft); margin-bottom: 0.4rem; }
-.setup-form .settings-actions button { flex: 1; padding: 0.85rem 0; }
-.setup-form .settings-actions #save-url { background: var(--delivery-btn); color: white; }

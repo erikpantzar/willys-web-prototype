@@ -8,6 +8,13 @@ import { FAMILY_MEMBERS, personaFor, personaBadgeHtml } from '../personas.js';
 import { recordAction, performUndo } from '../undo.js';
 import { pixelLoaderHtml } from '../loader.js';
 import { playAddSound, playQtyUpSound, playQtyDownSound, playRemoveSound, vibrateAdd, vibrateRemove } from '../sound.js';
+import dialogStyles from '../dialog.module.css';
+import itemRowStyles from '../components/ItemRow.module.css';
+import searchBoxStyles from '../components/SearchBox.module.css';
+import resultCardStyles from '../components/ResultCard.module.css';
+import totalCardStyles from '../components/TotalCard.module.css';
+import emptyStateStyles from '../components/EmptyState.module.css';
+import iconButtonStyles from '../components/IconButton.module.css';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const SEARCH_RESULT_LIMIT = 15;
@@ -127,7 +134,7 @@ function rerenderItemList(root, items) {
   if (list) {
     const visible = applySortFilter(items);
     list.innerHTML = items.length === 0 ? emptyState() : visible.length === 0 ? filteredEmptyState() : visible.map(itemRow).join('');
-    list.querySelectorAll('.item-row').forEach((li) => wireItemRow(li, root, items));
+    list.querySelectorAll(`.${itemRowStyles['item-row']}`).forEach((li) => wireItemRow(li, root, items));
   }
 }
 
@@ -148,7 +155,7 @@ function wireSortFilterToolbar(root, items) {
 // actually showing underneath.
 function openFilterModal(root, items) {
   const backdrop = document.createElement('div');
-  backdrop.className = 'modal-backdrop';
+  backdrop.className = dialogStyles['modal-backdrop'];
 
   function personChips() {
     const names = [...new Set(items.map((i) => i.added_by))];
@@ -180,10 +187,10 @@ function openFilterModal(root, items) {
 
   function render() {
     backdrop.innerHTML = `
-      <div class="confirm-dialog filter-modal">
+      <div class="${dialogStyles['confirm-dialog']} filter-modal">
         <div class="filter-modal-header">
           <div class="filter-modal-title">Filter list</div>
-          <button type="button" class="toolbar-icon-btn" id="filter-modal-close" title="Close">✕</button>
+          <button type="button" class="${iconButtonStyles['toolbar-icon-btn']}" id="filter-modal-close" title="Close">✕</button>
         </div>
         <div class="filter-modal-section">
           <div class="who-label">Who</div>
@@ -240,9 +247,9 @@ function openFilterModal(root, items) {
 
 function filteredEmptyState() {
   return `
-    <li class="empty-state" style="list-style: none">
-      <div class="empty-state-title">No items match this filter</div>
-      <div class="empty-state-subtitle">Tap the banner above to clear it.</div>
+    <li class="${emptyStateStyles['empty-state']}" style="list-style: none">
+      <div class="${emptyStateStyles['empty-state-title']}">No items match this filter</div>
+      <div class="${emptyStateStyles['empty-state-subtitle']}">Tap the banner above to clear it.</div>
     </li>
   `;
 }
@@ -273,19 +280,19 @@ export async function renderList(root) {
 
   root.innerHTML = `
     <div class="view-body view-body-top list-view-body">
-    <div class="search-section">
-      <form id="search-form" class="search-box">
+    <div class="${searchBoxStyles['search-section']}">
+      <form id="search-form" class="${searchBoxStyles['search-box']}">
         <svg width="18" height="18" viewBox="0 0 18 18" style="flex-shrink:0"><circle cx="8" cy="8" r="6" fill="none" stroke="var(--search-pill-fg)" stroke-width="2"></circle><line x1="12.2" y1="12.2" x2="16.5" y2="16.5" stroke="var(--search-pill-fg)" stroke-width="2" stroke-linecap="round"></line></svg>
         <input id="search-input" type="text" placeholder="Find products… e.g. 2 mjölk" autocomplete="off" autocapitalize="off" enterkeyhint="search" />
-        <button type="button" id="search-clear" class="search-clear-btn" hidden aria-label="Clear search">✕</button>
+        <button type="button" id="search-clear" class="${searchBoxStyles['search-clear-btn']}" hidden aria-label="Clear search">✕</button>
       </form>
-      <div id="search-results" class="results-grid"></div>
+      <div id="search-results" class="${searchBoxStyles['results-grid']}"></div>
     </div>
 
     <div class="list-rail">
-    <div class="view-toolbar list-toolbar">
-      <button type="button" class="toolbar-icon-btn" id="sort-btn" title="Sort: ${escapeHtml(activeSortMode.label)} (tap to cycle)">${escapeHtml(activeSortMode.glyph)}</button>
-      <button type="button" class="toolbar-icon-btn${isFilterActive(filterState) ? ' active' : ''}" id="filter-btn" title="Filter list">
+    <div class="${iconButtonStyles['view-toolbar']} list-toolbar">
+      <button type="button" class="${iconButtonStyles['toolbar-icon-btn']}" id="sort-btn" title="Sort: ${escapeHtml(activeSortMode.label)} (tap to cycle)">${escapeHtml(activeSortMode.glyph)}</button>
+      <button type="button" class="${iconButtonStyles['toolbar-icon-btn']}${isFilterActive(filterState) ? ' active' : ''}" id="filter-btn" title="Filter list">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M8 12h8M11 18h2" stroke="var(--list-pill-fg)" stroke-width="2" stroke-linecap="round"></path></svg>
         ${isFilterActive(filterState) ? `<span class="filter-count-badge">${activeFilterCount(filterState)}</span>` : ''}
       </button>
@@ -297,9 +304,9 @@ export async function renderList(root) {
     </ul>
 
     ${pricedTotal > 0 ? `
-      <div class="total">
+      <div class="${totalCardStyles['total']}">
         Total: <span id="total-amount">${formatSum(pricedTotal)}</span> kr
-        ${missingPrice || anyVariable ? `<div class="note">${[missingPrice && 'some items have no price on file', anyVariable && 'some prices are per kg — weight varies'].filter(Boolean).join('; ')}</div>` : ''}
+        ${missingPrice || anyVariable ? `<div class="${totalCardStyles['note']}">${[missingPrice && 'some items have no price on file', anyVariable && 'some prices are per kg — weight varies'].filter(Boolean).join('; ')}</div>` : ''}
       </div>
     ` : ''}
 
@@ -324,7 +331,7 @@ export async function renderList(root) {
 
   wireSortFilterToolbar(root, items);
 
-  root.querySelectorAll('.item-row').forEach((li) => wireItemRow(li, root, items));
+  root.querySelectorAll(`.${itemRowStyles['item-row']}`).forEach((li) => wireItemRow(li, root, items));
 
   root.querySelector('#reset-btn').addEventListener('click', async () => {
     const ok = await confirmDialog("Clear the whole list and start fresh? Can't be undone.", { confirmLabel: 'Clear list' });
@@ -816,25 +823,25 @@ function wireProductSearch(root, items) {
 }
 
 function resultCard(c, i, confirmedUrl) {
-  const size = c.size ? `<div class="result-size">${escapeHtml(c.size)}</div>` : '';
-  const price = c.price ? `<div class="result-price">${escapeHtml(c.price)} kr${c.priceUnit === 'kg' ? '/kg' : ''}</div>` : '';
+  const size = c.size ? `<div class="${resultCardStyles['result-size']}">${escapeHtml(c.size)}</div>` : '';
+  const price = c.price ? `<div class="${resultCardStyles['result-price']}">${escapeHtml(c.price)} kr${c.priceUnit === 'kg' ? '/kg' : ''}</div>` : '';
   const img = c.imageUrl
-    ? `<img class="result-img" src="${escapeHtml(c.imageUrl)}" loading="lazy" alt="" />`
-    : `<div class="result-img placeholder"></div>`;
+    ? `<img class="${resultCardStyles['result-img']}" src="${escapeHtml(c.imageUrl)}" loading="lazy" alt="" />`
+    : `<div class="${resultCardStyles['result-img']} placeholder"></div>`;
   const isConfirmed = confirmedUrl && c.url && c.url === confirmedUrl;
   const confirmedClass = isConfirmed ? ' confirmed' : '';
   // Staggered entrance (issue #24) — capped delay so a long result list
   // doesn't make the bottom cards visibly lag behind the search.
   const delay = Math.min(i, 8) * 40;
   return `
-    <div class="result-card${confirmedClass} result-card-enter" data-pick="${i}" style="animation-delay: ${delay}ms">
+    <div class="${resultCardStyles['result-card']}${confirmedClass} result-card-enter" data-pick="${i}" style="animation-delay: ${delay}ms">
       ${img}
-      ${isConfirmed ? '<div class="result-confirmed-badge">✓</div>' : ''}
-      <div class="result-info">
-        <div class="result-name">${escapeHtml(c.text || c.name)}</div>
+      ${isConfirmed ? `<div class="${resultCardStyles['result-confirmed-badge']}">✓</div>` : ''}
+      <div class="${resultCardStyles['result-info']}">
+        <div class="${resultCardStyles['result-name']}">${escapeHtml(c.text || c.name)}</div>
         ${size}
         ${price}
-        <div class="result-status"></div>
+        <div class="${resultCardStyles['result-status']}"></div>
       </div>
     </div>
   `;
@@ -969,9 +976,9 @@ function applyQuantityLocally(root, items, id, next) {
     return;
   }
 
-  const row = root.querySelector(`[data-qty-step][data-id="${id}"]`)?.closest('.item-row');
+  const row = root.querySelector(`[data-qty-step][data-id="${id}"]`)?.closest(`.${itemRowStyles['item-row']}`);
   if (row) {
-    row.querySelector('.qty-stepper span').textContent = next;
+    row.querySelector(`.${itemRowStyles['qty-stepper']} span`).textContent = next;
     row.querySelectorAll('[data-qty-step]').forEach((b) => (b.dataset.current = String(next)));
   }
 
@@ -997,7 +1004,7 @@ function addItemLocally(root, items, item) {
     return;
   }
 
-  list.querySelector('.empty-state')?.remove();
+  list.querySelector(`.${emptyStateStyles['empty-state']}`)?.remove();
 
   const wrapper = document.createElement('div');
   wrapper.innerHTML = itemRow(item);
@@ -1022,7 +1029,7 @@ function removeItemLocally(root, items, itemId) {
     return;
   }
 
-  root.querySelector(`[data-remove="${itemId}"]`)?.closest('.item-row')?.remove();
+  root.querySelector(`[data-remove="${itemId}"]`)?.closest(`.${itemRowStyles['item-row']}`)?.remove();
 
   const list = root.querySelector('.item-list');
   if (list && items.length === 0) list.innerHTML = emptyState();
@@ -1060,29 +1067,29 @@ function animateTotal(el, newTotal) {
 
 function emptyState() {
   return `
-    <li class="empty-state" style="list-style: none">
-      <div class="empty-state-icon" style="background: var(--list-pill-bg)">
+    <li class="${emptyStateStyles['empty-state']}" style="list-style: none">
+      <div class="${emptyStateStyles['empty-state-icon']}" style="background: var(--list-pill-bg)">
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M4 6h16l-1.5 10.5a2 2 0 01-2 1.5H7.5a2 2 0 01-2-1.5L4 6z" stroke="var(--list-pill-fg)" stroke-width="1.8" stroke-linejoin="round"></path><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="var(--list-pill-fg)" stroke-width="1.8"></path></svg>
       </div>
-      <div class="empty-state-title">Your list is empty</div>
-      <div class="empty-state-subtitle">Search for groceries above to start adding!</div>
+      <div class="${emptyStateStyles['empty-state-title']}">Your list is empty</div>
+      <div class="${emptyStateStyles['empty-state-subtitle']}">Search for groceries above to start adding!</div>
     </li>
   `;
 }
 
 function itemRow(item) {
   return `
-    <li class="item-row">
+    <li class="${itemRowStyles['item-row']}">
       ${personaBadgeHtml(item.added_by)}
-      <div class="item-main">
-        <div class="item-text">${escapeHtml(item.text)}</div>
+      <div class="${itemRowStyles['item-main']}">
+        <div class="${itemRowStyles['item-text']}">${escapeHtml(item.text)}</div>
       </div>
-      <div class="qty-stepper">
+      <div class="${itemRowStyles['qty-stepper']}">
         <button data-qty-step="-1" data-id="${item.id}" data-current="${item.quantity}">−</button>
         <span>${item.quantity}</span>
         <button data-qty-step="1" data-id="${item.id}" data-current="${item.quantity}">+</button>
       </div>
-      <button class="remove-btn" data-remove="${item.id}">✕</button>
+      <button class="${itemRowStyles['remove-btn']}" data-remove="${item.id}">✕</button>
     </li>
   `;
 }

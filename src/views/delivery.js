@@ -8,6 +8,11 @@ import { extractPrice, formatSum } from '../format.js';
 import { personaBadgeHtml } from '../personas.js';
 import { playOrderConfirmedSound, vibrateOrderConfirmed } from '../sound.js';
 import { burstConfetti } from '../confetti.js';
+import itemRowStyles from '../components/ItemRow.module.css';
+import iconButtonStyles from '../components/IconButton.module.css';
+import deliverySlotsStyles from '../components/DeliverySlots.module.css';
+import fullscreenModalStyles from '../components/FullscreenModal.module.css';
+import addToCalendarLinkStyles from '../components/AddToCalendarLink.module.css';
 
 // Delivery status state: 'idle' | 'loading' | 'ready'
 let deliveryStatus = 'idle';
@@ -103,8 +108,8 @@ async function notifyIfBackgrounded() {
 function shell(inner) {
   return `
     <div class="view-body view-body-top">
-      <div class="view-toolbar">
-        <button class="toolbar-icon-btn" id="refresh-delivery" title="Refresh available times">
+      <div class="${iconButtonStyles['view-toolbar']}">
+        <button class="${iconButtonStyles['toolbar-icon-btn']}" id="refresh-delivery" title="Refresh available times">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 0113.66-5.66M20 12a8 8 0 01-13.66 5.66" stroke="var(--delivery-pill-fg)" stroke-width="2" stroke-linecap="round"></path><path d="M17 3v4h-4M7 21v-4h4" stroke="var(--delivery-pill-fg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
         </button>
       </div>
@@ -228,12 +233,12 @@ function wireRefresh(root) {
 
 function dateGroup(alt, soonestStartTime) {
   if (alt.slots.length === 0) {
-    return `<section class="delivery-group"><h3>${escapeHtml(alt.targetDate)}</h3><div class="empty small">No slots this day.</div></section>`;
+    return `<section class="${deliverySlotsStyles['delivery-group']}"><h3>${escapeHtml(alt.targetDate)}</h3><div class="empty small">No slots this day.</div></section>`;
   }
   return `
-    <section class="delivery-group">
+    <section class="${deliverySlotsStyles['delivery-group']}">
       <h3>${escapeHtml(alt.targetDate)} <span class="muted">(${escapeHtml(alt.label)})</span></h3>
-      <div class="slot-buttons">
+      <div class="${deliverySlotsStyles['slot-buttons']}">
         ${alt.slots
           .map((s) => {
             const isSoonest = s.startTime === soonestStartTime;
@@ -263,10 +268,10 @@ async function verifySlotStillAvailable(slot) {
 
 function itemSummaryRow(item) {
   return `
-    <li class="item-row item-row-readonly">
+    <li class="${itemRowStyles['item-row']} item-row-readonly">
       ${personaBadgeHtml(item.added_by)}
-      <div class="item-main">
-        <div class="item-text">${escapeHtml(item.text)}</div>
+      <div class="${itemRowStyles['item-main']}">
+        <div class="${itemRowStyles['item-text']}">${escapeHtml(item.text)}</div>
       </div>
       <div class="item-qty-readonly">×${item.quantity}</div>
     </li>
@@ -287,7 +292,7 @@ async function openConfirmModal(root, slot, slotBtn) {
   }
 
   const backdrop = document.createElement('div');
-  backdrop.className = 'fullscreen-modal-backdrop';
+  backdrop.className = fullscreenModalStyles['fullscreen-modal-backdrop'];
   const who = getIdentity();
   const totalQty = items.reduce((sum, i) => sum + (i.quantity || 1), 0);
   const pricedTotal = items.reduce((sum, i) => {
@@ -297,11 +302,11 @@ async function openConfirmModal(root, slot, slotBtn) {
 
   function renderBody(inner) {
     backdrop.innerHTML = `
-      <div class="fullscreen-modal-header">
-        <div class="fullscreen-modal-title">Confirm order</div>
-        <button class="toolbar-icon-btn" id="modal-close" title="Cancel">✕</button>
+      <div class="${fullscreenModalStyles['fullscreen-modal-header']}">
+        <div class="${fullscreenModalStyles['fullscreen-modal-title']}">Confirm order</div>
+        <button class="${iconButtonStyles['toolbar-icon-btn']}" id="modal-close" title="Cancel">✕</button>
       </div>
-      <div class="fullscreen-modal-body">${inner}</div>
+      <div class="${fullscreenModalStyles['fullscreen-modal-body']}">${inner}</div>
     `;
     backdrop.querySelector('#modal-close')?.addEventListener('click', cancel);
   }
@@ -337,7 +342,7 @@ async function openConfirmModal(root, slot, slotBtn) {
     <div class="signoff-row muted">
       Confirming as <strong>${escapeHtml(who)}</strong>. This sends the list for shopping and starts a fresh one — can't be undone.
     </div>
-    <div class="fullscreen-modal-actions">
+    <div class="${fullscreenModalStyles['fullscreen-modal-actions']}">
       <button id="confirm-yes" class="btn-send">🎉 Send it!</button>
       <button id="confirm-no">Cancel</button>
     </div>
@@ -355,7 +360,7 @@ async function openConfirmModal(root, slot, slotBtn) {
       try {
         verified = await verifySlotStillAvailable(slot);
       } catch (err) {
-        renderBody(`<div class="error">Could not re-check availability: ${escapeHtml(err.message)}</div><div class="fullscreen-modal-actions"><button id="modal-close-2">Close</button></div>`);
+        renderBody(`<div class="error">Could not re-check availability: ${escapeHtml(err.message)}</div><div class="${fullscreenModalStyles['fullscreen-modal-actions']}"><button id="modal-close-2">Close</button></div>`);
         backdrop.querySelector('#modal-close-2').addEventListener('click', cancel);
         return;
       }
@@ -379,7 +384,7 @@ async function openConfirmModal(root, slot, slotBtn) {
       setDeliveryStatus('idle');
       renderCelebration(backdrop, root, finalSlot, who, totalQty, pricedTotal);
     } catch (err) {
-      renderBody(`<div class="error">Could not finalize: ${escapeHtml(err.message)}</div><div class="fullscreen-modal-actions"><button id="modal-close-2">Close</button></div>`);
+      renderBody(`<div class="error">Could not finalize: ${escapeHtml(err.message)}</div><div class="${fullscreenModalStyles['fullscreen-modal-actions']}"><button id="modal-close-2">Close</button></div>`);
       backdrop.querySelector('#modal-close-2').addEventListener('click', cancel);
     }
   });
@@ -393,11 +398,11 @@ async function openConfirmModal(root, slot, slotBtn) {
 // closes it back to a quieter confirmation in the pane itself.
 function renderCelebration(backdrop, root, finalSlot, who, totalQty, pricedTotal) {
   backdrop.innerHTML = `
-    <div class="fullscreen-modal-header">
-      <div class="fullscreen-modal-title">🎉 Order sent!</div>
-      <button class="toolbar-icon-btn" id="celebration-done" title="Done">✕</button>
+    <div class="${fullscreenModalStyles['fullscreen-modal-header']}">
+      <div class="${fullscreenModalStyles['fullscreen-modal-title']}">🎉 Order sent!</div>
+      <button class="${iconButtonStyles['toolbar-icon-btn']}" id="celebration-done" title="Done">✕</button>
     </div>
-    <div class="fullscreen-modal-body celebration-body">
+    <div class="${fullscreenModalStyles['fullscreen-modal-body']} celebration-body">
       <div class="celebration-badge">✓</div>
       <div class="celebration-message">Nice one, ${escapeHtml(who)}! Delivery is on its way.</div>
       <div class="receipt-card">
@@ -405,7 +410,7 @@ function renderCelebration(backdrop, root, finalSlot, who, totalQty, pricedTotal
         <div class="receipt-sub muted">${totalQty} item${totalQty === 1 ? '' : 's'}${pricedTotal > 0 ? ` · ${formatSum(pricedTotal)} kr` : ''}</div>
       </div>
       <div class="celebration-actions">
-        <a class="add-to-calendar-link" href="${buildDeliveryIcsDataUrl(finalSlot)}" download="willys-delivery.ics">📅 Add to calendar</a>
+        <a class="${addToCalendarLinkStyles['add-to-calendar-link']}" href="${buildDeliveryIcsDataUrl(finalSlot)}" download="willys-delivery.ics">📅 Add to calendar</a>
         ${navigator.share ? `<button id="share-order" class="share-btn">📤 Share with the household</button>` : ''}
       </div>
     </div>
