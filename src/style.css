@@ -78,13 +78,13 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 h1, h2, h3, button, .heading-font { font-family: 'Baloo 2', ui-sans-serif, sans-serif; }
-button, a, input[type="text"], .item-row, .result-card, .slot-buttons button {
+button, a, input[type="text"], .result-card, .slot-buttons button {
   touch-action: manipulation;
 }
 button { user-select: none; }
 button:active { transform: scale(0.96); }
-.result-card:active, .item-row:active { transform: scale(0.985); }
-button, .result-card, .item-row { transition: transform 0.1s ease; }
+.result-card:active { transform: scale(0.985); }
+button, .result-card { transition: transform 0.1s ease; }
 
 /* #app fills exactly the viewport below the fixed .topnav — a frame, not a
    scroller itself. Views are permanent side-by-side panes inside it
@@ -486,16 +486,6 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 .item-list .item-persona-badge { cursor: pointer; }
 
 .item-list { list-style: none; margin: 0.75rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; }
-.item-row {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.65rem 0.7rem;
-  border-radius: 1.1rem;
-  background: var(--card);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
 /* Corner badge replacing the old "added by <name>" caption (issue #30) —
    sits on the card corner rather than taking a line of its own, so it
    reads as "whose item this is" without competing with the item text or
@@ -516,13 +506,6 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2), 0 0 0 2px var(--bg);
   z-index: 1;
 }
-.item-main { flex: 1; min-width: 0; }
-.item-text { word-break: break-word; font-size: 0.9rem; font-weight: 700; font-family: 'Baloo 2', sans-serif; color: var(--ink); }
-.qty-stepper { display: flex; align-items: center; gap: 0.3rem; background: var(--list-pill-bg); border-radius: 0.95rem; padding: 0.25rem; }
-.qty-stepper button { padding: 0; width: 2.1rem; height: 2.1rem; border-radius: 0.7rem; background: #fff; color: var(--list-pill-fg); font-variant-numeric: tabular-nums; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
-.qty-stepper span { font-variant-numeric: tabular-nums; min-width: 1.4ch; text-align: center; font-weight: 800; color: var(--list-pill-fg); }
-.remove-btn { background: var(--danger-bg); border: none; color: var(--danger-fg); font-size: 0.9rem; width: 2.1rem; height: 2.1rem; border-radius: 0.7rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-
 .total {
   margin-top: 1rem;
   padding: 0.9rem 1rem;

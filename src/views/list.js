@@ -9,6 +9,7 @@ import { recordAction, performUndo } from '../undo.js';
 import { pixelLoaderHtml } from '../loader.js';
 import { playAddSound, playQtyUpSound, playQtyDownSound, playRemoveSound, vibrateAdd, vibrateRemove } from '../sound.js';
 import dialogStyles from '../dialog.module.css';
+import itemRowStyles from '../components/ItemRow.module.css';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const SEARCH_RESULT_LIMIT = 15;
@@ -128,7 +129,7 @@ function rerenderItemList(root, items) {
   if (list) {
     const visible = applySortFilter(items);
     list.innerHTML = items.length === 0 ? emptyState() : visible.length === 0 ? filteredEmptyState() : visible.map(itemRow).join('');
-    list.querySelectorAll('.item-row').forEach((li) => wireItemRow(li, root, items));
+    list.querySelectorAll(`.${itemRowStyles['item-row']}`).forEach((li) => wireItemRow(li, root, items));
   }
 }
 
@@ -325,7 +326,7 @@ export async function renderList(root) {
 
   wireSortFilterToolbar(root, items);
 
-  root.querySelectorAll('.item-row').forEach((li) => wireItemRow(li, root, items));
+  root.querySelectorAll(`.${itemRowStyles['item-row']}`).forEach((li) => wireItemRow(li, root, items));
 
   root.querySelector('#reset-btn').addEventListener('click', async () => {
     const ok = await confirmDialog("Clear the whole list and start fresh? Can't be undone.", { confirmLabel: 'Clear list' });
@@ -970,9 +971,9 @@ function applyQuantityLocally(root, items, id, next) {
     return;
   }
 
-  const row = root.querySelector(`[data-qty-step][data-id="${id}"]`)?.closest('.item-row');
+  const row = root.querySelector(`[data-qty-step][data-id="${id}"]`)?.closest(`.${itemRowStyles['item-row']}`);
   if (row) {
-    row.querySelector('.qty-stepper span').textContent = next;
+    row.querySelector(`.${itemRowStyles['qty-stepper']} span`).textContent = next;
     row.querySelectorAll('[data-qty-step]').forEach((b) => (b.dataset.current = String(next)));
   }
 
@@ -1023,7 +1024,7 @@ function removeItemLocally(root, items, itemId) {
     return;
   }
 
-  root.querySelector(`[data-remove="${itemId}"]`)?.closest('.item-row')?.remove();
+  root.querySelector(`[data-remove="${itemId}"]`)?.closest(`.${itemRowStyles['item-row']}`)?.remove();
 
   const list = root.querySelector('.item-list');
   if (list && items.length === 0) list.innerHTML = emptyState();
@@ -1073,17 +1074,17 @@ function emptyState() {
 
 function itemRow(item) {
   return `
-    <li class="item-row">
+    <li class="${itemRowStyles['item-row']}">
       ${personaBadgeHtml(item.added_by)}
-      <div class="item-main">
-        <div class="item-text">${escapeHtml(item.text)}</div>
+      <div class="${itemRowStyles['item-main']}">
+        <div class="${itemRowStyles['item-text']}">${escapeHtml(item.text)}</div>
       </div>
-      <div class="qty-stepper">
+      <div class="${itemRowStyles['qty-stepper']}">
         <button data-qty-step="-1" data-id="${item.id}" data-current="${item.quantity}">−</button>
         <span>${item.quantity}</span>
         <button data-qty-step="1" data-id="${item.id}" data-current="${item.quantity}">+</button>
       </div>
-      <button class="remove-btn" data-remove="${item.id}">✕</button>
+      <button class="${itemRowStyles['remove-btn']}" data-remove="${item.id}">✕</button>
     </li>
   `;
 }
