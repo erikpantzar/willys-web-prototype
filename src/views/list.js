@@ -266,7 +266,7 @@ export async function renderList(root) {
   const anyVariable = items.some((i) => isVariableWeight(i.text));
 
   const totalQty = items.reduce((sum, i) => sum + (i.quantity || 1), 0);
-  updateCartBadge(totalQty);
+  updateCartBadge(totalQty, pricedTotal);
 
   const visibleItems = applySortFilter(items);
   const activeSortMode = SORT_MODES.find((m) => m.id === sortMode);
@@ -840,15 +840,93 @@ function resultCard(c, i, confirmedUrl) {
   `;
 }
 
-function updateCartBadge(totalQty) {
+// Tap-to-toggle on the topnav cart badge instead of a new floating total
+// bar (issue #38) — a persistent floating total was rejected because it
+// repeats #13's rejected sticky-footer tradeoff: sticky UI eating vertical
+// space on iOS specifically while the keyboard's up for search-and-add
+// (see main.js's swipe/nav-rework comment). The badge is already
+// always-visible chrome, so it does double duty: tap swaps it between item
+// count and the running total in kr. Module-level, not per-render, state
+// so the chosen mode survives renderList() being called again on every
+// add/remove/qty change and every route switch back to List.
+let cartBadgeMode = 'count'; // 'count' | 'total'
+
+function updateCartBadge(totalQty, pricedTotal) {
   const badge = document.getElementById('cart-badge');
   if (!badge) return;
+
+  // Diffing against the badge's own last-known values (rather than a
+  // "did this call come from a mutation" flag threaded through every call
+  // site) is what lets the pop animation fire exactly when a number
+  // actually changed — including via applyQuantityLocally's in-place
+  // path — without re-popping on a same-value re-render (e.g. swiping
+  // back to the List tab with nothing changed).
+  const nextTotal = pricedTotal.toFixed(2);
+  const changed = badge.dataset.primed === '1' && (badge.dataset.qty !== String(totalQty) || badge.dataset.total !== nextTotal);
+  badge.dataset.primed = '1';
+  badge.dataset.qty = String(totalQty);
+  badge.dataset.total = nextTotal;
+
   if (totalQty > 0) {
     badge.hidden = false;
-    badge.textContent = String(totalQty);
+    renderCartBadgeContent(badge, changed);
   } else {
     badge.hidden = true;
   }
+  wireCartBadgeToggle(badge);
+}
+
+function renderCartBadgeContent(badge, pop) {
+  if (cartBadgeMode === 'total') {
+    const kr = formatSum(Number(badge.dataset.total));
+    badge.textContent = `${kr} kr`;
+    // Wider pill + smaller type for "348,34 kr" than a 1-2 digit count needs.
+    badge.classList.add('cart-badge-price');
+    badge.setAttribute('aria-label', `Running total ${kr} kronor. Tap to show item count instead.`);
+  } else {
+    const qty = Number(badge.dataset.qty);
+    badge.textContent = badge.dataset.qty;
+    badge.classList.remove('cart-badge-price');
+    badge.setAttribute('aria-label', `${qty} ${qty === 1 ? 'item' : 'items'} in list. Tap to show running total instead.`);
+  }
+
+  if (pop && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    badge.classList.remove('badge-pop');
+    void badge.offsetWidth; // restart the pop animation even on rapid successive changes
+    badge.classList.add('badge-pop');
+  }
+}
+
+// Wired once — the badge is static markup in index.html, not torn down and
+// recreated on every renderList() the way item rows are, so re-wiring on
+// each call would stack up duplicate listeners.
+function wireCartBadgeToggle(badge) {
+  if (badge.dataset.wired) return;
+  badge.dataset.wired = '1';
+  badge.setAttribute('role', 'button');
+  badge.tabIndex = 0;
+
+  const toggle = () => {
+    cartBadgeMode = cartBadgeMode === 'count' ? 'total' : 'count';
+    renderCartBadgeContent(badge, false);
+  };
+  // The badge sits inside the "List" tab button (index.html), so a plain
+  // click would bubble up into that button's own listener (main.js) and
+  // re-navigate to #list — a no-op most of the time, but a real bug when
+  // tapping the badge from the Delivery tab: it'd yank the user over to
+  // List just for checking the total. stopPropagation keeps the tap
+  // scoped to the badge.
+  badge.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggle();
+  });
+  badge.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+      toggle();
+    }
+  });
 }
 
 // Shared tail end of every local-patch path (qty change, add, remove):
@@ -859,12 +937,12 @@ function updateCartBadge(totalQty) {
 // rare, not worth a bespoke DOM-insertion path for).
 function updateBadgeAndTotal(root, items) {
   const totalQty = items.reduce((sum, i) => sum + (i.quantity || 1), 0);
-  updateCartBadge(totalQty);
-
   const pricedTotal = items.reduce((sum, i) => {
     const price = extractPrice(i.text);
     return price === null ? sum : sum + price * (i.quantity || 1);
   }, 0);
+  updateCartBadge(totalQty, pricedTotal);
+
   const totalEl = root.querySelector('#total-amount');
   if (totalEl && pricedTotal > 0) {
     animateTotal(totalEl, pricedTotal);

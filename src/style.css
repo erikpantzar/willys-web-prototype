@@ -242,6 +242,20 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
 }
 .tab[data-route="list"] { color: color-mix(in oklch, var(--list-pill-fg) 45%, var(--bg)); }
 .tab[data-route="delivery"] { color: color-mix(in oklch, var(--delivery-pill-fg) 45%, var(--bg)); }
+/* The generic `button:active { transform: scale(0.96) }` press-feedback
+   shrinks around the button's center by default. That's fine everywhere
+   else, but here the cart badge sits off-center (flush right, via
+   .tab-label's flex: 1 — see below), so shrinking toward the middle
+   nudges the badge a few px left under a stationary pointer. Harmless for
+   touch (a tap's target is resolved from touchstart, not re-hit-tested
+   after the shrink) but a real miss for a mouse click that stays at one
+   point through mousedown+mouseup: found this the hard way — with the
+   default center origin, a Playwright mouse click at the badge's own
+   center intercepted on the *button* instead once the shrink had nudged
+   the badge out from under the pointer by mouseup. Anchoring the shrink
+   to the right edge keeps the badge visually still under press, so its
+   own click target never moves. */
+.tab[data-route="list"]:active { transform-origin: right center; }
 .tab.active { font-weight: 800; }
 .tab[data-route="list"].active { color: var(--list-pill-fg); border-bottom-color: var(--list-btn); }
 .tab[data-route="delivery"].active { color: var(--delivery-pill-fg); border-bottom-color: var(--delivery-btn); }
@@ -251,11 +265,57 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
    at equal specificity, so a "hidden" badge rendered as an empty dot. */
 .cart-badge[hidden], .tab-badge[hidden] { display: none; }
 
+/* Lets "List" recenter in the space left over once the badge (its flex
+   sibling) takes what it needs, instead of both being centered as a fixed
+   group (issue #38). Without this, the wider total-mode pill ("348,34
+   kr") drags the group's center left, off the button's actual midpoint —
+   verified with Playwright against real iPhone viewport geometry: in that
+   layout the button's own horizontal center ends up *inside the badge's
+   bounding box*. Since the badge's own click handler stops propagation
+   (see wireCartBadgeToggle — needed so a peek-the-total tap from the
+   Delivery tab doesn't also navigate to List), a plain center-tap meant to
+   switch to the List tab would silently land on the badge instead and
+   just re-toggle it, never navigating.
+   Tried pinning the badge with `position: absolute` first, which fixes
+   the geometry but breaks tapping it at all: Chromium doesn't deliver
+   click events to an absolutely-positioned descendant of a native
+   <button> even when it's the topmost element per elementFromPoint
+   (confirmed by temporarily moving the badge outside the button in a
+   throwaway test — clicks reached it fine there). flex: 1 keeps the badge
+   a normal in-flow sibling, sidestepping that entirely. */
+.tab-label { flex: 1; text-align: center; }
+
 .cart-badge {
   min-width: 1.1rem; height: 1.1rem;
   border-radius: 0.6rem; background: var(--search-btn); color: #fff; font-size: 0.65rem;
   font-weight: 800; display: flex; align-items: center; justify-content: center; padding: 0 0.3rem;
   font-family: 'Baloo 2', sans-serif;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: min-width 0.15s ease, padding 0.15s ease;
+}
+/* Tap-to-toggle target (issue #38) — same pill doubles as the running
+   total, so it needs to read as tappable even though it's a <span>, not a
+   <button> (button/badge shapes don't mix well here). */
+.cart-badge:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+/* "348,34 kr" needs more horizontal room and slightly smaller type than a
+   1-2 digit count — same pill, relaxed width instead of a second element. */
+.cart-badge.cart-badge-price {
+  min-width: 2.7rem;
+  font-size: 0.58rem;
+  padding: 0 0.4rem;
+  border-radius: 0.65rem;
+}
+/* Brief pulse on qty/add changes, echoing #total-amount's total-pop
+   (animateTotal() in list.js) — same "felt, not just read" nudge, scaled
+   down for the small pill instead of a separate toast. */
+.cart-badge.badge-pop { animation: cart-badge-pop 0.35s ease-out; }
+@keyframes cart-badge-pop {
+  0% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cart-badge.badge-pop { animation: none; }
 }
 
 .tab-badge {
