@@ -25,6 +25,7 @@ export const resetList = (...args) => impl().resetList(...args);
 export const search = (...args) => impl().search(...args);
 export const resolve = (...args) => impl().resolve(...args);
 export const confirm = (...args) => impl().confirm(...args);
+export const reportProductIssue = (...args) => impl().reportProductIssue(...args);
 export const getDeliveryTimesWide = (...args) => impl().getDeliveryTimesWide(...args);
 export const chooseDeliveryTime = (...args) => impl().chooseDeliveryTime(...args);
 export const healthCheck = (...args) => impl().healthCheck(...args);

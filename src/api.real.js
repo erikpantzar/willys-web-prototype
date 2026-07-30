@@ -33,6 +33,7 @@ export const resetList = () => request('/list/list/reset', { method: 'POST' });
 export const search = (q, limit = 15) => request(`/matcher/search?q=${encodeURIComponent(q)}&limit=${limit}`);
 export const resolve = (query) => request('/matcher/resolve', { method: 'POST', body: { query } });
 export const confirm = (resolutionId, choice) => request('/matcher/confirm', { method: 'POST', body: { resolutionId, choice } });
+export const reportProductIssue = (report) => request('/matcher/report-issue', { method: 'POST', body: report });
 
 // --- delivery times (willys-shopping-agent) ---
 // The agent now caches this server-side too (a live check launches a real

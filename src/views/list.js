@@ -791,7 +791,37 @@ function wireProductSearch(root, items) {
     resultsEl.innerHTML = candidates.map((c, i) => resultCard(c, i, confirmedUrl)).join('');
     resultsEl.querySelectorAll('[data-pick]').forEach((card, i) => {
       card.addEventListener('click', () => addFromSearch(candidates[i], quantity, card));
+      // stopPropagation — the report button sits inside the same card
+      // that's entirely clickable-to-add (see addFromSearch above), so
+      // without this a report tap would also add the item to the list.
+      card.querySelector('[data-report]')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        reportProblem(candidates[i]);
+      });
     });
+  }
+
+  // One-tap, no confirmation dialog — that was the explicit ask (see
+  // issue tracking this) — so this has to be safe to fire immediately:
+  // it only ever creates a GitHub issue, never touches the real list or
+  // catalog. Problem type is inferred from what's actually visibly wrong
+  // on this card rather than asking the reporter to pick, since asking
+  // would turn "one tap" into "one tap, then a dialog."
+  async function reportProblem(candidate) {
+    const problemType = candidate.imageUrl ? 'other' : 'missing-image';
+    try {
+      await api.reportProductIssue({
+        productName: candidate.text || candidate.name,
+        productUrl: candidate.url || null,
+        imageUrl: candidate.imageUrl || null,
+        departmentName: candidate.departmentName || null,
+        problemType,
+        reportedBy: getIdentity(),
+      });
+      showToast('Reported — thanks for flagging it!', { type: 'success' });
+    } catch (err) {
+      showToast(`Could not send report: ${err.message}`);
+    }
   }
 
   async function addFromSearch(candidate, quantity, card) {
@@ -849,6 +879,7 @@ function resultCard(c, i, confirmedUrl) {
     <div class="${resultCardStyles['result-card']}${confirmedClass} result-card-enter" data-pick="${i}" style="animation-delay: ${delay}ms">
       ${img}
       ${isConfirmed ? `<div class="${resultCardStyles['result-confirmed-badge']}">✓</div>` : ''}
+      <button type="button" class="${resultCardStyles['report-btn']}" data-report="${i}" title="Report a problem with this product" aria-label="Report a problem with this product">⚠</button>
       <div class="${resultCardStyles['result-info']}">
         <div class="${resultCardStyles['result-name']}">${escapeHtml(c.text || c.name)}</div>
         ${size}
