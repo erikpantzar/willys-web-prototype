@@ -10,6 +10,7 @@ import { playOrderConfirmedSound, vibrateOrderConfirmed } from '../sound.js';
 import { burstConfetti } from '../confetti.js';
 import itemRowStyles from '../components/ItemRow.module.css';
 import iconButtonStyles from '../components/IconButton.module.css';
+import deliverySlotsStyles from '../components/DeliverySlots.module.css';
 
 // Delivery status state: 'idle' | 'loading' | 'ready'
 let deliveryStatus = 'idle';
@@ -230,12 +231,12 @@ function wireRefresh(root) {
 
 function dateGroup(alt, soonestStartTime) {
   if (alt.slots.length === 0) {
-    return `<section class="delivery-group"><h3>${escapeHtml(alt.targetDate)}</h3><div class="empty small">No slots this day.</div></section>`;
+    return `<section class="${deliverySlotsStyles['delivery-group']}"><h3>${escapeHtml(alt.targetDate)}</h3><div class="empty small">No slots this day.</div></section>`;
   }
   return `
-    <section class="delivery-group">
+    <section class="${deliverySlotsStyles['delivery-group']}">
       <h3>${escapeHtml(alt.targetDate)} <span class="muted">(${escapeHtml(alt.label)})</span></h3>
-      <div class="slot-buttons">
+      <div class="${deliverySlotsStyles['slot-buttons']}">
         ${alt.slots
           .map((s) => {
             const isSoonest = s.startTime === soonestStartTime;

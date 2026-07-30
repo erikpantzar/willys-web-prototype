@@ -78,7 +78,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 h1, h2, h3, button, .heading-font { font-family: 'Baloo 2', ui-sans-serif, sans-serif; }
-button, a, input[type="text"], .slot-buttons button {
+button, a, input[type="text"] {
   touch-action: manipulation;
 }
 button { user-select: none; }
@@ -536,12 +536,6 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 .soonest-time { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
 .soonest-arrow { font-size: 1.2rem; opacity: 0.85; flex-shrink: 0; }
 
-.delivery-group { margin-bottom: 1.2rem; }
-.delivery-group h3 { font-family: 'Baloo 2', sans-serif; font-size: 0.9rem; font-weight: 600; margin: 0 0 0.6rem; color: var(--ink-soft); text-transform: none; letter-spacing: 0; }
-.slot-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.slot-buttons button { font-variant-numeric: tabular-nums; background: var(--card); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04); }
-.slot-buttons button.sel { background: var(--delivery-btn); color: white; }
-.slot-buttons button.is-soonest { box-shadow: 0 0 0 2px var(--delivery-btn); font-weight: 800; color: var(--delivery-pill-fg); }
 /* Confirm-order hero — a truck icon, the time, and a quick item-count/total
    stat row, so the last checkpoint before sending reads as a real order
    summary rather than a plain "are you sure" line. */
