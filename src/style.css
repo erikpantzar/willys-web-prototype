@@ -734,29 +734,6 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 .empty-state-title { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 1.05rem; color: var(--ink-soft); margin-bottom: 0.25rem; }
 .empty-state-subtitle { font-size: 0.85rem; font-weight: 700; }
 
-/* Bouncing-dot loader, replacing the old 8-bit segmented bar to match the
-   new playful design language — used for the two genuinely slow calls
-   (delivery-time preview, ~20s; a live catalog-fallback search). Same
-   pixelLoaderHtml() export/markup contract as before, restyled. */
-.pixel-loader { display: flex; flex-direction: column; align-items: center; padding: 2.5rem 1.25rem; text-align: center; }
-.pixel-loader .bar { display: flex; gap: 6px; margin-bottom: 0.5rem; }
-.pixel-loader .bar i {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--delivery-btn);
-  font-style: normal;
-  animation: fs-pop 1s ease-in-out infinite;
-}
-.pixel-loader .bar i:nth-child(2) { animation-delay: 0.2s; }
-.pixel-loader .bar i:nth-child(3) { animation-delay: 0.4s; }
-.pixel-loader .bar i:nth-child(n+4) { display: none; }
-@keyframes fs-pop { 0%, 100% { transform: scale(0.7); opacity: 0.6; } 50% { transform: scale(1); opacity: 1; } }
-.pixel-loader .label { font-size: 0.82rem; color: var(--ink-soft); font-weight: 700; margin-top: 0.3rem; font-family: 'Baloo 2', sans-serif; }
-@media (prefers-reduced-motion: reduce) {
-  .pixel-loader .bar i { animation: none; opacity: 1; transform: none; }
-}
-
 /* Fullscreen order-confirm modal (issue: delivery slot confirmation) —
    the last checkpoint before a real order goes out, so it gets the whole
    screen and the full list, not a small centered "are you sure?" card. */
