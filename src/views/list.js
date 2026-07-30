@@ -22,6 +22,231 @@ const QTY_REPEAT_START_MS = 220;
 const QTY_REPEAT_FLOOR_MS = 60;
 const QTY_REPEAT_ACCEL = 0.82;
 
+// Sort & filter (issue #37). Sort never hides an item, just reorders what's
+// already there — a single tap-to-cycle icon button, no modal needed.
+// Filter *hides* items, which is the thing that needs to be unmissable when
+// active, so it gets the real modal (see openFilterModal) plus three layers
+// of "you're not seeing everything" signal: the banner below, the trigger
+// button's own state change, and the banner doubling as a one-tap clear.
+// Both live at module scope rather than component-local state so they
+// survive a full renderList() (Reset, Undo) instead of silently resetting —
+// but only for this page session; not worth persisting to localStorage on
+// top of that for a viewing preference this minor.
+const SORT_MODES = [
+  { id: 'none', label: 'Default order', glyph: '↕' },
+  { id: 'newest', label: 'Newest first', glyph: 'NEW' },
+  { id: 'oldest', label: 'Oldest first', glyph: 'OLD' },
+  { id: 'unpriced', label: 'Unpriced first', glyph: 'NO¤' },
+  { id: 'alpha', label: 'A–Z', glyph: 'A–Z' },
+];
+let sortMode = SORT_MODES[0].id;
+let filterState = { person: null, priced: null, qtyGt1: false };
+
+function activeFilterCount(f) {
+  return (f.person ? 1 : 0) + (f.priced ? 1 : 0) + (f.qtyGt1 ? 1 : 0);
+}
+
+function isFilterActive(f) {
+  return activeFilterCount(f) > 0;
+}
+
+// The fast local-patch paths (addItemLocally etc.) only make sense when
+// what's on screen is exactly `items` in API order — once a sort or filter
+// is engaged they fall back to rebuilding just the list (still no network
+// call, still no "Loading list…" flash, just not the single-row DOM patch).
+function isDefaultView() {
+  return sortMode === 'none' && !isFilterActive(filterState);
+}
+
+function applySortFilter(items) {
+  let out = items.filter((i) => {
+    if (filterState.person && i.added_by !== filterState.person) return false;
+    if (filterState.priced === 'priced' && extractPrice(i.text) === null) return false;
+    if (filterState.priced === 'unpriced' && extractPrice(i.text) !== null) return false;
+    if (filterState.qtyGt1 && !((i.quantity || 1) > 1)) return false;
+    return true;
+  });
+  if (sortMode === 'newest') out = out.slice().sort((a, b) => new Date(b.added_at) - new Date(a.added_at));
+  else if (sortMode === 'oldest') out = out.slice().sort((a, b) => new Date(a.added_at) - new Date(b.added_at));
+  else if (sortMode === 'unpriced') out = out.slice().sort((a, b) => (extractPrice(a.text) === null ? 0 : 1) - (extractPrice(b.text) === null ? 0 : 1));
+  else if (sortMode === 'alpha') out = out.slice().sort((a, b) => a.text.localeCompare(b.text));
+  return out;
+}
+
+function filterBannerText() {
+  const parts = [];
+  if (filterState.person) parts.push(`${filterState.person}'s items`);
+  if (filterState.priced === 'priced') parts.push('priced items');
+  if (filterState.priced === 'unpriced') parts.push('items with no price');
+  if (filterState.qtyGt1) parts.push('qty > 1');
+  return `Showing: ${parts.join(', ')} only — Tap to clear`;
+}
+
+function clearFilters(root, items) {
+  filterState = { person: null, priced: null, qtyGt1: false };
+  rerenderItemList(root, items);
+}
+
+// Rebuilds just the toolbar's state (sort glyph, filter trigger/badge), the
+// banner, and the item-list markup — everything sort/filter can affect —
+// without touching the search box, total, who-picker, etc. Also the
+// fallback rebuild path local-patch functions use once sort/filter isn't
+// in its default state (see isDefaultView).
+function rerenderItemList(root, items) {
+  const sortBtn = root.querySelector('#sort-btn');
+  if (sortBtn) {
+    const mode = SORT_MODES.find((m) => m.id === sortMode);
+    sortBtn.textContent = mode.glyph;
+    sortBtn.title = `Sort: ${mode.label} (tap to cycle)`;
+  }
+
+  const filterBtn = root.querySelector('#filter-btn');
+  if (filterBtn) {
+    const active = isFilterActive(filterState);
+    filterBtn.classList.toggle('active', active);
+    filterBtn.querySelector('.filter-count-badge')?.remove();
+    if (active) {
+      const badge = document.createElement('span');
+      badge.className = 'filter-count-badge';
+      badge.textContent = String(activeFilterCount(filterState));
+      filterBtn.appendChild(badge);
+    }
+  }
+
+  root.querySelector('#filter-banner')?.remove();
+  if (isFilterActive(filterState)) {
+    const banner = document.createElement('div');
+    banner.id = 'filter-banner';
+    banner.className = 'filter-banner';
+    banner.innerHTML = `<span>${escapeHtml(filterBannerText())}</span><button type="button" class="filter-banner-clear-btn" aria-label="Clear filters">✕</button>`;
+    banner.addEventListener('click', () => clearFilters(root, items));
+    root.querySelector('.list-toolbar')?.after(banner);
+  }
+
+  const list = root.querySelector('.item-list');
+  if (list) {
+    const visible = applySortFilter(items);
+    list.innerHTML = items.length === 0 ? emptyState() : visible.length === 0 ? filteredEmptyState() : visible.map(itemRow).join('');
+    list.querySelectorAll('.item-row').forEach((li) => wireItemRow(li, root, items));
+  }
+}
+
+function wireSortFilterToolbar(root, items) {
+  root.querySelector('#sort-btn')?.addEventListener('click', () => {
+    const idx = SORT_MODES.findIndex((m) => m.id === sortMode);
+    sortMode = SORT_MODES[(idx + 1) % SORT_MODES.length].id;
+    rerenderItemList(root, items);
+  });
+  root.querySelector('#filter-btn')?.addEventListener('click', () => openFilterModal(root, items));
+  root.querySelector('#filter-banner')?.addEventListener('click', () => clearFilters(root, items));
+}
+
+// The filter modal (issue #37) — by person (reusing the same persona chips
+// #30 already established), by priced/unpriced, by quantity > 1. Applies
+// live as each chip is tapped rather than needing a separate "Apply" step —
+// simpler than tracking a draft state that could diverge from what's
+// actually showing underneath.
+function openFilterModal(root, items) {
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+
+  function personChips() {
+    const names = [...new Set(items.map((i) => i.added_by))];
+    const options = [{ name: null, label: 'Everyone' }, ...names.map((n) => ({ name: n, label: personaFor(n).name }))];
+    return options
+      .map((o) => {
+        const persona = o.name ? personaFor(o.name) : null;
+        const selected = filterState.person === o.name;
+        return `
+          <button type="button" class="persona-chip${selected ? ' selected' : ''}" data-person="${o.name ? escapeHtml(o.name) : ''}" style="${persona ? `--persona-color:${persona.color}` : ''}">
+            ${persona ? `<span class="persona-chip-emoji">${persona.emoji}</span>` : ''}
+            <span class="persona-chip-name">${escapeHtml(o.label)}</span>
+          </button>
+        `;
+      })
+      .join('');
+  }
+
+  function priceChips() {
+    const options = [
+      { v: null, label: 'All' },
+      { v: 'priced', label: 'Priced' },
+      { v: 'unpriced', label: 'No price' },
+    ];
+    return options
+      .map((o) => `<button type="button" class="persona-chip${filterState.priced === o.v ? ' selected' : ''}" data-priced="${o.v || ''}"><span class="persona-chip-name">${o.label}</span></button>`)
+      .join('');
+  }
+
+  function render() {
+    backdrop.innerHTML = `
+      <div class="confirm-dialog filter-modal">
+        <div class="filter-modal-header">
+          <div class="filter-modal-title">Filter list</div>
+          <button type="button" class="toolbar-icon-btn" id="filter-modal-close" title="Close">✕</button>
+        </div>
+        <div class="filter-modal-section">
+          <div class="who-label">Who</div>
+          <div class="who-chips">${personChips()}</div>
+        </div>
+        <div class="filter-modal-section">
+          <div class="who-label">Price</div>
+          <div class="who-chips">${priceChips()}</div>
+        </div>
+        <div class="filter-modal-section">
+          <label class="filter-modal-toggle">
+            <input type="checkbox" id="filter-qty-gt1" ${filterState.qtyGt1 ? 'checked' : ''} />
+            Quantity greater than 1
+          </label>
+        </div>
+        <button type="button" id="filter-clear-all" class="danger" style="width: 100%">Clear all filters</button>
+      </div>
+    `;
+    backdrop.querySelector('#filter-modal-close').addEventListener('click', close);
+    backdrop.querySelectorAll('[data-person]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        filterState.person = btn.dataset.person || null;
+        rerenderItemList(root, items);
+        render();
+      });
+    });
+    backdrop.querySelectorAll('[data-priced]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        filterState.priced = btn.dataset.priced || null;
+        rerenderItemList(root, items);
+        render();
+      });
+    });
+    backdrop.querySelector('#filter-qty-gt1').addEventListener('change', (e) => {
+      filterState.qtyGt1 = e.target.checked;
+      rerenderItemList(root, items);
+    });
+    backdrop.querySelector('#filter-clear-all').addEventListener('click', () => {
+      clearFilters(root, items);
+      render();
+    });
+  }
+
+  function close() {
+    backdrop.remove();
+  }
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) close();
+  });
+
+  render();
+  document.body.appendChild(backdrop);
+}
+
+function filteredEmptyState() {
+  return `
+    <li class="empty-state" style="list-style: none">
+      <div class="empty-state-title">No items match this filter</div>
+      <div class="empty-state-subtitle">Tap the banner above to clear it.</div>
+    </li>
+  `;
+}
+
 export async function renderList(root) {
   root.innerHTML = `<div class="loading">Loading list…</div>`;
 
@@ -43,8 +268,19 @@ export async function renderList(root) {
   const totalQty = items.reduce((sum, i) => sum + (i.quantity || 1), 0);
   updateCartBadge(totalQty);
 
+  const visibleItems = applySortFilter(items);
+  const activeSortMode = SORT_MODES.find((m) => m.id === sortMode);
+
   root.innerHTML = `
     <div class="view-body view-body-top">
+    <div class="view-toolbar list-toolbar">
+      <button type="button" class="toolbar-icon-btn" id="sort-btn" title="Sort: ${escapeHtml(activeSortMode.label)} (tap to cycle)">${escapeHtml(activeSortMode.glyph)}</button>
+      <button type="button" class="toolbar-icon-btn${isFilterActive(filterState) ? ' active' : ''}" id="filter-btn" title="Filter list">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M8 12h8M11 18h2" stroke="var(--list-pill-fg)" stroke-width="2" stroke-linecap="round"></path></svg>
+        ${isFilterActive(filterState) ? `<span class="filter-count-badge">${activeFilterCount(filterState)}</span>` : ''}
+      </button>
+    </div>
+    ${isFilterActive(filterState) ? `<div class="filter-banner" id="filter-banner"><span>${escapeHtml(filterBannerText())}</span><button type="button" class="filter-banner-clear-btn" aria-label="Clear filters">✕</button></div>` : ''}
     <div class="search-section">
       <form id="search-form" class="search-box">
         <svg width="18" height="18" viewBox="0 0 18 18" style="flex-shrink:0"><circle cx="8" cy="8" r="6" fill="none" stroke="var(--search-pill-fg)" stroke-width="2"></circle><line x1="12.2" y1="12.2" x2="16.5" y2="16.5" stroke="var(--search-pill-fg)" stroke-width="2" stroke-linecap="round"></line></svg>
@@ -55,7 +291,7 @@ export async function renderList(root) {
     </div>
 
     <ul class="item-list">
-      ${items.length === 0 ? emptyState() : items.map(itemRow).join('')}
+      ${items.length === 0 ? emptyState() : visibleItems.length === 0 ? filteredEmptyState() : visibleItems.map(itemRow).join('')}
     </ul>
 
     ${pricedTotal > 0 ? `
@@ -82,6 +318,8 @@ export async function renderList(root) {
   wireWhoPicker(root, items);
 
   wireProductSearch(root, items);
+
+  wireSortFilterToolbar(root, items);
 
   root.querySelectorAll('.item-row').forEach((li) => wireItemRow(li, root, items));
 
@@ -214,6 +452,20 @@ function wireItemRow(li, root, items) {
   if (removeBtn) {
     wireRemoveButton(removeBtn, root, items);
     wireSwipeToRemove(li, removeBtn, root, items);
+
+    // Shortcut suggested in #37: tap the row's own persona badge to filter
+    // straight to that person, instead of only being reachable through the
+    // filter modal — reuses UI that's already there (issue #30). Tapping
+    // the same person's badge again toggles the filter back off.
+    const itemId = Number(removeBtn.dataset.remove);
+    const item = items.find((i) => i.id === itemId);
+    const badge = li.querySelector('.item-persona-badge');
+    if (badge && item) {
+      badge.addEventListener('click', () => {
+        filterState.person = filterState.person === item.added_by ? null : item.added_by;
+        rerenderItemList(root, items);
+      });
+    }
   }
   li.querySelectorAll('[data-qty-step]').forEach((btn) => wireQtyButton(btn, root, items));
 }
@@ -626,6 +878,16 @@ function applyQuantityLocally(root, items, id, next) {
   if (!item) return;
   item.quantity = next;
 
+  // A non-default sort/filter can change whether this item still belongs
+  // in view, or where — e.g. "qty > 1" filtering it out, or "unpriced
+  // first" moving it — which the single-row patch below can't express, so
+  // fall back to rebuilding the (still local, still no network call) list.
+  if (!isDefaultView()) {
+    rerenderItemList(root, items);
+    updateBadgeAndTotal(root, items);
+    return;
+  }
+
   const row = root.querySelector(`[data-qty-step][data-id="${id}"]`)?.closest('.item-row');
   if (row) {
     row.querySelector('.qty-stepper span').textContent = next;
@@ -643,6 +905,16 @@ function addItemLocally(root, items, item) {
   items.push(item);
   const list = root.querySelector('.item-list');
   if (!list) return;
+
+  // Same reasoning as applyQuantityLocally — a filter could hide the new
+  // item entirely (e.g. filtered to someone else's items) or a sort could
+  // mean it doesn't belong at the end, so let rerenderItemList figure out
+  // where (or whether) it lands instead of always appending.
+  if (!isDefaultView()) {
+    rerenderItemList(root, items);
+    updateBadgeAndTotal(root, items);
+    return;
+  }
 
   list.querySelector('.empty-state')?.remove();
 
@@ -662,6 +934,12 @@ function removeItemLocally(root, items, itemId) {
   const idx = items.findIndex((i) => i.id === itemId);
   if (idx === -1) return;
   items.splice(idx, 1);
+
+  if (!isDefaultView()) {
+    rerenderItemList(root, items);
+    updateBadgeAndTotal(root, items);
+    return;
+  }
 
   root.querySelector(`[data-remove="${itemId}"]`)?.closest('.item-row')?.remove();
 
