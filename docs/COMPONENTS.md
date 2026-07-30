@@ -1,7 +1,7 @@
 # Component conventions
 
 How new UI pieces in this app should be built, and the direction existing ones are migrating
-toward. See willys-web-prototype#43 for the tracked migration checklist — this document is the
+toward. See willys-web-prototype#46 for the tracked migration checklist — this document is the
 standard that issue works against, not a one-off plan.
 
 ## Why
@@ -92,4 +92,4 @@ The only thing missing today is that `toast.js`'s styles (`.toast`, `.toast-erro
 
 Not a big-bang rewrite — migrate one component at a time, opportunistically (when you're
 already touching it for something else) or off the tracked checklist in
-willys-web-prototype#43.
+willys-web-prototype#46.
