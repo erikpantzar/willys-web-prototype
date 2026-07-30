@@ -3,6 +3,7 @@ import { isConnectionVerified, isDemoMode } from './settings.js';
 import { renderList } from './views/list.js';
 import { renderDelivery } from './views/delivery.js';
 import { renderSettings } from './views/settings.js';
+import { showToast } from './toast.js';
 
 const app = document.getElementById('app');
 const tabs = document.querySelectorAll('.tab');
@@ -113,6 +114,39 @@ if ('serviceWorker' in navigator) {
     // import.meta.env.BASE_URL, not a literal '/sw.js' — this is served
     // from a GitHub Pages *project* site (/willys-web-prototype/...), so an
     // origin-root path would 404 and the SW would never register.
-    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {});
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).then(wireUpdatePrompt).catch(() => {});
+  });
+}
+
+// Prompts a reload when a newly-deployed sw.js is detected (its bytes now
+// change on every build — see scripts/stamp-sw.js — so this is a reliable
+// "a new version was just deployed" signal). This matters most for an
+// iOS home-screen install (issue #35): it has no browser chrome to reload
+// with, and gets suspended rather than reloaded on resume, so it can
+// otherwise sit on a stale bundle indefinitely with no way to notice.
+// `visibilitychange` is the one moment available to actively check, since
+// there's no periodic background refresh to rely on either.
+function wireUpdatePrompt(reg) {
+  // Only a genuine update should prompt a reload — a brand-new install
+  // (no prior controller) also fires 'updatefound', and that one's just
+  // the first-ever activation, not a new version to switch to.
+  const hadControllerAlready = Boolean(navigator.serviceWorker.controller);
+
+  reg.addEventListener('updatefound', () => {
+    const newWorker = reg.installing;
+    if (!newWorker || !hadControllerAlready) return;
+    newWorker.addEventListener('statechange', () => {
+      if (newWorker.state === 'installed') {
+        showToast('A new version is available.', {
+          type: 'success',
+          actionLabel: 'Refresh',
+          onAction: () => location.reload(),
+        });
+      }
+    });
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') reg.update().catch(() => {});
   });
 }

@@ -13,6 +13,15 @@
 // indefinitely, which is what made iOS Safari show a very stale version.
 // Network-first always picks up a new deploy when online, and still falls
 // back to the cache offline.
+// Stamped by scripts/stamp-sw.js on every build. Not read by any logic
+// below — its only job is to change these bytes on every deploy, so the
+// browser's own SW-update check (a byte-diff of this file) has something
+// to actually detect. Without it this file is otherwise untouched by Vite
+// (it's a static public/ passthrough), so it stays byte-identical across
+// deploys that only change the hashed app bundle, and the browser never
+// notices a new version exists (see main.js's wireUpdatePrompt, issue #35).
+const BUILD_ID = '__BUILD_ID__';
+
 const SHELL_CACHE = 'willys-shell-v2';
 const IMAGE_CACHE = 'willys-images-v1';
 const SHELL_URLS = [self.registration.scope, `${self.registration.scope}manifest.json`, `${self.registration.scope}icon.svg`];
