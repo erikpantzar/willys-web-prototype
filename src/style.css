@@ -124,6 +124,28 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
 
 .view-body { padding: 0 1rem 1.5rem; max-width: 640px; margin: 0 auto; }
 
+/* Tablet/desktop layout (issue #31) — above this breakpoint, the List
+   view's fixed 640px centered column (same as phone) wastes the extra
+   width instead of using it. Search + results move into a left rail,
+   the running list into a right rail, so adding an item is no longer a
+   separate "mode" from looking at what's already in the cart the way it
+   functionally is on a single phone-width column. Both rails still have
+   a bounded max-width — this isn't "stretch the content to fill the
+   screen", same tap-target/line-length reasoning as phone, just laid
+   out side by side instead of stacked. Below the breakpoint, .list-rail
+   is a no-op wrapper (it wasn't there at all before #31; on phone it
+   just contributes no layout of its own, same DOM order as always). */
+@media (min-width: 900px) {
+  .list-view-body {
+    max-width: 960px;
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+  }
+  .list-view-body .search-section { flex: 0 0 400px; max-width: 400px; margin-bottom: 0; }
+  .list-view-body .list-rail { flex: 1 1 480px; max-width: 520px; min-width: 0; }
+}
+
 .demo-banner {
   background: var(--list-btn);
   color: white;
@@ -344,6 +366,65 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 .who-new-row { margin-top: 0.55rem; }
 .who-new-row[hidden] { display: none; }
 
+/* Sort & filter (issue #37). Sort is a plain toolbar-icon-btn with a short
+   text glyph instead of an icon — a handful of mutually exclusive states
+   ("NEW", "OLD", "NO¤", "A–Z") reads unambiguously at this size where an
+   abstract icon wouldn't need a whole legend. Filter reuses the same
+   button shape but gets its own active/badge treatment below, since it's
+   the one of the two that can hide items. */
+.list-toolbar { gap: 0.5rem; }
+#sort-btn { font-size: 0.62rem; font-weight: 800; font-family: 'Baloo 2', sans-serif; color: var(--list-pill-fg); letter-spacing: -0.02em; }
+#filter-btn { position: relative; }
+#filter-btn.active { background: var(--list-btn); }
+#filter-btn.active svg path { stroke: #fff; }
+.filter-count-badge {
+  position: absolute; top: -0.3rem; right: -0.3rem;
+  min-width: 1rem; height: 1rem; border-radius: 0.55rem;
+  background: var(--danger-fg); color: #fff; font-size: 0.62rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; padding: 0 0.25rem;
+  font-family: 'Baloo 2', sans-serif;
+}
+/* The "unmissable when active" banner (per #37's ask) — same colored-strip
+   pattern as .demo-banner, deliberately in the Search view's orange rather
+   than the List view's own green so an active filter reads as a distinct,
+   attention-getting state rather than just more of the page's usual
+   color. Doubles as the one-tap "clear all" — the ✕ is mostly a visual
+   affordance, since tapping anywhere on the banner clears (see list.js). */
+.filter-banner {
+  background: var(--search-btn);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: center;
+  padding: 0.55rem 0.9rem;
+  border-radius: 1rem;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: 'Baloo 2', sans-serif;
+}
+.filter-banner-clear-btn {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  border: none;
+  width: 1.3rem; height: 1.3rem; border-radius: 50%;
+  font-size: 0.7rem;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+}
+.filter-modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem; }
+.filter-modal-title { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 1.05rem; }
+.filter-modal-section { margin-bottom: 0.9rem; }
+.filter-modal-toggle { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.85rem; }
+/* Shortcut from #37's "worth floating" idea: tapping an item row's persona
+   badge filters straight to that person (see wireItemRow) — only wired up
+   in the List view, so only there does the badge read as tappable. */
+.item-list .item-persona-badge { cursor: pointer; }
+
 .item-list { list-style: none; margin: 0.75rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; }
 .item-row {
   position: relative;
@@ -433,6 +514,13 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 }
 @media (prefers-reduced-motion: reduce) {
   .result-card-enter { animation: none; }
+}
+/* Item rows added via the local-patch path (see addItemLocally in list.js)
+   reuse this same pop-in rather than inventing a second entrance animation
+   for what's visually the same "a card just appeared" moment. */
+.item-row-enter { animation: result-pop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .item-row-enter { animation: none; }
 }
 .result-card.picking { opacity: 0.5; pointer-events: none; }
 .result-card.added { box-shadow: 0 0 0 2px var(--list-btn); }
