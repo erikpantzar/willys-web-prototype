@@ -74,3 +74,25 @@ export function playQtyDownSound() {
 export function vibrateAdd() {
   safely(() => navigator.vibrate?.([12, 40, 12]));
 }
+
+// The payoff sound — order confirmed and sent. Bigger and longer than the
+// add chord on purpose: everything else in the app (add, qty+/-) is a small
+// step along the way, this is the moment those steps were building to. A
+// rising four-note run into a held top note, rather than the add sound's
+// quick three-note chord.
+export function playOrderConfirmedSound() {
+  const context = getContext();
+  if (!context) return;
+  safely(() => {
+    tone(context, { freq: 523.25, start: 0, duration: 0.14, gain: 0.14 }); // C5
+    tone(context, { freq: 659.25, start: 0.1, duration: 0.14, gain: 0.14 }); // E5
+    tone(context, { freq: 783.99, start: 0.2, duration: 0.14, gain: 0.15 }); // G5
+    tone(context, { freq: 1046.5, start: 0.3, duration: 0.4, gain: 0.16 }); // C6, held
+  });
+}
+
+// A longer, richer pattern than vibrateAdd's — matches the sound above in
+// being the one moment in the app that gets more than a token buzz.
+export function vibrateOrderConfirmed() {
+  safely(() => navigator.vibrate?.([15, 60, 15, 60, 15, 100, 40]));
+}

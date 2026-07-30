@@ -4,6 +4,9 @@ import { pixelLoaderHtml } from '../loader.js';
 import { getIdentity } from '../who.js';
 import { getCached, setCached, clearCached, isStale } from '../deliveryCache.js';
 import { buildDeliveryIcsDataUrl } from '../calendar.js';
+import { extractPrice, formatSum } from '../format.js';
+import { playOrderConfirmedSound, vibrateOrderConfirmed } from '../sound.js';
+import { burstConfetti } from '../confetti.js';
 
 // Delivery status state: 'idle' | 'loading' | 'ready'
 let deliveryStatus = 'idle';
@@ -118,10 +121,17 @@ function renderAlternatives(root, body, fetchedAt) {
     return;
   }
 
+  // Surfaced above the full list so picking the earliest slot doesn't
+  // require scanning every date group first — most visits, "whatever's
+  // soonest" is exactly what someone wants. The full list stays below for
+  // anyone who actually wants a later slot instead.
+  const soonest = findSoonestSlot(alternatives);
+
   root.innerHTML = shell(`
     ${checkedNote(fetchedAt)}
+    ${soonest ? soonestCard(soonest) : ''}
     <div id="delivery-groups">
-      ${alternatives.map(dateGroup).join('')}
+      ${alternatives.map((a) => dateGroup(a, soonest?.startTime)).join('')}
     </div>
   `);
   wireRefresh(root);
@@ -137,11 +147,34 @@ function renderAlternatives(root, body, fetchedAt) {
   });
 }
 
+function findSoonestSlot(alternatives) {
+  let best = null;
+  for (const alt of alternatives) {
+    for (const s of alt.slots) {
+      if (!best || s.startTime < best.startTime) best = s;
+    }
+  }
+  return best;
+}
+
+function soonestCard(slot) {
+  return `
+    <button class="soonest-card" data-slot='${JSON.stringify(slot).replace(/'/g, '&#39;')}'>
+      <div class="soonest-icon">🚚</div>
+      <div class="soonest-text">
+        <div class="soonest-label">Fastest available</div>
+        <div class="soonest-time">${escapeHtml(timePart(slot.formattedTime))}</div>
+      </div>
+      <div class="soonest-arrow">→</div>
+    </button>
+  `;
+}
+
 function wireRefresh(root) {
   root.querySelector('#refresh-delivery')?.addEventListener('click', () => renderDelivery(root, { forceRefresh: true }));
 }
 
-function dateGroup(alt) {
+function dateGroup(alt, soonestStartTime) {
   if (alt.slots.length === 0) {
     return `<section class="delivery-group"><h3>${escapeHtml(alt.targetDate)}</h3><div class="empty small">No slots this day.</div></section>`;
   }
@@ -149,7 +182,12 @@ function dateGroup(alt) {
     <section class="delivery-group">
       <h3>${escapeHtml(alt.targetDate)} <span class="muted">(${escapeHtml(alt.label)})</span></h3>
       <div class="slot-buttons">
-        ${alt.slots.map((s) => `<button data-slot='${JSON.stringify(s).replace(/'/g, '&#39;')}'>${escapeHtml(timePart(s.formattedTime))}</button>`).join('')}
+        ${alt.slots
+          .map((s) => {
+            const isSoonest = s.startTime === soonestStartTime;
+            return `<button data-slot='${JSON.stringify(s).replace(/'/g, '&#39;')}' class="${isSoonest ? 'is-soonest' : ''}">${isSoonest ? '⚡ ' : ''}${escapeHtml(timePart(s.formattedTime))}</button>`;
+          })
+          .join('')}
       </div>
     </section>
   `;
@@ -200,6 +238,10 @@ async function openConfirmModal(root, slot, slotBtn) {
   backdrop.className = 'fullscreen-modal-backdrop';
   const who = getIdentity();
   const totalQty = items.reduce((sum, i) => sum + (i.quantity || 1), 0);
+  const pricedTotal = items.reduce((sum, i) => {
+    const price = extractPrice(i.text);
+    return price === null ? sum : sum + price * (i.quantity || 1);
+  }, 0);
 
   function renderBody(inner) {
     backdrop.innerHTML = `
@@ -218,19 +260,33 @@ async function openConfirmModal(root, slot, slotBtn) {
   }
 
   renderBody(`
-    <div class="confirm-time-banner">
-      <div class="muted">Delivery time</div>
-      <div class="confirm-time">${escapeHtml(slot.formattedTime)}</div>
+    <div class="confirm-hero">
+      <div class="confirm-hero-icon">🚚</div>
+      <div class="confirm-time-banner">
+        <div class="muted">Delivery time</div>
+        <div class="confirm-time">${escapeHtml(slot.formattedTime)}</div>
+      </div>
+      <div class="confirm-stats">
+        <div class="confirm-stat">
+          <div class="confirm-stat-value">${totalQty}</div>
+          <div class="confirm-stat-label">item${totalQty === 1 ? '' : 's'}</div>
+        </div>
+        ${pricedTotal > 0 ? `
+          <div class="confirm-stat">
+            <div class="confirm-stat-value">${formatSum(pricedTotal)} kr</div>
+            <div class="confirm-stat-label">total</div>
+          </div>
+        ` : ''}
+      </div>
     </div>
     <ul class="item-list">
       ${items.length === 0 ? '<li class="empty small">No items on the list.</li>' : items.map(itemSummaryRow).join('')}
     </ul>
     <div class="signoff-row muted">
-      ${totalQty} item${totalQty === 1 ? '' : 's'} — confirming as <strong>${escapeHtml(who)}</strong>. This sends the list for
-      shopping and starts a fresh one — can't be undone.
+      Confirming as <strong>${escapeHtml(who)}</strong>. This sends the list for shopping and starts a fresh one — can't be undone.
     </div>
     <div class="fullscreen-modal-actions">
-      <button id="confirm-yes" class="danger">Confirm &amp; send</button>
+      <button id="confirm-yes" class="btn-send">🎉 Send it!</button>
       <button id="confirm-no">Cancel</button>
     </div>
   `);
@@ -263,23 +319,70 @@ async function openConfirmModal(root, slot, slotBtn) {
       await api.chooseDeliveryTime(finalSlot);
       await api.fakeSend(who);
       await api.resetList();
-      backdrop.remove();
       // Clear the view fully — the delivery times just used are spent
       // (a fresh order needs a fresh check), so don't leave the old slot
       // groups on screen or serve them from cache next visit.
       clearCached();
       lastFetchedAt = null;
       setDeliveryStatus('idle');
-      root.innerHTML = shell(`
-        <div class="success">✅ Sent! Delivery time ${escapeHtml(finalSlot.formattedTime)} confirmed and the list is cleared for next time.</div>
-        <a class="add-to-calendar-link" href="${buildDeliveryIcsDataUrl(finalSlot)}" download="willys-delivery.ics">📅 Add to calendar</a>
-      `);
-      wireRefresh(root);
+      renderCelebration(backdrop, root, finalSlot, who, totalQty, pricedTotal);
     } catch (err) {
       renderBody(`<div class="error">Could not finalize: ${escapeHtml(err.message)}</div><div class="fullscreen-modal-actions"><button id="modal-close-2">Close</button></div>`);
       backdrop.querySelector('#modal-close-2').addEventListener('click', cancel);
     }
   });
+}
+
+// The payoff screen — order sent. Stays inside the fullscreen modal (more
+// real estate, more drama) rather than closing it and dropping a one-line
+// ".success" message into the regular pane, and gets the full treatment:
+// confetti, a bigger badge-pop than any other animation in the app, a
+// receipt-style recap, and the sound/haptic pairing from sound.js. "Done"
+// closes it back to a quieter confirmation in the pane itself.
+function renderCelebration(backdrop, root, finalSlot, who, totalQty, pricedTotal) {
+  backdrop.innerHTML = `
+    <div class="fullscreen-modal-header">
+      <div class="fullscreen-modal-title">🎉 Order sent!</div>
+      <button class="toolbar-icon-btn" id="celebration-done" title="Done">✕</button>
+    </div>
+    <div class="fullscreen-modal-body celebration-body">
+      <div class="celebration-badge">✓</div>
+      <div class="celebration-message">Nice one, ${escapeHtml(who)}! Delivery is on its way.</div>
+      <div class="receipt-card">
+        <div class="receipt-time">${escapeHtml(finalSlot.formattedTime)}</div>
+        <div class="receipt-sub muted">${totalQty} item${totalQty === 1 ? '' : 's'}${pricedTotal > 0 ? ` · ${formatSum(pricedTotal)} kr` : ''}</div>
+      </div>
+      <div class="celebration-actions">
+        <a class="add-to-calendar-link" href="${buildDeliveryIcsDataUrl(finalSlot)}" download="willys-delivery.ics">📅 Add to calendar</a>
+        ${navigator.share ? `<button id="share-order" class="share-btn">📤 Share with the household</button>` : ''}
+      </div>
+    </div>
+  `;
+
+  function close() {
+    backdrop.remove();
+    root.innerHTML = shell(`<div class="success">✅ All set — see you at delivery ${escapeHtml(timePart(finalSlot.formattedTime))}.</div>`);
+    wireRefresh(root);
+  }
+  backdrop.querySelector('#celebration-done').addEventListener('click', close);
+
+  const shareBtn = backdrop.querySelector('#share-order');
+  if (shareBtn) {
+    shareBtn.addEventListener('click', async () => {
+      try {
+        await navigator.share({
+          title: 'Willys delivery',
+          text: `Grocery delivery confirmed for ${finalSlot.formattedTime} — ${totalQty} item${totalQty === 1 ? '' : 's'}${pricedTotal > 0 ? `, ${formatSum(pricedTotal)} kr` : ''}.`,
+        });
+      } catch {
+        // cancelled or unsupported at call time — no-op, the calendar link is still right there
+      }
+    });
+  }
+
+  playOrderConfirmedSound();
+  vibrateOrderConfirmed();
+  burstConfetti(backdrop);
 }
 
 function escapeHtml(s) {

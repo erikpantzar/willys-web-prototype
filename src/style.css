@@ -412,13 +412,78 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 .result-price { font-size: 0.9rem; color: var(--ink-soft); font-weight: 800; }
 .result-status { font-size: 0.75rem; color: var(--list-pill-fg); min-height: 1em; font-weight: 700; }
 
+/* Soonest-available shortcut, above the full date-group list — surfaces the
+   single fastest slot so picking it doesn't require scanning every group
+   first. The matching slot is also marked with ⚡ where it appears in its
+   own group below, so the two don't read as unrelated buttons. */
+.soonest-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 1.1rem;
+  border-radius: 1.25rem;
+  border: none;
+  background: linear-gradient(135deg, var(--delivery-btn), color-mix(in oklch, var(--delivery-btn) 65%, #6fd3c7));
+  color: white;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+  text-align: left;
+  cursor: pointer;
+}
+.soonest-icon { font-size: 1.7rem; flex-shrink: 0; }
+.soonest-text { flex: 1; min-width: 0; }
+.soonest-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.88; }
+.soonest-time { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.soonest-arrow { font-size: 1.2rem; opacity: 0.85; flex-shrink: 0; }
+
 .delivery-group { margin-bottom: 1.2rem; }
 .delivery-group h3 { font-family: 'Baloo 2', sans-serif; font-size: 0.9rem; font-weight: 600; margin: 0 0 0.6rem; color: var(--ink-soft); text-transform: none; letter-spacing: 0; }
 .slot-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .slot-buttons button { font-variant-numeric: tabular-nums; background: var(--card); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04); }
 .slot-buttons button.sel { background: var(--delivery-btn); color: white; }
+.slot-buttons button.is-soonest { box-shadow: 0 0 0 2px var(--delivery-btn); font-weight: 800; color: var(--delivery-pill-fg); }
 .confirm-dialog { margin-top: 1rem; padding: 1rem 1.1rem; border: none; border-radius: 1.1rem; background: var(--card); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06); }
 .confirm-actions { display: flex; gap: 0.5rem; margin-top: 0.85rem; }
+
+/* Confirm-order hero — a truck icon, the time, and a quick item-count/total
+   stat row, so the last checkpoint before sending reads as a real order
+   summary rather than a plain "are you sure" line. */
+.confirm-hero { text-align: center; margin-bottom: 1rem; }
+.confirm-hero-icon { font-size: 2.2rem; margin-bottom: 0.35rem; }
+.confirm-stats { display: flex; justify-content: center; gap: 1.75rem; margin-top: 0.8rem; }
+.confirm-stat { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; }
+.confirm-stat-value { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 1.15rem; color: var(--delivery-pill-fg); font-variant-numeric: tabular-nums; }
+.confirm-stat-label { font-size: 0.7rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
+.btn-send { width: 100%; background: var(--delivery-btn); color: white; font-weight: 800; }
+
+/* Order-confirmed celebration — the biggest moment in the app, so it gets
+   the whole fullscreen modal, a confetti burst, and the sound/haptic pairing
+   from sound.js instead of a plain text line. */
+.celebration-body { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 1rem; position: relative; }
+.celebration-badge {
+  width: 5rem; height: 5rem; border-radius: 50%;
+  background: var(--delivery-btn); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.4rem; font-weight: 800; margin-bottom: 1rem;
+  animation: celebration-badge-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes celebration-badge-pop {
+  0% { transform: scale(0.3); opacity: 0; }
+  60% { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.celebration-message { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 1.2rem; color: var(--ink); margin-bottom: 1.15rem; max-width: 320px; }
+.receipt-card { width: 100%; max-width: 340px; background: var(--card); border-radius: 1.25rem; padding: 1.1rem 1.3rem; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06); margin-bottom: 1.25rem; }
+.receipt-time { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 1.1rem; color: var(--delivery-pill-fg); }
+.receipt-sub { margin-top: 0.25rem; }
+.celebration-actions { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; max-width: 340px; }
+.celebration-actions .add-to-calendar-link { justify-content: center; width: 100%; }
+.share-btn { width: 100%; background: var(--search-pill-bg); color: var(--search-pill-fg); font-weight: 700; }
+.confetti-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+@media (prefers-reduced-motion: reduce) {
+  .celebration-badge { animation: none; }
+}
 
 .settings-panel label { display: flex; flex-direction: column; gap: 0.3rem; margin: 0.7rem 0; font-weight: 700; }
 .url-input-group { display: flex; align-items: center; gap: 0; }
