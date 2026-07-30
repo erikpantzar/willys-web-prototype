@@ -12,6 +12,16 @@ import { playAddSound, playQtyUpSound, playQtyDownSound, playRemoveSound, vibrat
 const SEARCH_DEBOUNCE_MS = 300;
 const SEARCH_RESULT_LIMIT = 15;
 
+// Press-and-hold qty-stepper acceleration (issue #29): a delay before the
+// first repeat so a plain tap never triggers it, then a classic
+// scroll-wheel-style ramp — each successive step waits a little less than
+// the last, down to a floor, so holding longer feels like it's speeding up
+// rather than just ticking at a fixed rate.
+const QTY_HOLD_DELAY_MS = 400;
+const QTY_REPEAT_START_MS = 220;
+const QTY_REPEAT_FLOOR_MS = 60;
+const QTY_REPEAT_ACCEL = 0.82;
+
 export async function renderList(root) {
   root.innerHTML = `<div class="loading">Loading list…</div>`;
 
@@ -237,13 +247,38 @@ function wireRemoveButton(btn, root, items) {
 }
 
 function wireQtyButton(btn, root, items) {
-  btn.addEventListener('click', async () => {
+  // `busy` serializes requests for this one button (so a fast repeat never
+  // overlaps two setQuantity calls); `repeating` tracks whether the hold
+  // delay has actually elapsed and auto-repeat has taken over from what
+  // would otherwise be a plain tap.
+  let busy = false;
+  let repeating = false;
+  let repeatFailed = false;
+  let holdTimer = null;
+  let repeatTimer = null;
+
+  function showQtyToast(next) {
+    showToast(`Quantity updated to ${next}`, {
+      type: 'success',
+      actionLabel: 'Undo',
+      onAction: async () => {
+        await performUndo();
+        renderList(root);
+      },
+    });
+  }
+
+  // One quantity step, shared by a plain tap and every auto-repeat tick.
+  // Returns 'ok' | 'floor' (hit the 1-item floor, not an error) | 'error'
+  // so the repeat loop knows whether to keep going.
+  async function step({ silent } = {}) {
+    if (busy) return 'busy';
     const id = Number(btn.dataset.id);
     const delta = Number(btn.dataset.qtyStep);
     const current = Number(btn.dataset.current);
     const next = current + delta;
-    if (next < 1) return;
-    btn.disabled = true;
+    if (next < 1) return 'floor';
+    busy = true;
     try {
       await api.setQuantity(id, next);
       recordAction({ type: 'qty', itemId: id, previousValue: current });
@@ -252,20 +287,59 @@ function wireQtyButton(btn, root, items) {
       // re-fetching + rebuilding the whole view on every +/- tap, which
       // visibly flashed a "Loading list…" screen for a one-number change.
       applyQuantityLocally(root, items, id, next);
-      btn.disabled = false;
-      showToast(`Quantity updated to ${next}`, {
-        type: 'success',
-        actionLabel: 'Undo',
-        onAction: async () => {
-          await performUndo();
-          renderList(root);
-        },
-      });
+      if (!silent) showQtyToast(next);
+      return 'ok';
     } catch (err) {
       showToast(`Could not update quantity: ${err.message}`);
-      btn.disabled = false;
+      return 'error';
+    } finally {
+      busy = false;
     }
+  }
+
+  function scheduleRepeat(intervalMs) {
+    repeatTimer = setTimeout(async () => {
+      const result = await step({ silent: true });
+      if (result === 'error') repeatFailed = true;
+      if (result !== 'ok' || !repeating) return; // hit the floor, errored, or already released
+      scheduleRepeat(Math.max(QTY_REPEAT_FLOOR_MS, intervalMs * QTY_REPEAT_ACCEL));
+    }, intervalMs);
+  }
+
+  function startPress() {
+    repeatFailed = false;
+    holdTimer = setTimeout(async () => {
+      repeating = true;
+      const result = await step({ silent: true });
+      if (result === 'error') repeatFailed = true;
+      if (result === 'ok' && repeating) scheduleRepeat(QTY_REPEAT_START_MS);
+    }, QTY_HOLD_DELAY_MS);
+  }
+
+  // On release: a plain tap (never made it past the hold delay) does its
+  // single step now, same as the old click handler. A hold that already
+  // auto-repeated just stops — one toast for wherever it landed, not one
+  // per tick — unless the last tick errored, which already showed its own.
+  function endPress({ wasCancel } = {}) {
+    clearTimeout(holdTimer);
+    clearTimeout(repeatTimer);
+    holdTimer = null;
+    repeatTimer = null;
+    if (repeating) {
+      repeating = false;
+      if (!repeatFailed && !wasCancel) showQtyToast(Number(btn.dataset.current));
+    } else if (!wasCancel) {
+      step();
+    }
+  }
+
+  btn.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return; // primary mouse button only
+    btn.setPointerCapture(e.pointerId);
+    startPress();
   });
+  btn.addEventListener('pointerup', () => endPress());
+  btn.addEventListener('pointercancel', () => endPress({ wasCancel: true }));
 }
 
 // Product-database search-and-add (the item-matcher-backed flow the
