@@ -9,6 +9,7 @@ import { personaBadgeHtml } from '../personas.js';
 import { playOrderConfirmedSound, vibrateOrderConfirmed } from '../sound.js';
 import { burstConfetti } from '../confetti.js';
 import itemRowStyles from '../components/ItemRow.module.css';
+import iconButtonStyles from '../components/IconButton.module.css';
 
 // Delivery status state: 'idle' | 'loading' | 'ready'
 let deliveryStatus = 'idle';
@@ -104,8 +105,8 @@ async function notifyIfBackgrounded() {
 function shell(inner) {
   return `
     <div class="view-body view-body-top">
-      <div class="view-toolbar">
-        <button class="toolbar-icon-btn" id="refresh-delivery" title="Refresh available times">
+      <div class="${iconButtonStyles['view-toolbar']}">
+        <button class="${iconButtonStyles['toolbar-icon-btn']}" id="refresh-delivery" title="Refresh available times">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 0113.66-5.66M20 12a8 8 0 01-13.66 5.66" stroke="var(--delivery-pill-fg)" stroke-width="2" stroke-linecap="round"></path><path d="M17 3v4h-4M7 21v-4h4" stroke="var(--delivery-pill-fg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
         </button>
       </div>
@@ -300,7 +301,7 @@ async function openConfirmModal(root, slot, slotBtn) {
     backdrop.innerHTML = `
       <div class="fullscreen-modal-header">
         <div class="fullscreen-modal-title">Confirm order</div>
-        <button class="toolbar-icon-btn" id="modal-close" title="Cancel">✕</button>
+        <button class="${iconButtonStyles['toolbar-icon-btn']}" id="modal-close" title="Cancel">✕</button>
       </div>
       <div class="fullscreen-modal-body">${inner}</div>
     `;
@@ -396,7 +397,7 @@ function renderCelebration(backdrop, root, finalSlot, who, totalQty, pricedTotal
   backdrop.innerHTML = `
     <div class="fullscreen-modal-header">
       <div class="fullscreen-modal-title">🎉 Order sent!</div>
-      <button class="toolbar-icon-btn" id="celebration-done" title="Done">✕</button>
+      <button class="${iconButtonStyles['toolbar-icon-btn']}" id="celebration-done" title="Done">✕</button>
     </div>
     <div class="fullscreen-modal-body celebration-body">
       <div class="celebration-badge">✓</div>

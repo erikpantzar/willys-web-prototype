@@ -14,6 +14,7 @@ import searchBoxStyles from '../components/SearchBox.module.css';
 import resultCardStyles from '../components/ResultCard.module.css';
 import totalCardStyles from '../components/TotalCard.module.css';
 import emptyStateStyles from '../components/EmptyState.module.css';
+import iconButtonStyles from '../components/IconButton.module.css';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const SEARCH_RESULT_LIMIT = 15;
@@ -189,7 +190,7 @@ function openFilterModal(root, items) {
       <div class="${dialogStyles['confirm-dialog']} filter-modal">
         <div class="filter-modal-header">
           <div class="filter-modal-title">Filter list</div>
-          <button type="button" class="toolbar-icon-btn" id="filter-modal-close" title="Close">✕</button>
+          <button type="button" class="${iconButtonStyles['toolbar-icon-btn']}" id="filter-modal-close" title="Close">✕</button>
         </div>
         <div class="filter-modal-section">
           <div class="who-label">Who</div>
@@ -289,9 +290,9 @@ export async function renderList(root) {
     </div>
 
     <div class="list-rail">
-    <div class="view-toolbar list-toolbar">
-      <button type="button" class="toolbar-icon-btn" id="sort-btn" title="Sort: ${escapeHtml(activeSortMode.label)} (tap to cycle)">${escapeHtml(activeSortMode.glyph)}</button>
-      <button type="button" class="toolbar-icon-btn${isFilterActive(filterState) ? ' active' : ''}" id="filter-btn" title="Filter list">
+    <div class="${iconButtonStyles['view-toolbar']} list-toolbar">
+      <button type="button" class="${iconButtonStyles['toolbar-icon-btn']}" id="sort-btn" title="Sort: ${escapeHtml(activeSortMode.label)} (tap to cycle)">${escapeHtml(activeSortMode.glyph)}</button>
+      <button type="button" class="${iconButtonStyles['toolbar-icon-btn']}${isFilterActive(filterState) ? ' active' : ''}" id="filter-btn" title="Filter list">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M8 12h8M11 18h2" stroke="var(--list-pill-fg)" stroke-width="2" stroke-linecap="round"></path></svg>
         ${isFilterActive(filterState) ? `<span class="filter-count-badge">${activeFilterCount(filterState)}</span>` : ''}
       </button>

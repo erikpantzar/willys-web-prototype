@@ -160,13 +160,6 @@ button { transition: transform 0.1s ease; }
    that view's color identity (see .tab rules), so the view itself can
    start right at the top with its main content, no separate header. */
 .view-body-top { padding-top: 1rem; }
-.view-toolbar { display: flex; justify-content: flex-end; margin-bottom: 0.5rem; }
-.toolbar-icon-btn {
-  width: 2.2rem; height: 2.2rem; border-radius: 0.75rem; border: none;
-  background: var(--delivery-pill-bg); display: flex; align-items: center; justify-content: center;
-  cursor: pointer; flex-shrink: 0;
-}
-
 
 /* Top, not bottom (was a fixed bottom bar — iOS pushes that up above the
    keyboard while typing, a poor experience; a top bar never fights the
