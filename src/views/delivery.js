@@ -50,6 +50,52 @@ function currentRoute() {
   return (location.hash || '#list').slice(1);
 }
 
+// Issue #34: the ~20s delivery-times fetch has a loader saying as much, but
+// the only way to know it's done is to keep watching it (or the tab badge,
+// if on another view). If someone backgrounds the tab/app mid-check, a
+// notification on completion means they don't have to commit to staring at
+// a spinner. Permission is asked for right here — the first time someone
+// actually backgrounds during a check — never up front on load, which is
+// the surest way to get an instant "block" with zero context attached.
+let backgroundListener = null;
+
+function armBackgroundNotify() {
+  disarmBackgroundNotify();
+  if (!window.Notification) return; // no API, nothing to arm
+  backgroundListener = () => {
+    if (document.visibilityState !== 'hidden') return;
+    if (Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {});
+    }
+  };
+  document.addEventListener('visibilitychange', backgroundListener);
+}
+
+function disarmBackgroundNotify() {
+  if (!backgroundListener) return;
+  document.removeEventListener('visibilitychange', backgroundListener);
+  backgroundListener = null;
+}
+
+// Fire-and-forget: called right as a check resolves. Never awaited by the
+// caller — a missing/unready SW or a still-pending permission decision
+// should never delay rendering the results that just arrived.
+async function notifyIfBackgrounded() {
+  if (document.visibilityState !== 'hidden') return;
+  if (!window.Notification || Notification.permission !== 'granted') return;
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    reg.showNotification('Delivery times are ready', {
+      body: 'Come back and pick a slot before it goes stale.',
+      icon: `${import.meta.env.BASE_URL}icon.svg`,
+      tag: 'delivery-times-ready',
+    });
+  } catch {
+    // notifications are a nice-to-have — never let this break the check flow
+  }
+}
+
 // No colored hero banner (the top nav tab already carries the "Delivery"
 // identity/color) — just the view-body plus a small refresh control,
 // present in every state (loading/error/empty/success alike) so there's
@@ -89,11 +135,13 @@ export async function renderDelivery(root, { forceRefresh = false } = {}) {
   root.innerHTML = shell(pixelLoaderHtml('Fetching delivery times… (can take up to ~20s)'));
   wireRefresh(root);
   setDeliveryStatus('loading');
+  armBackgroundNotify();
 
   let body;
   try {
     body = await api.getDeliveryTimesWide(forceRefresh);
   } catch (err) {
+    disarmBackgroundNotify();
     // Only render error if we're still on the delivery route
     if (currentRoute() === routeAtStart && routeAtStart === 'delivery') {
       root.innerHTML = shell(`<div class="error">Could not check delivery times: ${escapeHtml(err.message)}</div>`);
@@ -102,6 +150,9 @@ export async function renderDelivery(root, { forceRefresh = false } = {}) {
     setDeliveryStatus('idle');
     return;
   }
+
+  disarmBackgroundNotify();
+  notifyIfBackgrounded();
 
   // Only render content if we're still on the delivery route
   if (currentRoute() !== routeAtStart || routeAtStart !== 'delivery') {

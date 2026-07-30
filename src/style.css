@@ -124,6 +124,28 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
 
 .view-body { padding: 0 1rem 1.5rem; max-width: 640px; margin: 0 auto; }
 
+/* Tablet/desktop layout (issue #31) — above this breakpoint, the List
+   view's fixed 640px centered column (same as phone) wastes the extra
+   width instead of using it. Search + results move into a left rail,
+   the running list into a right rail, so adding an item is no longer a
+   separate "mode" from looking at what's already in the cart the way it
+   functionally is on a single phone-width column. Both rails still have
+   a bounded max-width — this isn't "stretch the content to fill the
+   screen", same tap-target/line-length reasoning as phone, just laid
+   out side by side instead of stacked. Below the breakpoint, .list-rail
+   is a no-op wrapper (it wasn't there at all before #31; on phone it
+   just contributes no layout of its own, same DOM order as always). */
+@media (min-width: 900px) {
+  .list-view-body {
+    max-width: 960px;
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+  }
+  .list-view-body .search-section { flex: 0 0 400px; max-width: 400px; margin-bottom: 0; }
+  .list-view-body .list-rail { flex: 1 1 480px; max-width: 520px; min-width: 0; }
+}
+
 .demo-banner {
   background: var(--list-btn);
   color: white;
@@ -220,6 +242,20 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
 }
 .tab[data-route="list"] { color: color-mix(in oklch, var(--list-pill-fg) 45%, var(--bg)); }
 .tab[data-route="delivery"] { color: color-mix(in oklch, var(--delivery-pill-fg) 45%, var(--bg)); }
+/* The generic `button:active { transform: scale(0.96) }` press-feedback
+   shrinks around the button's center by default. That's fine everywhere
+   else, but here the cart badge sits off-center (flush right, via
+   .tab-label's flex: 1 — see below), so shrinking toward the middle
+   nudges the badge a few px left under a stationary pointer. Harmless for
+   touch (a tap's target is resolved from touchstart, not re-hit-tested
+   after the shrink) but a real miss for a mouse click that stays at one
+   point through mousedown+mouseup: found this the hard way — with the
+   default center origin, a Playwright mouse click at the badge's own
+   center intercepted on the *button* instead once the shrink had nudged
+   the badge out from under the pointer by mouseup. Anchoring the shrink
+   to the right edge keeps the badge visually still under press, so its
+   own click target never moves. */
+.tab[data-route="list"]:active { transform-origin: right center; }
 .tab.active { font-weight: 800; }
 .tab[data-route="list"].active { color: var(--list-pill-fg); border-bottom-color: var(--list-btn); }
 .tab[data-route="delivery"].active { color: var(--delivery-pill-fg); border-bottom-color: var(--delivery-btn); }
@@ -229,11 +265,57 @@ button, .result-card, .item-row { transition: transform 0.1s ease; }
    at equal specificity, so a "hidden" badge rendered as an empty dot. */
 .cart-badge[hidden], .tab-badge[hidden] { display: none; }
 
+/* Lets "List" recenter in the space left over once the badge (its flex
+   sibling) takes what it needs, instead of both being centered as a fixed
+   group (issue #38). Without this, the wider total-mode pill ("348,34
+   kr") drags the group's center left, off the button's actual midpoint —
+   verified with Playwright against real iPhone viewport geometry: in that
+   layout the button's own horizontal center ends up *inside the badge's
+   bounding box*. Since the badge's own click handler stops propagation
+   (see wireCartBadgeToggle — needed so a peek-the-total tap from the
+   Delivery tab doesn't also navigate to List), a plain center-tap meant to
+   switch to the List tab would silently land on the badge instead and
+   just re-toggle it, never navigating.
+   Tried pinning the badge with `position: absolute` first, which fixes
+   the geometry but breaks tapping it at all: Chromium doesn't deliver
+   click events to an absolutely-positioned descendant of a native
+   <button> even when it's the topmost element per elementFromPoint
+   (confirmed by temporarily moving the badge outside the button in a
+   throwaway test — clicks reached it fine there). flex: 1 keeps the badge
+   a normal in-flow sibling, sidestepping that entirely. */
+.tab-label { flex: 1; text-align: center; }
+
 .cart-badge {
   min-width: 1.1rem; height: 1.1rem;
   border-radius: 0.6rem; background: var(--search-btn); color: #fff; font-size: 0.65rem;
   font-weight: 800; display: flex; align-items: center; justify-content: center; padding: 0 0.3rem;
   font-family: 'Baloo 2', sans-serif;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: min-width 0.15s ease, padding 0.15s ease;
+}
+/* Tap-to-toggle target (issue #38) — same pill doubles as the running
+   total, so it needs to read as tappable even though it's a <span>, not a
+   <button> (button/badge shapes don't mix well here). */
+.cart-badge:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+/* "348,34 kr" needs more horizontal room and slightly smaller type than a
+   1-2 digit count — same pill, relaxed width instead of a second element. */
+.cart-badge.cart-badge-price {
+  min-width: 2.7rem;
+  font-size: 0.58rem;
+  padding: 0 0.4rem;
+  border-radius: 0.65rem;
+}
+/* Brief pulse on qty/add changes, echoing #total-amount's total-pop
+   (animateTotal() in list.js) — same "felt, not just read" nudge, scaled
+   down for the small pill instead of a separate toast. */
+.cart-badge.badge-pop { animation: cart-badge-pop 0.35s ease-out; }
+@keyframes cart-badge-pop {
+  0% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cart-badge.badge-pop { animation: none; }
 }
 
 .tab-badge {
@@ -344,6 +426,65 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 .who-new-row { margin-top: 0.55rem; }
 .who-new-row[hidden] { display: none; }
 
+/* Sort & filter (issue #37). Sort is a plain toolbar-icon-btn with a short
+   text glyph instead of an icon — a handful of mutually exclusive states
+   ("NEW", "OLD", "NO¤", "A–Z") reads unambiguously at this size where an
+   abstract icon wouldn't need a whole legend. Filter reuses the same
+   button shape but gets its own active/badge treatment below, since it's
+   the one of the two that can hide items. */
+.list-toolbar { gap: 0.5rem; }
+#sort-btn { font-size: 0.62rem; font-weight: 800; font-family: 'Baloo 2', sans-serif; color: var(--list-pill-fg); letter-spacing: -0.02em; }
+#filter-btn { position: relative; }
+#filter-btn.active { background: var(--list-btn); }
+#filter-btn.active svg path { stroke: #fff; }
+.filter-count-badge {
+  position: absolute; top: -0.3rem; right: -0.3rem;
+  min-width: 1rem; height: 1rem; border-radius: 0.55rem;
+  background: var(--danger-fg); color: #fff; font-size: 0.62rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; padding: 0 0.25rem;
+  font-family: 'Baloo 2', sans-serif;
+}
+/* The "unmissable when active" banner (per #37's ask) — same colored-strip
+   pattern as .demo-banner, deliberately in the Search view's orange rather
+   than the List view's own green so an active filter reads as a distinct,
+   attention-getting state rather than just more of the page's usual
+   color. Doubles as the one-tap "clear all" — the ✕ is mostly a visual
+   affordance, since tapping anywhere on the banner clears (see list.js). */
+.filter-banner {
+  background: var(--search-btn);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: center;
+  padding: 0.55rem 0.9rem;
+  border-radius: 1rem;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: 'Baloo 2', sans-serif;
+}
+.filter-banner-clear-btn {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  border: none;
+  width: 1.3rem; height: 1.3rem; border-radius: 50%;
+  font-size: 0.7rem;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+}
+.filter-modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem; }
+.filter-modal-title { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 1.05rem; }
+.filter-modal-section { margin-bottom: 0.9rem; }
+.filter-modal-toggle { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.85rem; }
+/* Shortcut from #37's "worth floating" idea: tapping an item row's persona
+   badge filters straight to that person (see wireItemRow) — only wired up
+   in the List view, so only there does the badge read as tappable. */
+.item-list .item-persona-badge { cursor: pointer; }
+
 .item-list { list-style: none; margin: 0.75rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; }
 .item-row {
   position: relative;
@@ -433,6 +574,13 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 }
 @media (prefers-reduced-motion: reduce) {
   .result-card-enter { animation: none; }
+}
+/* Item rows added via the local-patch path (see addItemLocally in list.js)
+   reuse this same pop-in rather than inventing a second entrance animation
+   for what's visually the same "a card just appeared" moment. */
+.item-row-enter { animation: result-pop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .item-row-enter { animation: none; }
 }
 .result-card.picking { opacity: 0.5; pointer-events: none; }
 .result-card.added { box-shadow: 0 0 0 2px var(--list-btn); }

@@ -75,6 +75,22 @@ export function vibrateAdd() {
   safely(() => navigator.vibrate?.([12, 40, 12]));
 }
 
+// Removing an item is a real ending, not just "a number changed" — a low,
+// short thud rather than another chime. Starts much lower and glides down
+// further than playQtyDownSound (440→293.66) so it reads as a distinct,
+// deeper "thud" rather than just a bigger version of the qty-down glide.
+export function playRemoveSound() {
+  const context = getContext();
+  if (!context) return;
+  safely(() => tone(context, { freq: 180, glideTo: 50, start: 0, duration: 0.2, gain: 0.17 }));
+}
+
+// A short, single, blunter pulse than vibrateAdd's three-beat pattern —
+// one thud, not a flourish.
+export function vibrateRemove() {
+  safely(() => navigator.vibrate?.(25));
+}
+
 // The payoff sound — order confirmed and sent. Bigger and longer than the
 // add chord on purpose: everything else in the app (add, qty+/-) is a small
 // step along the way, this is the moment those steps were building to. A
