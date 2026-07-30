@@ -4,6 +4,7 @@ import { extractPrice, isVariableWeight, formatSum, parseQuantity, formatProduct
 import { showToast } from '../toast.js';
 import { confirmDialog } from '../dialog.js';
 import { getWho, getIdentity, setWho } from '../who.js';
+import { FAMILY_MEMBERS, personaFor, personaBadgeHtml } from '../personas.js';
 import { recordAction, performUndo } from '../undo.js';
 import { pixelLoaderHtml } from '../loader.js';
 import { playAddSound, playQtyUpSound, playQtyDownSound, vibrateAdd } from '../sound.js';
@@ -55,9 +56,7 @@ export async function renderList(root) {
     ` : ''}
 
     <div class="utility-section">
-      <div class="who-row">
-        <label>Your name (optional) <input id="who" type="text" value="${escapeHtml(getWho())}" placeholder="e.g. Erik — defaults to Guest" /></label>
-      </div>
+      <div class="who-row" id="who-row">${whoRowHtml(items)}</div>
     </div>
 
     <div class="list-status">
@@ -70,23 +69,7 @@ export async function renderList(root) {
     </div>
   `;
 
-  const whoInput = root.querySelector('#who');
-  whoInput.addEventListener('change', (e) => {
-    const newName = e.target.value.trim();
-    const existingNames = new Set(items.map(i => i.added_by.toLowerCase()));
-    const currentWho = getWho().toLowerCase();
-
-    // Warn if the new name case-insensitively matches a different existing name
-    if (newName && newName.toLowerCase() !== currentWho && existingNames.has(newName.toLowerCase())) {
-      const matches = items.filter(i => i.added_by.toLowerCase() === newName.toLowerCase()).map(i => i.added_by);
-      const existingCasing = [...new Set(matches)][0];
-      if (existingCasing && existingCasing !== newName) {
-        showToast(`Note: "${existingCasing}" is already in use on this list (different casing).`);
-      }
-    }
-
-    setWho(newName);
-  });
+  wireWhoPicker(root, items);
 
   wireProductSearch(root);
 
@@ -160,6 +143,114 @@ export async function renderList(root) {
       showToast(`Could not reset: ${err.message}`);
     }
   });
+}
+
+// Chip picker for "who's adding" (issue #30) — replaces the old free-text
+// name field. Family members are always offered (so a fresh, empty list
+// still has them ready to tap), plus anyone else already seen on this list,
+// plus "+ New" for a one-off guest. Picking an existing chip can never
+// collide on casing since it writes back the exact canonical name; only
+// the "+ New" path can still produce a near-duplicate, so that's the one
+// place the casing-collision warning survives.
+function whoRowHtml(items) {
+  const selected = getWho() || 'Guest';
+  // The currently-selected name is included as a candidate too, not just
+  // names already on the list — otherwise typing a brand-new "+ New" name
+  // sets it correctly but has no chip to show it as selected until they've
+  // actually added an item under it.
+  const candidateNames = [...items.map((i) => i.added_by), selected];
+  const seen = new Set();
+  const extraNames = [];
+  for (const n of candidateNames) {
+    const key = n.toLowerCase();
+    if (key === 'guest' || FAMILY_MEMBERS.some((p) => p.name.toLowerCase() === key) || seen.has(key)) continue;
+    seen.add(key);
+    extraNames.push(n);
+  }
+  const chips = [...FAMILY_MEMBERS, personaFor('Guest'), ...extraNames.map((n) => personaFor(n))];
+  return `
+    <div class="who-label">Who's adding?</div>
+    <div class="who-chips" id="who-chips">
+      ${chips.map((p) => personaChipHtml(p, p.name.toLowerCase() === selected.toLowerCase())).join('')}
+      <button type="button" class="persona-chip persona-chip-new" id="who-new-btn">
+        <span class="persona-chip-emoji">✏️</span><span class="persona-chip-name">+ New</span>
+      </button>
+    </div>
+    <div class="who-new-row" id="who-new-row" hidden>
+      <input id="who-new-input" type="text" placeholder="Type a name…" autocomplete="off" />
+    </div>
+  `;
+}
+
+function personaChipHtml(persona, isSelected) {
+  return `
+    <button type="button" class="persona-chip${isSelected ? ' selected' : ''}" data-persona="${escapeHtml(persona.name)}" style="--persona-color:${persona.color}">
+      <span class="persona-chip-emoji">${persona.emoji}</span>
+      <span class="persona-chip-name">${escapeHtml(persona.name)}</span>
+    </button>
+  `;
+}
+
+function wireWhoPicker(root, items) {
+  const whoRow = root.querySelector('#who-row');
+
+  function rerender() {
+    whoRow.innerHTML = whoRowHtml(items);
+    wire();
+  }
+
+  function wire() {
+    whoRow.querySelectorAll('[data-persona]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        setWho(btn.dataset.persona);
+        rerender();
+      });
+    });
+
+    const newBtn = whoRow.querySelector('#who-new-btn');
+    const newRow = whoRow.querySelector('#who-new-row');
+    const newInput = whoRow.querySelector('#who-new-input');
+
+    newBtn.addEventListener('click', () => {
+      newRow.hidden = false;
+      newInput.focus();
+    });
+
+    // Guards against firing twice: committing via Enter replaces this
+    // input's DOM (rerender), which itself fires a native blur on the
+    // about-to-be-removed input — without this flag that blur would call
+    // commit() a second time.
+    let committed = false;
+    function commit() {
+      if (committed) return;
+      committed = true;
+      const newName = newInput.value.trim();
+      if (!newName) {
+        newRow.hidden = true;
+        return;
+      }
+      const existingNames = new Set(items.map((i) => i.added_by.toLowerCase()));
+      if (existingNames.has(newName.toLowerCase()) && newName.toLowerCase() !== (getWho() || '').toLowerCase()) {
+        const matches = items.filter((i) => i.added_by.toLowerCase() === newName.toLowerCase()).map((i) => i.added_by);
+        const existingCasing = [...new Set(matches)][0];
+        if (existingCasing && existingCasing !== newName) {
+          showToast(`Note: "${existingCasing}" is already in use on this list (different casing).`);
+        }
+      }
+      setWho(newName);
+      rerender();
+    }
+
+    newInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        commit();
+      }
+    });
+    newInput.addEventListener('blur', commit);
+  }
+
+  wire();
 }
 
 // Product-database search-and-add (the item-matcher-backed flow the
@@ -367,9 +458,9 @@ function emptyState() {
 function itemRow(item) {
   return `
     <li class="item-row">
+      ${personaBadgeHtml(item.added_by)}
       <div class="item-main">
         <div class="item-text">${escapeHtml(item.text)}</div>
-        <div class="item-meta">added by ${escapeHtml(item.added_by)}</div>
       </div>
       <div class="qty-stepper">
         <button data-qty-step="-1" data-id="${item.id}" data-current="${item.quantity}">−</button>

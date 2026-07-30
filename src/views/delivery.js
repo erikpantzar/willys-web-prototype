@@ -5,6 +5,7 @@ import { getIdentity } from '../who.js';
 import { getCached, setCached, clearCached, isStale } from '../deliveryCache.js';
 import { buildDeliveryIcsDataUrl } from '../calendar.js';
 import { extractPrice, formatSum } from '../format.js';
+import { personaBadgeHtml } from '../personas.js';
 import { playOrderConfirmedSound, vibrateOrderConfirmed } from '../sound.js';
 import { burstConfetti } from '../confetti.js';
 
@@ -212,9 +213,9 @@ async function verifySlotStillAvailable(slot) {
 function itemSummaryRow(item) {
   return `
     <li class="item-row item-row-readonly">
+      ${personaBadgeHtml(item.added_by)}
       <div class="item-main">
         <div class="item-text">${escapeHtml(item.text)}</div>
-        <div class="item-meta">added by ${escapeHtml(item.added_by)}</div>
       </div>
       <div class="item-qty-readonly">×${item.quantity}</div>
     </li>
