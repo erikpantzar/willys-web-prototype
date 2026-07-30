@@ -487,19 +487,6 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2), 0 0 0 2px var(--bg);
   z-index: 1;
 }
-.total {
-  margin-top: 1rem;
-  padding: 0.9rem 1rem;
-  border-radius: 1.1rem;
-  background: var(--card);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  font-weight: 800;
-  font-family: 'Baloo 2', sans-serif;
-  font-size: 0.95rem;
-  font-variant-numeric: tabular-nums;
-  display: flex;
-  justify-content: space-between;
-}
 /* Small pop when the rolling total updates (see list.js's animateTotal) —
    the number itself counts up/down over the same window. */
 #total-amount { display: inline-block; }
@@ -511,7 +498,6 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 @media (prefers-reduced-motion: reduce) {
   #total-amount.total-pop { animation: none; }
 }
-.total .note { font-weight: normal; font-family: 'Nunito', sans-serif; font-size: 0.72rem; color: var(--muted); display: block; margin-top: 0.2rem; }
 .list-status { margin-top: 0.7rem; font-size: 0.78rem; color: var(--muted); font-weight: 700; }
 .list-actions { margin-top: 1rem; }
 

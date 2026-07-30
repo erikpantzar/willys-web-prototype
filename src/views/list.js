@@ -12,6 +12,7 @@ import dialogStyles from '../dialog.module.css';
 import itemRowStyles from '../components/ItemRow.module.css';
 import searchBoxStyles from '../components/SearchBox.module.css';
 import resultCardStyles from '../components/ResultCard.module.css';
+import totalCardStyles from '../components/TotalCard.module.css';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const SEARCH_RESULT_LIMIT = 15;
@@ -301,9 +302,9 @@ export async function renderList(root) {
     </ul>
 
     ${pricedTotal > 0 ? `
-      <div class="total">
+      <div class="${totalCardStyles['total']}">
         Total: <span id="total-amount">${formatSum(pricedTotal)}</span> kr
-        ${missingPrice || anyVariable ? `<div class="note">${[missingPrice && 'some items have no price on file', anyVariable && 'some prices are per kg — weight varies'].filter(Boolean).join('; ')}</div>` : ''}
+        ${missingPrice || anyVariable ? `<div class="${totalCardStyles['note']}">${[missingPrice && 'some items have no price on file', anyVariable && 'some prices are per kg — weight varies'].filter(Boolean).join('; ')}</div>` : ''}
       </div>
     ` : ''}
 
