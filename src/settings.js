@@ -48,3 +48,17 @@ export function setDemoMode(on) {
   if (on) localStorage.setItem(DEMO_KEY, '1');
   else localStorage.removeItem(DEMO_KEY);
 }
+
+// Group-by-department toggle (issue #41) — a viewing preference, so it
+// persists across sessions like demo mode does, unlike sort/filter (#37)
+// which are deliberately session-only. Default off: absent key -> false.
+const GROUP_BY_DEPT_KEY = 'willys.groupByDepartment';
+
+export function isGroupByDepartment() {
+  return localStorage.getItem(GROUP_BY_DEPT_KEY) === '1';
+}
+
+export function setGroupByDepartment(on) {
+  if (on) localStorage.setItem(GROUP_BY_DEPT_KEY, '1');
+  else localStorage.removeItem(GROUP_BY_DEPT_KEY);
+}

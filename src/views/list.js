@@ -8,6 +8,7 @@ import { FAMILY_MEMBERS, personaFor, personaBadgeHtml } from '../personas.js';
 import { recordAction, performUndo } from '../undo.js';
 import { pixelLoaderHtml } from '../loader.js';
 import { playAddSound, playQtyUpSound, playQtyDownSound, playRemoveSound, vibrateAdd, vibrateRemove } from '../sound.js';
+import { isGroupByDepartment, setGroupByDepartment } from '../settings.js';
 import dialogStyles from '../dialog.module.css';
 import itemRowStyles from '../components/ItemRow.module.css';
 import searchBoxStyles from '../components/SearchBox.module.css';
@@ -15,6 +16,7 @@ import resultCardStyles from '../components/ResultCard.module.css';
 import totalCardStyles from '../components/TotalCard.module.css';
 import emptyStateStyles from '../components/EmptyState.module.css';
 import iconButtonStyles from '../components/IconButton.module.css';
+import departmentGroupStyles from '../components/DepartmentGroup.module.css';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const SEARCH_RESULT_LIMIT = 15;
@@ -59,10 +61,60 @@ function isFilterActive(f) {
 
 // The fast local-patch paths (addItemLocally etc.) only make sense when
 // what's on screen is exactly `items` in API order — once a sort or filter
-// is engaged they fall back to rebuilding just the list (still no network
-// call, still no "Loading list…" flash, just not the single-row DOM patch).
+// is engaged (or grouping is on, which needs its section headers/counts
+// kept in sync) they fall back to rebuilding just the list (still no
+// network call, still no "Loading list…" flash, just not the single-row
+// DOM patch).
 function isDefaultView() {
-  return sortMode === 'none' && !isFilterActive(filterState);
+  return sortMode === 'none' && !isFilterActive(filterState) && !isGroupByDepartment();
+}
+
+// Group-by-department (issue #41). Buckets the already sorted/filtered
+// items by department — items with no department (or an unrecognized one,
+// since the catalog->department plumbing from #1 doesn't exist yet) land
+// in a trailing "Övrigt" ("Other") bucket, which is expected today: every
+// item falls into it until that plumbing lands, and it must render fine,
+// not break. No department-order list is threaded through yet either, so
+// known departments are ordered by first appearance in `visibleItems`.
+const UNGROUPED_LABEL = 'Övrigt';
+
+function groupByDepartment(visibleItems) {
+  const order = [];
+  const buckets = new Map();
+  for (const item of visibleItems) {
+    const name = item.departmentName || UNGROUPED_LABEL;
+    if (!buckets.has(name)) {
+      buckets.set(name, []);
+      order.push(name);
+    }
+    buckets.get(name).push(item);
+  }
+  // The "Övrigt" bucket always trails the known departments, even if it
+  // happened to be the first one seen (the common case today).
+  const known = order.filter((n) => n !== UNGROUPED_LABEL);
+  const names = buckets.has(UNGROUPED_LABEL) ? [...known, UNGROUPED_LABEL] : known;
+  return names.map((name) => ({ name, items: buckets.get(name) }));
+}
+
+// Shared by renderList's initial markup and rerenderItemList's rebuild —
+// one flat <ul> when grouping is off (today's look), or one <section> per
+// department with a plain header (name + count) and a nested <ul> when
+// it's on. No accordion/collapse, no per-group subtotal — both explicitly
+// out of scope for #41.
+function itemListMarkup(items, visibleItems) {
+  if (items.length === 0) return `<ul class="item-list">${emptyState()}</ul>`;
+  if (visibleItems.length === 0) return `<ul class="item-list">${filteredEmptyState()}</ul>`;
+  if (!isGroupByDepartment()) return `<ul class="item-list">${visibleItems.map(itemRow).join('')}</ul>`;
+  return groupByDepartment(visibleItems)
+    .map(
+      (group) => `
+        <section class="${departmentGroupStyles['department-group']}">
+          <h3>${escapeHtml(group.name)} (${group.items.length})</h3>
+          <ul class="item-list">${group.items.map(itemRow).join('')}</ul>
+        </section>
+      `
+    )
+    .join('');
 }
 
 function applySortFilter(items) {
@@ -120,6 +172,9 @@ function rerenderItemList(root, items) {
     }
   }
 
+  const groupBtn = root.querySelector('#group-btn');
+  if (groupBtn) groupBtn.classList.toggle('active', isGroupByDepartment());
+
   root.querySelector('#filter-banner')?.remove();
   if (isFilterActive(filterState)) {
     const banner = document.createElement('div');
@@ -130,11 +185,11 @@ function rerenderItemList(root, items) {
     root.querySelector('.list-toolbar')?.after(banner);
   }
 
-  const list = root.querySelector('.item-list');
-  if (list) {
+  const wrap = root.querySelector('#item-list-wrap');
+  if (wrap) {
     const visible = applySortFilter(items);
-    list.innerHTML = items.length === 0 ? emptyState() : visible.length === 0 ? filteredEmptyState() : visible.map(itemRow).join('');
-    list.querySelectorAll(`.${itemRowStyles['item-row']}`).forEach((li) => wireItemRow(li, root, items));
+    wrap.innerHTML = itemListMarkup(items, visible);
+    wrap.querySelectorAll(`.${itemRowStyles['item-row']}`).forEach((li) => wireItemRow(li, root, items));
   }
 }
 
@@ -146,6 +201,10 @@ function wireSortFilterToolbar(root, items) {
   });
   root.querySelector('#filter-btn')?.addEventListener('click', () => openFilterModal(root, items));
   root.querySelector('#filter-banner')?.addEventListener('click', () => clearFilters(root, items));
+  root.querySelector('#group-btn')?.addEventListener('click', () => {
+    setGroupByDepartment(!isGroupByDepartment());
+    rerenderItemList(root, items);
+  });
 }
 
 // The filter modal (issue #37) — by person (reusing the same persona chips
@@ -303,12 +362,13 @@ export async function renderList(root) {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M8 12h8M11 18h2" stroke="var(--list-pill-fg)" stroke-width="2" stroke-linecap="round"></path></svg>
         ${isFilterActive(filterState) ? `<span class="filter-count-badge">${activeFilterCount(filterState)}</span>` : ''}
       </button>
+      <button type="button" class="${iconButtonStyles['toolbar-icon-btn']}${isGroupByDepartment() ? ' active' : ''}" id="group-btn" title="Group by department">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 5h7v6H4zM13 5h7v6h-7zM4 13h7v6H4zM13 13h7v6h-7z" stroke="var(--list-pill-fg)" stroke-width="2" stroke-linejoin="round"></path></svg>
+      </button>
     </div>
     ${isFilterActive(filterState) ? `<div class="filter-banner" id="filter-banner"><span>${escapeHtml(filterBannerText())}</span><button type="button" class="filter-banner-clear-btn" aria-label="Clear filters">✕</button></div>` : ''}
 
-    <ul class="item-list">
-      ${items.length === 0 ? emptyState() : visibleItems.length === 0 ? filteredEmptyState() : visibleItems.map(itemRow).join('')}
-    </ul>
+    <div class="item-list-wrap" id="item-list-wrap">${itemListMarkup(items, visibleItems)}</div>
 
     ${pricedTotal > 0 ? `
       <div class="${totalCardStyles['total']}">

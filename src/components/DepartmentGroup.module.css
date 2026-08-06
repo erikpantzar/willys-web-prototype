@@ -1,0 +1,15 @@
+/* Group-by-department section header (issue #41) — same spacing/typography
+   pattern as Delivery's date groups (DeliverySlots.module.css's
+   .delivery-group/h3), reused here rather than inventing new rules. Plain
+   header + nested list, no accordion/collapse — that's explicitly out of
+   scope for this issue. */
+.department-group { margin-bottom: 1.2rem; }
+.department-group h3 {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0 0 0.6rem;
+  color: var(--ink-soft);
+  text-transform: none;
+  letter-spacing: 0;
+}
