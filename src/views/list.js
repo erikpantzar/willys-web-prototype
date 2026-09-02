@@ -345,7 +345,7 @@ export async function renderList(root) {
   const activeSortMode = SORT_MODES.find((m) => m.id === sortMode);
 
   root.innerHTML = `
-    <div class="view-body view-body-top list-view-body">
+    <div class="view-body view-body-top">
     <div class="${searchBoxStyles['search-section']}">
       <form id="search-form" class="${searchBoxStyles['search-box']}">
         ${icon('search', { size: 18 })}
@@ -353,16 +353,8 @@ export async function renderList(root) {
         <button type="button" id="search-clear" class="${searchBoxStyles['search-clear-btn']}" hidden aria-label="Clear search">${icon('close', { size: 12, strokeWidth: 3 })}</button>
       </form>
       <div id="search-results" class="${searchBoxStyles['results-grid']}"></div>
-      <div id="search-placeholder" class="${searchBoxStyles['search-placeholder']}">
-        <div class="${searchBoxStyles['search-placeholder-icon']}">
-          ${icon('search', { size: 22 })}
-        </div>
-        <div class="${searchBoxStyles['search-placeholder-title']}">Search groceries</div>
-        <div class="${searchBoxStyles['search-placeholder-subtitle']}">Find products above to add them to your list.</div>
-      </div>
     </div>
 
-    <div class="list-rail">
     <div class="${iconButtonStyles['view-toolbar']} list-toolbar">
       <button type="button" class="${iconButtonStyles['toolbar-icon-btn']} save-cart-btn" id="save-cart-btn" title="${items.length === 0 ? 'Add something to the list first to save it as a cart' : 'Save list as cart'}" aria-label="Save list as cart" ${items.length === 0 ? 'disabled' : ''}>
         ${icon('save-cart', { size: 20 })}
@@ -397,7 +389,6 @@ export async function renderList(root) {
 
     <div class="list-actions">
       <button id="reset-btn" class="danger">Reset list</button>
-    </div>
     </div>
     </div>
   `;
@@ -805,7 +796,6 @@ function wireProductSearch(root, items) {
   const input = root.querySelector('#search-input');
   const clearBtn = root.querySelector('#search-clear');
   const resultsEl = root.querySelector('#search-results');
-  const placeholderEl = root.querySelector('#search-placeholder');
   let debounceTimer;
   let requestSeq = 0;
   let currentResolution = null;
@@ -818,7 +808,6 @@ function wireProductSearch(root, items) {
     const raw = input.value.trim();
     if (!raw) {
       resultsEl.innerHTML = '';
-      placeholderEl.hidden = false;
       currentResolution = null;
       return;
     }
@@ -830,7 +819,6 @@ function wireProductSearch(root, items) {
     input.value = '';
     clearBtn.hidden = true;
     resultsEl.innerHTML = '';
-    placeholderEl.hidden = false;
     currentResolution = null;
     input.focus();
   });
@@ -838,7 +826,6 @@ function wireProductSearch(root, items) {
   async function runSearch(raw) {
     const seq = ++requestSeq;
     const { text: query, quantity } = parseQuantity(raw);
-    placeholderEl.hidden = true;
     resultsEl.innerHTML = pixelLoaderHtml('Searching…');
     let body;
     try {
@@ -928,7 +915,6 @@ function wireProductSearch(root, items) {
       input.value = '';
       clearBtn.hidden = true;
       resultsEl.innerHTML = '';
-      placeholderEl.hidden = false;
       currentResolution = null;
       input.focus();
     } catch (err) {
