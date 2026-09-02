@@ -14,4 +14,4 @@
   -webkit-tap-highlight-color: transparent;
   transition: opacity 0.15s, color 0.15s, background 0.15s;
 }
-.link:active { opacity: 1; color: var(--ink); background: rgba(0, 0, 0, 0.06); }
+.link:active { opacity: 1; color: var(--ink); background: var(--press-tint); }

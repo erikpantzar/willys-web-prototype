@@ -139,9 +139,9 @@ button { transition: transform 0.1s ease; }
   gap: 0.35rem;
   transition: color 0.2s ease;
 }
-.tab[data-route="carts"] { color: color-mix(in oklch, var(--carts-pill-fg) 45%, var(--bg)); }
-.tab[data-route="list"] { color: color-mix(in oklch, var(--list-pill-fg) 45%, var(--bg)); }
-.tab[data-route="delivery"] { color: color-mix(in oklch, var(--delivery-pill-fg) 45%, var(--bg)); }
+.tab[data-route="carts"] { color: var(--tab-carts-fg); }
+.tab[data-route="list"] { color: var(--tab-list-fg); }
+.tab[data-route="delivery"] { color: var(--tab-delivery-fg); }
 /* The generic `button:active { transform: scale(0.96) }` press-feedback
    shrinks around the button's center by default. That's fine everywhere
    else, but here the cart badge sits off-center (flush right, via
@@ -536,10 +536,10 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
   align-items: center;
   text-align: center;
   padding: 2.5rem 1.5rem 2rem;
-  background: linear-gradient(180deg, oklch(80% 0.1 245), oklch(90% 0.05 90) 70%);
+  background: linear-gradient(180deg, var(--setup-grad-1), var(--setup-grad-2) 70%);
 }
 .setup-icon {
-  width: 5.5rem; height: 5.5rem; border-radius: 50%; background: #fff; color: var(--delivery-btn);
+  width: 5.5rem; height: 5.5rem; border-radius: 50%; background: var(--card); color: var(--delivery-btn);
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1); margin-bottom: 1.25rem;
 }

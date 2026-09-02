@@ -55,7 +55,7 @@
   height: 1.7rem;
   border: none;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--press-tint);
   color: var(--muted);
   font-size: 0.85rem;
   display: flex;
