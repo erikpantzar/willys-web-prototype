@@ -8,6 +8,7 @@ import { extractPrice, formatSum } from '../format.js';
 import { personaBadgeHtml } from '../personas.js';
 import { playOrderConfirmedSound, vibrateOrderConfirmed } from '../sound.js';
 import { burstConfetti } from '../confetti.js';
+import { icon } from '../icons.js';
 import itemRowStyles from '../components/ItemRow.module.css';
 import iconButtonStyles from '../components/IconButton.module.css';
 import deliverySlotsStyles from '../components/DeliverySlots.module.css';
@@ -44,7 +45,7 @@ function updateTabBadge() {
   } else if (deliveryStatus === 'ready') {
     badge.hidden = false;
     badge.className = 'tab-badge ready';
-    badge.innerHTML = '';
+    badge.innerHTML = icon('check', { size: 12, strokeWidth: 3 });
   } else {
     badge.hidden = true;
     badge.innerHTML = '';
@@ -109,8 +110,8 @@ function shell(inner) {
   return `
     <div class="view-body view-body-top">
       <div class="${iconButtonStyles['view-toolbar']}">
-        <button class="${iconButtonStyles['toolbar-icon-btn']}" id="refresh-delivery" title="Refresh available times">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 0113.66-5.66M20 12a8 8 0 01-13.66 5.66" stroke="var(--delivery-pill-fg)" stroke-width="2" stroke-linecap="round"></path><path d="M17 3v4h-4M7 21v-4h4" stroke="var(--delivery-pill-fg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        <button class="${iconButtonStyles['toolbar-icon-btn']}" id="refresh-delivery" title="Refresh available times" aria-label="Refresh available times">
+          ${icon('refresh', { size: 20 })}
         </button>
       </div>
       ${inner}
@@ -121,7 +122,7 @@ function shell(inner) {
 function checkedNote(fetchedAt) {
   const mins = Math.max(0, Math.round((Date.now() - fetchedAt) / 60000));
   const when = mins === 0 ? 'just now' : mins === 1 ? '1 minute ago' : `${mins} minutes ago`;
-  return `<div class="muted" style="margin-bottom: 0.7rem">Checked ${when}${mins >= 5 ? ' — tap ↻ above to refresh' : ''}</div>`;
+  return `<div class="muted" style="margin-bottom: 0.7rem">Checked ${when}${mins >= 5 ? ` — tap ${icon('refresh', { size: 14 })} above to refresh` : ''}</div>`;
 }
 
 export async function renderDelivery(root, { forceRefresh = false } = {}) {
@@ -217,12 +218,12 @@ function findSoonestSlot(alternatives) {
 function soonestCard(slot) {
   return `
     <button class="soonest-card" data-slot='${JSON.stringify(slot).replace(/'/g, '&#39;')}'>
-      <div class="soonest-icon">🚚</div>
+      <div class="soonest-icon">${icon('truck', { size: 30 })}</div>
       <div class="soonest-text">
         <div class="soonest-label">Fastest available</div>
         <div class="soonest-time">${escapeHtml(timePart(slot.formattedTime))}</div>
       </div>
-      <div class="soonest-arrow">→</div>
+      <div class="soonest-arrow">${icon('chevron-right', { size: 22, strokeWidth: 2.5 })}</div>
     </button>
   `;
 }
@@ -242,7 +243,7 @@ function dateGroup(alt, soonestStartTime) {
         ${alt.slots
           .map((s) => {
             const isSoonest = s.startTime === soonestStartTime;
-            return `<button data-slot='${JSON.stringify(s).replace(/'/g, '&#39;')}' class="${isSoonest ? 'is-soonest' : ''}">${isSoonest ? '⚡ ' : ''}${escapeHtml(timePart(s.formattedTime))}</button>`;
+            return `<button data-slot='${JSON.stringify(s).replace(/'/g, '&#39;')}' class="${isSoonest ? 'is-soonest' : ''}">${isSoonest ? `${icon('zap', { size: 14, strokeWidth: 2.5 })} ` : ''}${escapeHtml(timePart(s.formattedTime))}</button>`;
           })
           .join('')}
       </div>
@@ -304,7 +305,7 @@ async function openConfirmModal(root, slot, slotBtn) {
     backdrop.innerHTML = `
       <div class="${fullscreenModalStyles['fullscreen-modal-header']}">
         <div class="${fullscreenModalStyles['fullscreen-modal-title']}">Confirm order</div>
-        <button class="${iconButtonStyles['toolbar-icon-btn']}" id="modal-close" title="Cancel">✕</button>
+        <button class="${iconButtonStyles['toolbar-icon-btn']}" id="modal-close" title="Cancel" aria-label="Cancel">${icon('close', { size: 18 })}</button>
       </div>
       <div class="${fullscreenModalStyles['fullscreen-modal-body']}">${inner}</div>
     `;
@@ -318,7 +319,7 @@ async function openConfirmModal(root, slot, slotBtn) {
 
   renderBody(`
     <div class="confirm-hero">
-      <div class="confirm-hero-icon">🚚</div>
+      <div class="confirm-hero-icon">${icon('truck', { size: 44 })}</div>
       <div class="confirm-time-banner">
         <div class="muted">Delivery time</div>
         <div class="confirm-time">${escapeHtml(slot.formattedTime)}</div>
@@ -400,25 +401,25 @@ function renderCelebration(backdrop, root, finalSlot, who, totalQty, pricedTotal
   backdrop.innerHTML = `
     <div class="${fullscreenModalStyles['fullscreen-modal-header']}">
       <div class="${fullscreenModalStyles['fullscreen-modal-title']}">🎉 Order sent!</div>
-      <button class="${iconButtonStyles['toolbar-icon-btn']}" id="celebration-done" title="Done">✕</button>
+      <button class="${iconButtonStyles['toolbar-icon-btn']}" id="celebration-done" title="Done" aria-label="Done">${icon('close', { size: 18 })}</button>
     </div>
     <div class="${fullscreenModalStyles['fullscreen-modal-body']} celebration-body">
-      <div class="celebration-badge">✓</div>
+      <div class="celebration-badge">${icon('check', { size: 40, strokeWidth: 3 })}</div>
       <div class="celebration-message">Nice one, ${escapeHtml(who)}! Delivery is on its way.</div>
       <div class="receipt-card">
         <div class="receipt-time">${escapeHtml(finalSlot.formattedTime)}</div>
         <div class="receipt-sub muted">${totalQty} item${totalQty === 1 ? '' : 's'}${pricedTotal > 0 ? ` · ${formatSum(pricedTotal)} kr` : ''}</div>
       </div>
       <div class="celebration-actions">
-        <a class="${addToCalendarLinkStyles['add-to-calendar-link']}" href="${buildDeliveryIcsDataUrl(finalSlot)}" download="willys-delivery.ics">📅 Add to calendar</a>
-        ${navigator.share ? `<button id="share-order" class="share-btn">📤 Share with the household</button>` : ''}
+        <a class="${addToCalendarLinkStyles['add-to-calendar-link']}" href="${buildDeliveryIcsDataUrl(finalSlot)}" download="willys-delivery.ics">${icon('calendar', { size: 18 })} Add to calendar</a>
+        ${navigator.share ? `<button id="share-order" class="share-btn">${icon('share', { size: 18 })} Share with the household</button>` : ''}
       </div>
     </div>
   `;
 
   function close() {
     backdrop.remove();
-    root.innerHTML = shell(`<div class="success">✅ All set — see you at delivery ${escapeHtml(timePart(finalSlot.formattedTime))}.</div>`);
+    root.innerHTML = shell(`<div class="success">${icon('check', { size: 16, strokeWidth: 2.5 })} All set — see you at delivery ${escapeHtml(timePart(finalSlot.formattedTime))}.</div>`);
     wireRefresh(root);
   }
   backdrop.querySelector('#celebration-done').addEventListener('click', close);

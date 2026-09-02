@@ -6,6 +6,7 @@
   background: var(--card); border: 2px solid var(--search-pill-bg); border-radius: 1.1rem; padding: 0.65rem 0.9rem;
   display: flex; align-items: center; gap: 0.6rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
+.search-box > :global(.icon) { color: var(--search-pill-fg); }
 .search-box input { border: none; outline: none; background: transparent; padding: 0; }
 .search-clear-btn[hidden] { display: none; }
 .search-clear-btn {
@@ -62,7 +63,7 @@
   }
   .search-placeholder-icon {
     width: 3.5rem; height: 3.5rem; border-radius: 50%; margin-bottom: 0.75rem;
-    background: var(--search-pill-bg);
+    background: var(--search-pill-bg); color: var(--search-pill-fg);
     display: flex; align-items: center; justify-content: center;
   }
   .search-placeholder-title { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 1rem; color: var(--ink-soft); margin-bottom: 0.25rem; }

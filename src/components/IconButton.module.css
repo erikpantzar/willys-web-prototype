@@ -4,6 +4,6 @@
 .view-toolbar { display: flex; justify-content: flex-end; margin-bottom: 0.5rem; }
 .toolbar-icon-btn {
   width: 2.2rem; height: 2.2rem; padding: 0; border-radius: 0.75rem; border: none;
-  background: var(--delivery-pill-bg); display: flex; align-items: center; justify-content: center;
+  background: var(--delivery-pill-bg); color: var(--delivery-pill-fg); display: flex; align-items: center; justify-content: center;
   cursor: pointer; flex-shrink: 0;
 }

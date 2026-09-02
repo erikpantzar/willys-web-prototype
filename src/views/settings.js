@@ -2,6 +2,7 @@
 import { getBaseUrl, setBaseUrl, isDemoMode, setDemoMode, isConnectionVerified, setConnectionVerified } from '../settings.js';
 import { healthCheck } from '../api.js';
 import styles from '../components/SettingsForm.module.css';
+import { icon } from '../icons.js';
 
 export function renderSettings(root) {
   const demo = isDemoMode();
@@ -13,19 +14,14 @@ export function renderSettings(root) {
   root.innerHTML = `
     <div class="setup-screen">
       <div class="setup-icon">
-        <svg width="42" height="42" viewBox="0 0 24 24" fill="none">
-          <path d="M2 8.5C7 3.5 17 3.5 22 8.5" stroke="var(--delivery-btn)" stroke-width="1.8" stroke-linecap="round"></path>
-          <path d="M5.5 12C9 8.7 15 8.7 18.5 12" stroke="var(--delivery-btn)" stroke-width="1.8" stroke-linecap="round"></path>
-          <path d="M9 15.5C10.7 13.9 13.3 13.9 15 15.5" stroke="var(--delivery-btn)" stroke-width="1.8" stroke-linecap="round"></path>
-          <circle cx="12" cy="19" r="1.6" fill="var(--delivery-btn)"></circle>
-        </svg>
+        ${icon('wifi', { size: 42 })}
       </div>
       <div class="setup-title">Settings</div>
       <div class="setup-subtitle">Connect this device to your family's shopping hub, or try the sample data first.</div>
 
       <div class="setup-form">
         <label>Demo mode</label>
-        <button id="toggle-demo" style="width: 100%">${demo ? '✓ On — showing sample data' : 'Off — try it with sample data'}</button>
+        <button id="toggle-demo" style="width: 100%">${demo ? `${icon('check', { size: 16, strokeWidth: 2.5 })} On — showing sample data` : 'Off — try it with sample data'}</button>
         <p class="muted" style="margin-top: 0.5rem">Runs entirely on seeded sample data, no tailnet connection needed — for trying out the
         interactions and design. Turn it off to connect to your real list.</p>
 
@@ -36,7 +32,7 @@ export function renderSettings(root) {
             <span class="${styles['url-prefix']}">https://</span>
             <input id="base-url" type="text" value="${escapeHtml(urlHost)}" />
           </div>
-          ${verified ? `<div class="success">✓ Connection verified</div>` : ''}
+          ${verified ? `<div class="success">${icon('check', { size: 14, strokeWidth: 2.5 })} Connection verified</div>` : ''}
           <div class="${styles['settings-actions']}" style="margin-top: 0.85rem">
             <button id="save-url">Save</button>
             <button id="check-health">Test connection</button>
@@ -72,10 +68,10 @@ export function renderSettings(root) {
       // Per-service status
       html += `<div class="${styles['health-services']}">`;
       for (const service of services) {
-        const icon = service.ok ? '✓' : '✕';
+        const statusIcon = icon(service.ok ? 'check' : 'close', { size: 14, strokeWidth: 2.5 });
         const className = service.ok ? 'success' : 'error';
         const statusText = service.ok ? 'OK' : (service.kind === 'unreachable' ? 'Unreachable' : 'Error');
-        html += `<div class="${styles['health-line']}"><span class="${className}">${icon} ${service.service}: ${statusText}</span>`;
+        html += `<div class="${styles['health-line']}"><span class="${className}">${statusIcon} ${service.service}: ${statusText}</span>`;
         if (service.detail) {
           html += `<span class="muted" style="display: block; margin-top: 0.2rem; margin-left: 1.2rem; font-size: 0.75rem;">${escapeHtml(service.detail)}</span>`;
         }

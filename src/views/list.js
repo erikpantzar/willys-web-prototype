@@ -10,6 +10,7 @@ import { recordAction, performUndo } from '../undo.js';
 import { pixelLoaderHtml } from '../loader.js';
 import { playAddSound, playQtyUpSound, playQtyDownSound, playRemoveSound, vibrateAdd, vibrateRemove } from '../sound.js';
 import { isGroupByDepartment, setGroupByDepartment } from '../settings.js';
+import { icon } from '../icons.js';
 import dialogStyles from '../dialog.module.css';
 import itemRowStyles from '../components/ItemRow.module.css';
 import searchBoxStyles from '../components/SearchBox.module.css';
@@ -44,13 +45,17 @@ const QTY_REPEAT_ACCEL = 0.82;
 // but only for this page session; not worth persisting to localStorage on
 // top of that for a viewing preference this minor.
 const SORT_MODES = [
-  { id: 'none', label: 'Default order', glyph: '↕' },
+  { id: 'none', label: 'Default order', glyph: null },
   { id: 'newest', label: 'Newest first', glyph: 'NEW' },
   { id: 'oldest', label: 'Oldest first', glyph: 'OLD' },
   { id: 'unpriced', label: 'Unpriced first', glyph: 'NO¤' },
   { id: 'alpha', label: 'A–Z', glyph: 'A–Z' },
 ];
 let sortMode = SORT_MODES[0].id;
+
+function sortGlyphHtml(mode) {
+  return mode.glyph ? escapeHtml(mode.glyph) : icon('sort', { size: 18 });
+}
 let filterState = { person: null, priced: null, qtyGt1: false };
 
 function activeFilterCount(f) {
@@ -157,7 +162,7 @@ function rerenderItemList(root, items) {
   const sortBtn = root.querySelector('#sort-btn');
   if (sortBtn) {
     const mode = SORT_MODES.find((m) => m.id === sortMode);
-    sortBtn.textContent = mode.glyph;
+    sortBtn.innerHTML = sortGlyphHtml(mode);
     sortBtn.title = `Sort: ${mode.label} (tap to cycle)`;
   }
 
@@ -182,7 +187,7 @@ function rerenderItemList(root, items) {
     const banner = document.createElement('div');
     banner.id = 'filter-banner';
     banner.className = 'filter-banner';
-    banner.innerHTML = `<span>${escapeHtml(filterBannerText())}</span><button type="button" class="filter-banner-clear-btn" aria-label="Clear filters">✕</button>`;
+    banner.innerHTML = `<span>${escapeHtml(filterBannerText())}</span><button type="button" class="filter-banner-clear-btn" aria-label="Clear filters">${icon('close', { size: 12, strokeWidth: 3 })}</button>`;
     banner.addEventListener('click', () => clearFilters(root, items));
     root.querySelector('.list-toolbar')?.after(banner);
   }
@@ -251,7 +256,7 @@ function openFilterModal(root, items) {
       <div class="${dialogStyles['confirm-dialog']} filter-modal">
         <div class="filter-modal-header">
           <div class="filter-modal-title">Filter list</div>
-          <button type="button" class="${iconButtonStyles['toolbar-icon-btn']}" id="filter-modal-close" title="Close">✕</button>
+          <button type="button" class="${iconButtonStyles['toolbar-icon-btn']}" id="filter-modal-close" title="Close" aria-label="Close">${icon('close', { size: 18 })}</button>
         </div>
         <div class="filter-modal-section">
           <div class="who-label">Who</div>
@@ -343,14 +348,14 @@ export async function renderList(root) {
     <div class="view-body view-body-top list-view-body">
     <div class="${searchBoxStyles['search-section']}">
       <form id="search-form" class="${searchBoxStyles['search-box']}">
-        <svg width="18" height="18" viewBox="0 0 18 18" style="flex-shrink:0"><circle cx="8" cy="8" r="6" fill="none" stroke="var(--search-pill-fg)" stroke-width="2"></circle><line x1="12.2" y1="12.2" x2="16.5" y2="16.5" stroke="var(--search-pill-fg)" stroke-width="2" stroke-linecap="round"></line></svg>
+        ${icon('search', { size: 18 })}
         <input id="search-input" type="text" placeholder="Find products… e.g. 2 mjölk" autocomplete="off" autocapitalize="off" enterkeyhint="search" />
-        <button type="button" id="search-clear" class="${searchBoxStyles['search-clear-btn']}" hidden aria-label="Clear search">✕</button>
+        <button type="button" id="search-clear" class="${searchBoxStyles['search-clear-btn']}" hidden aria-label="Clear search">${icon('close', { size: 12, strokeWidth: 3 })}</button>
       </form>
       <div id="search-results" class="${searchBoxStyles['results-grid']}"></div>
       <div id="search-placeholder" class="${searchBoxStyles['search-placeholder']}">
         <div class="${searchBoxStyles['search-placeholder-icon']}">
-          <svg width="22" height="22" viewBox="0 0 18 18" fill="none"><circle cx="8" cy="8" r="6" fill="none" stroke="var(--search-pill-fg)" stroke-width="2"></circle><line x1="12.2" y1="12.2" x2="16.5" y2="16.5" stroke="var(--search-pill-fg)" stroke-width="2" stroke-linecap="round"></line></svg>
+          ${icon('search', { size: 22 })}
         </div>
         <div class="${searchBoxStyles['search-placeholder-title']}">Search groceries</div>
         <div class="${searchBoxStyles['search-placeholder-subtitle']}">Find products above to add them to your list.</div>
@@ -360,18 +365,18 @@ export async function renderList(root) {
     <div class="list-rail">
     <div class="${iconButtonStyles['view-toolbar']} list-toolbar">
       <button type="button" class="${iconButtonStyles['toolbar-icon-btn']} save-cart-btn" id="save-cart-btn" title="${items.length === 0 ? 'Add something to the list first to save it as a cart' : 'Save list as cart'}" aria-label="Save list as cart" ${items.length === 0 ? 'disabled' : ''}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 4h2l2.4 11.2a2 2 0 002 1.6h8.4a2 2 0 002-1.6L21 8H6.2" stroke="var(--carts-pill-fg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M13 10v4M11 12h4" stroke="var(--carts-pill-fg)" stroke-width="2" stroke-linecap="round"></path><circle cx="9.5" cy="20" r="1.3" fill="var(--carts-pill-fg)"></circle><circle cx="17" cy="20" r="1.3" fill="var(--carts-pill-fg)"></circle></svg>
+        ${icon('save-cart', { size: 20 })}
       </button>
-      <button type="button" class="${iconButtonStyles['toolbar-icon-btn']}" id="sort-btn" title="Sort: ${escapeHtml(activeSortMode.label)} (tap to cycle)">${escapeHtml(activeSortMode.glyph)}</button>
-      <button type="button" class="${iconButtonStyles['toolbar-icon-btn']}${isFilterActive(filterState) ? ' active' : ''}" id="filter-btn" title="Filter list">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M8 12h8M11 18h2" stroke="var(--list-pill-fg)" stroke-width="2" stroke-linecap="round"></path></svg>
+      <button type="button" class="${iconButtonStyles['toolbar-icon-btn']}" id="sort-btn" title="Sort: ${escapeHtml(activeSortMode.label)} (tap to cycle)" aria-label="Sort: ${escapeHtml(activeSortMode.label)}">${sortGlyphHtml(activeSortMode)}</button>
+      <button type="button" class="${iconButtonStyles['toolbar-icon-btn']}${isFilterActive(filterState) ? ' active' : ''}" id="filter-btn" title="Filter list" aria-label="Filter list">
+        ${icon('filter', { size: 20 })}
         ${isFilterActive(filterState) ? `<span class="filter-count-badge">${activeFilterCount(filterState)}</span>` : ''}
       </button>
-      <button type="button" class="${iconButtonStyles['toolbar-icon-btn']}${isGroupByDepartment() ? ' active' : ''}" id="group-btn" title="Group by department">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 5h7v6H4zM13 5h7v6h-7zM4 13h7v6H4zM13 13h7v6h-7z" stroke="var(--list-pill-fg)" stroke-width="2" stroke-linejoin="round"></path></svg>
+      <button type="button" class="${iconButtonStyles['toolbar-icon-btn']}${isGroupByDepartment() ? ' active' : ''}" id="group-btn" title="Group by department" aria-label="Group by department">
+        ${icon('grid', { size: 20 })}
       </button>
     </div>
-    ${isFilterActive(filterState) ? `<div class="filter-banner" id="filter-banner"><span>${escapeHtml(filterBannerText())}</span><button type="button" class="filter-banner-clear-btn" aria-label="Clear filters">✕</button></div>` : ''}
+    ${isFilterActive(filterState) ? `<div class="filter-banner" id="filter-banner"><span>${escapeHtml(filterBannerText())}</span><button type="button" class="filter-banner-clear-btn" aria-label="Clear filters">${icon('close', { size: 12, strokeWidth: 3 })}</button></div>` : ''}
 
     <div class="item-list-wrap" id="item-list-wrap">${itemListMarkup(items, visibleItems)}</div>
 
@@ -449,7 +454,7 @@ function whoRowHtml(items) {
     <div class="who-chips" id="who-chips">
       ${chips.map((p) => personaChipHtml(p, p.name.toLowerCase() === selected.toLowerCase())).join('')}
       <button type="button" class="persona-chip persona-chip-new" id="who-new-btn">
-        <span class="persona-chip-emoji">✏️</span><span class="persona-chip-name">+ New</span>
+        <span class="persona-chip-emoji">${icon('pencil', { size: 14 })}</span><span class="persona-chip-name">+ New</span>
       </button>
     </div>
     <div class="who-new-row" id="who-new-row" hidden>
@@ -560,7 +565,7 @@ function wireRemoveButton(btn, root, items) {
   btn.addEventListener('click', () => performRemove(btn, root, items));
 }
 
-// Shared by the ✕ button's click and the swipe gesture below — same
+// Shared by the remove button's click and the swipe gesture below — same
 // request, same sound/haptic, same undo toast, regardless of which
 // triggered it. Returns whether it succeeded so a caller mid-animation
 // (the swipe path) knows whether to finish removing the row or snap it
@@ -947,8 +952,8 @@ function resultCard(c, i, confirmedUrl) {
   return `
     <div class="${resultCardStyles['result-card']}${confirmedClass} result-card-enter" data-pick="${i}" style="animation-delay: ${delay}ms">
       ${img}
-      ${isConfirmed ? `<div class="${resultCardStyles['result-confirmed-badge']}">✓</div>` : ''}
-      <button type="button" class="${resultCardStyles['report-btn']}" data-report="${i}" title="Report a problem with this product" aria-label="Report a problem with this product">⚠</button>
+      ${isConfirmed ? `<div class="${resultCardStyles['result-confirmed-badge']}">${icon('check', { size: 12, strokeWidth: 3 })}</div>` : ''}
+      <button type="button" class="${resultCardStyles['report-btn']}" data-report="${i}" title="Report a problem with this product" aria-label="Report a problem with this product">${icon('warning', { size: 14 })}</button>
       <div class="${resultCardStyles['result-info']}">
         <div class="${resultCardStyles['result-name']}">${escapeHtml(c.text || c.name)}</div>
         ${size}
@@ -1226,8 +1231,8 @@ function animateTotal(el, newTotal) {
 function emptyState() {
   return `
     <li class="${emptyStateStyles['empty-state']}" style="list-style: none">
-      <div class="${emptyStateStyles['empty-state-icon']}" style="background: var(--list-pill-bg)">
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M4 6h16l-1.5 10.5a2 2 0 01-2 1.5H7.5a2 2 0 01-2-1.5L4 6z" stroke="var(--list-pill-fg)" stroke-width="1.8" stroke-linejoin="round"></path><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="var(--list-pill-fg)" stroke-width="1.8"></path></svg>
+      <div class="${emptyStateStyles['empty-state-icon']}" style="background: var(--list-pill-bg); color: var(--list-pill-fg)">
+        ${icon('basket', { size: 32 })}
       </div>
       <div class="${emptyStateStyles['empty-state-title']}">Your list is empty</div>
       <div class="${emptyStateStyles['empty-state-subtitle']}">Search for groceries above to start adding!</div>
@@ -1243,11 +1248,11 @@ function itemRow(item) {
         <div class="${itemRowStyles['item-text']}">${escapeHtml(item.text)}</div>
       </div>
       <div class="${itemRowStyles['qty-stepper']}">
-        <button data-qty-step="-1" data-id="${item.id}" data-current="${item.quantity}">−</button>
+        <button data-qty-step="-1" data-id="${item.id}" data-current="${item.quantity}" aria-label="Decrease quantity">${icon('minus', { size: 16, strokeWidth: 2.5 })}</button>
         <span>${item.quantity}</span>
-        <button data-qty-step="1" data-id="${item.id}" data-current="${item.quantity}">+</button>
+        <button data-qty-step="1" data-id="${item.id}" data-current="${item.quantity}" aria-label="Increase quantity">${icon('plus', { size: 16, strokeWidth: 2.5 })}</button>
       </div>
-      <button class="${itemRowStyles['remove-btn']}" data-remove="${item.id}">✕</button>
+      <button class="${itemRowStyles['remove-btn']}" data-remove="${item.id}" aria-label="Remove from list">${icon('close', { size: 16, strokeWidth: 2.5 })}</button>
     </li>
   `;
 }

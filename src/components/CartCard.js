@@ -3,6 +3,7 @@ import styles from './CartCard.module.css';
 import itemRowStyles from './ItemRow.module.css';
 import { personaBadgeHtml, personaFor } from '../personas.js';
 import { cartTitle } from '../format.js';
+import { icon } from '../icons.js';
 
 export function createCartCard(cart, { onToggle, onAddAll, onAddItem, onRename, onDelete }) {
   const el = document.createElement('li');
@@ -24,7 +25,7 @@ export function createCartCard(cart, { onToggle, onAddAll, onAddItem, onRename, 
         <div class="${styles.title}">${escapeHtml(cartTitle(current))}</div>
         <div class="${styles.subtitle}">${escapeHtml(subtitleText())}</div>
       </div>
-      <span class="${styles.chevron}">▼</span>
+      <span class="${styles.chevron}">${icon('chevron-down', { size: 14, strokeWidth: 2.5 })}</span>
     </button>
     <div class="${styles.body}">
       <div class="${styles['body-inner']}">
@@ -58,7 +59,7 @@ export function createCartCard(cart, { onToggle, onAddAll, onAddItem, onRename, 
           <div class="${itemRowStyles['item-text']}">${escapeHtml(item.text)}</div>
         </div>
         <div class="item-qty-readonly">×${item.quantity}</div>
-        <button type="button" class="${styles['item-add']}${done ? ` ${styles.done}` : ''}" data-add-item="${item.id}" ${done ? 'disabled' : ''} aria-label="${done ? 'Already on the list' : 'Add to list'}">${done ? '✓' : '+'}</button>
+        <button type="button" class="${styles['item-add']}${done ? ` ${styles.done}` : ''}" data-add-item="${item.id}" ${done ? 'disabled' : ''} aria-label="${done ? 'Already on the list' : 'Add to list'}">${done ? icon('check', { size: 16, strokeWidth: 2.5 }) : icon('plus', { size: 18, strokeWidth: 2.5 })}</button>
       </li>
     `;
   }
@@ -69,8 +70,8 @@ export function createCartCard(cart, { onToggle, onAddAll, onAddItem, onRename, 
     content.innerHTML = `
       <div class="${styles.actions}">
         <button type="button" class="${styles['add-all']}" data-add-all>Add all to list</button>
-        <button type="button" class="${styles['icon-btn']}" data-rename title="Rename cart" aria-label="Rename cart">✏️</button>
-        <button type="button" class="${styles['icon-btn']} ${styles.danger}" data-delete title="Delete cart" aria-label="Delete cart">✕</button>
+        <button type="button" class="${styles['icon-btn']}" data-rename title="Rename cart" aria-label="Rename cart">${icon('pencil', { size: 18 })}</button>
+        <button type="button" class="${styles['icon-btn']} ${styles.danger}" data-delete title="Delete cart" aria-label="Delete cart">${icon('trash', { size: 18 })}</button>
       </div>
       <ul class="${styles.items}">${items.map(itemRow).join('')}</ul>
     `;
@@ -102,7 +103,7 @@ export function createCartCard(cart, { onToggle, onAddAll, onAddItem, onRename, 
     for (const id of itemIds) {
       const btn = content.querySelector(`[data-add-item="${id}"]`);
       if (!btn || btn.classList.contains(styles.done)) continue;
-      btn.textContent = '✓';
+      btn.innerHTML = icon('check', { size: 16, strokeWidth: 2.5 });
       btn.disabled = true;
       btn.setAttribute('aria-label', 'Already on the list');
       btn.classList.add(styles.done, styles.pop);

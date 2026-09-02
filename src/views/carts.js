@@ -11,6 +11,7 @@ import { createCartCard } from '../components/CartCard.js';
 import emptyStateStyles from '../components/EmptyState.module.css';
 import departmentGroupStyles from '../components/DepartmentGroup.module.css';
 import cartCardStyles from '../components/CartCard.module.css';
+import { icon } from '../icons.js';
 
 function shell(inner) {
   return `
@@ -172,8 +173,8 @@ function renderEmpty(root, listCount) {
   const canSave = listCount > 0;
   root.innerHTML = shell(`
     <div class="${emptyStateStyles['empty-state']}">
-      <div class="${emptyStateStyles['empty-state-icon']}" style="background: var(--carts-pill-bg)">
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M3 4h2l2.4 11.2a2 2 0 002 1.6h8.4a2 2 0 002-1.6L21 8H6.2" stroke="var(--carts-pill-fg)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="9.5" cy="20" r="1.4" fill="var(--carts-pill-fg)"></circle><circle cx="17" cy="20" r="1.4" fill="var(--carts-pill-fg)"></circle></svg>
+      <div class="${emptyStateStyles['empty-state-icon']}" style="background: var(--carts-pill-bg); color: var(--carts-pill-fg)">
+        ${icon('cart', { size: 32 })}
       </div>
       <div class="${emptyStateStyles['empty-state-title']}">No carts yet</div>
       <div class="${emptyStateStyles['empty-state-subtitle']}">Save your current list as a cart, or send a list — sent lists show up here.</div>

@@ -5,6 +5,9 @@ import { renderList } from './views/list.js';
 import { renderDelivery } from './views/delivery.js';
 import { renderSettings } from './views/settings.js';
 import { showToast } from './toast.js';
+import { mountIcons } from './icons.js';
+
+mountIcons();
 
 const app = document.getElementById('app');
 const tabs = document.querySelectorAll('.tab');

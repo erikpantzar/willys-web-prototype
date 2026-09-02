@@ -26,6 +26,7 @@ button, a, input[type="text"] {
 button { user-select: none; }
 button:active { transform: scale(0.96); }
 button { transition: transform 0.1s ease; }
+.icon { display: inline-block; vertical-align: -0.15em; flex-shrink: 0; }
 
 /* #app fills exactly the viewport below the fixed .topnav — a frame, not a
    scroller itself. Views are permanent side-by-side panes inside it
@@ -134,9 +135,10 @@ button { transition: transform 0.1s ease; }
   margin: 0 0.6rem 0 0.2rem;
   width: 2rem; height: 2rem; border-radius: 0.7rem; border: none;
   background: var(--tab-inactive-bg); color: color-mix(in oklch, var(--ink-soft) 55%, var(--bg));
-  font-size: 1rem; display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   cursor: pointer;
 }
+.settings-gear-btn [data-icon] { display: flex; }
 .settings-gear-btn.active { background: var(--tab-inactive-bg); color: var(--ink); }
 /* Each tab always carries its view's color (no more colored hero banner
    doing that job) — always tinted with its view's color (issue #21), but
@@ -207,6 +209,7 @@ button { transition: transform 0.1s ease; }
    throwaway test — clicks reached it fine there). flex: 1 keeps the badge
    a normal in-flow sibling, sidestepping that entirely. */
 .tab-label { flex: 1; text-align: center; }
+.tab-icon { display: flex; flex-shrink: 0; }
 
 .cart-badge {
   min-width: 1.1rem; height: 1.1rem;
@@ -273,11 +276,9 @@ button { transition: transform 0.1s ease; }
   align-items: center;
   justify-content: center;
 }
-.tab-badge.ready::after {
-  content: '✓';
+.tab-badge.ready .icon {
   color: var(--delivery-btn);
-  font-weight: 700;
-  display: inline-block;
+  display: block;
   animation: badge-check-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 @keyframes badge-check-pop {
@@ -286,7 +287,7 @@ button { transition: transform 0.1s ease; }
 }
 @media (prefers-reduced-motion: reduce) {
   .tab-badge.loading i { animation: none; opacity: 1; transform: none; }
-  .tab-badge.ready::after { animation: none; }
+  .tab-badge.ready .icon { animation: none; }
 }
 
 input[type="text"] {
@@ -356,16 +357,15 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
    button shape but gets its own active/badge treatment below, since it's
    the one of the two that can hide items. */
 .list-toolbar { gap: 0.5rem; }
-.save-cart-btn { background: var(--carts-pill-bg); margin-right: auto; }
+.save-cart-btn { background: var(--carts-pill-bg); color: var(--carts-pill-fg); margin-right: auto; }
 .save-cart-btn:disabled { opacity: 0.45; cursor: default; }
 #sort-btn { font-size: 0.62rem; font-weight: 800; font-family: 'Baloo 2', sans-serif; color: var(--list-pill-fg); letter-spacing: -0.02em; }
+#filter-btn, #group-btn { color: var(--list-pill-fg); }
 #filter-btn { position: relative; }
-#filter-btn.active { background: var(--list-btn); }
-#filter-btn.active svg path { stroke: #fff; }
+#filter-btn.active { background: var(--list-btn); color: #fff; }
 /* Group-by-department (issue #41) — same toggle treatment as the filter
    trigger above, minus the badge (it's a plain on/off, nothing to count). */
-#group-btn.active { background: var(--list-btn); }
-#group-btn.active svg path { stroke: #fff; }
+#group-btn.active { background: var(--list-btn); color: #fff; }
 .filter-count-badge {
   position: absolute; top: -0.3rem; right: -0.3rem;
   min-width: 1rem; height: 1rem; border-radius: 0.55rem;
@@ -377,7 +377,7 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
    pattern as .demo-banner, deliberately in the Search view's orange rather
    than the List view's own green so an active filter reads as a distinct,
    attention-getting state rather than just more of the page's usual
-   color. Doubles as the one-tap "clear all" — the ✕ is mostly a visual
+   color. Doubles as the one-tap "clear all" — the close button is mostly a visual
    affordance, since tapping anywhere on the banner clears (see list.js). */
 .filter-banner {
   background: var(--search-btn);
@@ -468,7 +468,7 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 }
 /* Soonest-available shortcut, above the full date-group list — surfaces the
    single fastest slot so picking it doesn't require scanning every group
-   first. The matching slot is also marked with ⚡ where it appears in its
+   first. The matching slot is also marked with a zap icon where it appears in its
    own group below, so the two don't read as unrelated buttons. */
 .soonest-card {
   width: 100%;
@@ -485,17 +485,17 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
   text-align: left;
   cursor: pointer;
 }
-.soonest-icon { font-size: 1.7rem; flex-shrink: 0; }
+.soonest-icon { display: flex; flex-shrink: 0; }
 .soonest-text { flex: 1; min-width: 0; }
 .soonest-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.88; }
 .soonest-time { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
-.soonest-arrow { font-size: 1.2rem; opacity: 0.85; flex-shrink: 0; }
+.soonest-arrow { display: flex; opacity: 0.85; flex-shrink: 0; }
 
 /* Confirm-order hero — a truck icon, the time, and a quick item-count/total
    stat row, so the last checkpoint before sending reads as a real order
    summary rather than a plain "are you sure" line. */
 .confirm-hero { text-align: center; margin-bottom: 1rem; }
-.confirm-hero-icon { font-size: 2.2rem; margin-bottom: 0.35rem; }
+.confirm-hero-icon { display: flex; justify-content: center; color: var(--delivery-btn); margin-bottom: 0.35rem; }
 .confirm-stats { display: flex; justify-content: center; gap: 1.75rem; margin-top: 0.8rem; }
 .confirm-stat { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; }
 .confirm-stat-value { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 1.15rem; color: var(--delivery-pill-fg); font-variant-numeric: tabular-nums; }
@@ -523,7 +523,7 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
 .receipt-time { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 1.1rem; color: var(--delivery-pill-fg); }
 .receipt-sub { margin-top: 0.25rem; }
 .celebration-actions { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; max-width: 340px; }
-.share-btn { width: 100%; background: var(--search-pill-bg); color: var(--search-pill-fg); font-weight: 700; }
+.share-btn { width: 100%; background: var(--search-pill-bg); color: var(--search-pill-fg); font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; }
 .confetti-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
 @media (prefers-reduced-motion: reduce) {
   .celebration-badge { animation: none; }
@@ -563,7 +563,7 @@ button.danger { background: var(--danger-bg); color: var(--danger-fg); }
   background: linear-gradient(180deg, oklch(80% 0.1 245), oklch(90% 0.05 90) 70%);
 }
 .setup-icon {
-  width: 5.5rem; height: 5.5rem; border-radius: 50%; background: #fff;
+  width: 5.5rem; height: 5.5rem; border-radius: 50%; background: #fff; color: var(--delivery-btn);
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1); margin-bottom: 1.25rem;
 }

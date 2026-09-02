@@ -17,22 +17,24 @@
        is just... visible, no separate indicator needed. Swipe left/right
        (see main.js) is the other way to move between them. -->
   <nav class="topnav">
-    <button data-route="carts" class="tab">Carts</button>
+    <button data-route="carts" class="tab"><span class="tab-icon" data-icon="cart" data-icon-size="17"></span>Carts</button>
     <button data-route="list" class="tab active">
       <!-- "List" wrapped so it (not the whole button) can flex-grow and
            stay centered in the remaining space as the badge next to it
            changes width (issue #38) — see .tab-label in style.css. -->
+      <span class="tab-icon" data-icon="list" data-icon-size="17"></span>
       <span class="tab-label">List</span>
       <span id="cart-badge" class="cart-badge" hidden></span>
     </button>
     <button data-route="delivery" class="tab">
+      <span class="tab-icon" data-icon="truck" data-icon-size="17"></span>
       Delivery
       <span class="tab-badge" hidden></span>
     </button>
     <!-- Settings is a real route (still swipeable/still a pane, see
          view-track below) but not an equal-weight peer tab next to
          List/Delivery — just a small gear icon at the end of the bar. -->
-    <button data-route="settings" class="settings-gear-btn" title="Settings">⚙</button>
+    <button data-route="settings" class="settings-gear-btn" title="Settings" aria-label="Settings"><span data-icon="gear" data-icon-size="18"></span></button>
   </nav>
 
   <!-- Views are four permanent panes side by side, not swapped in/out —
