@@ -23,7 +23,9 @@ import departmentGroupStyles from '../components/DepartmentGroup.module.css';
 import lastCartHintStyles from '../components/LastCartHint.module.css';
 
 const SEARCH_DEBOUNCE_MS = 300;
+const SEARCH_MIN_CHARS = 2;
 const SEARCH_RESULT_LIMIT = 15;
+const SEARCH_LIVE_HINT_MAX_RESULTS = 3;
 
 // Press-and-hold qty-stepper acceleration (issue #29): a delay before the
 // first repeat so a plain tap never triggers it, then a classic
@@ -802,22 +804,30 @@ function wireProductSearch(root, items) {
   let requestSeq = 0;
   let currentResolution = null;
 
-  root.querySelector('#search-form').addEventListener('submit', (e) => e.preventDefault());
+  root.querySelector('#search-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    clearTimeout(debounceTimer);
+    const raw = input.value.trim();
+    if (!isSearchable(raw)) return;
+    runSearch(raw, { live: true });
+  });
 
   input.addEventListener('input', () => {
     clearBtn.hidden = input.value.length === 0;
     clearTimeout(debounceTimer);
     const raw = input.value.trim();
-    if (!raw) {
+    if (!isSearchable(raw)) {
+      requestSeq++;
       resultsEl.innerHTML = '';
       currentResolution = null;
       return;
     }
-    debounceTimer = setTimeout(() => runSearch(raw), SEARCH_DEBOUNCE_MS);
+    debounceTimer = setTimeout(() => runSearch(raw, { live: false }), SEARCH_DEBOUNCE_MS);
   });
 
   clearBtn.addEventListener('click', () => {
     clearTimeout(debounceTimer);
+    requestSeq++;
     input.value = '';
     clearBtn.hidden = true;
     resultsEl.innerHTML = '';
@@ -825,33 +835,44 @@ function wireProductSearch(root, items) {
     input.focus();
   });
 
-  async function runSearch(raw) {
+  function isSearchable(raw) {
+    return parseQuantity(raw).text.length >= SEARCH_MIN_CHARS;
+  }
+
+  async function runSearch(raw, { live }) {
     const seq = ++requestSeq;
     const { text: query, quantity } = parseQuantity(raw);
-    resultsEl.innerHTML = pixelLoaderHtml('Searching…');
+    if (live) resultsEl.innerHTML = pixelLoaderHtml('Searching willys.se… (can take ~10s)');
     let body;
     try {
       // Call resolve() instead of search() to get a persisted resolution.
       // This avoids the race condition where calling resolve() again on click
       // could match a different product if the catalog changed in between.
-      body = await api.resolve(query);
+      body = await api.resolve(query, { live });
     } catch (err) {
-      if (seq === requestSeq) resultsEl.innerHTML = `<div class="error">${escapeHtml(err.message)}</div>`;
+      if (seq !== requestSeq) return;
       currentResolution = null;
+      resultsEl.innerHTML = err.status === 404
+        ? noMatchesHtml(query, live)
+        : `<div class="error">${escapeHtml(err.message)}</div>`;
       return;
     }
     if (seq !== requestSeq) return; // a newer keystroke's search already landed
 
     const candidates = body.candidates || [];
+    const offerLive = !live && body.liveAvailable === true;
     if (candidates.length === 0) {
-      resultsEl.innerHTML = `<div class="empty">No matches for "${escapeHtml(query)}".</div>`;
       currentResolution = null;
+      resultsEl.innerHTML = offerLive ? catalogEmptyHtml() : noMatchesHtml(query, live);
+      wireLiveSearchButton(raw);
       return;
     }
     currentResolution = body;
 
     const confirmedUrl = body.confirmedUrl || null;
-    resultsEl.innerHTML = candidates.map((c, i) => resultCard(c, i, confirmedUrl)).join('');
+    const liveButton = offerLive && candidates.length <= SEARCH_LIVE_HINT_MAX_RESULTS ? liveSearchButtonHtml() : '';
+    resultsEl.innerHTML = candidates.map((c, i) => resultCard(c, i, confirmedUrl)).join('') + liveButton;
+    wireLiveSearchButton(raw);
     resultsEl.querySelectorAll('[data-pick]').forEach((card, i) => {
       card.addEventListener('click', () => addFromSearch(candidates[i], quantity, card));
       // stopPropagation — the report button sits inside the same card
@@ -862,6 +883,15 @@ function wireProductSearch(root, items) {
         reportProblem(candidates[i]);
       });
       wireProductLinks(card);
+    });
+  }
+
+  function wireLiveSearchButton(raw) {
+    const button = resultsEl.querySelector('[data-live-search]');
+    if (!button) return;
+    button.addEventListener('click', () => {
+      clearTimeout(debounceTimer);
+      runSearch(raw, { live: true });
     });
   }
 
@@ -925,6 +955,23 @@ function wireProductSearch(root, items) {
       showToast(`Could not add: ${err.message}`);
     }
   }
+}
+
+function liveSearchButtonHtml() {
+  return `<button type="button" class="${searchBoxStyles['live-search-btn']}" data-live-search>${icon('search', { size: 16 })} Search willys.se</button>`;
+}
+
+function catalogEmptyHtml() {
+  return `
+    <div class="${searchBoxStyles['live-search-cta']}">
+      <div class="empty">Nothing in the local catalog — press Enter to search willys.se</div>
+      ${liveSearchButtonHtml()}
+    </div>
+  `;
+}
+
+function noMatchesHtml(query, live) {
+  return `<div class="empty">No matches for "${escapeHtml(query)}"${live ? ' on willys.se' : ''}.</div>`;
 }
 
 function resultCard(c, i, confirmedUrl) {

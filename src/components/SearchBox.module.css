@@ -17,3 +17,10 @@
 .results-grid { display: flex; flex-direction: column; gap: 0.7rem; }
 .search-section .results-grid { margin-top: 0.6rem; }
 .search-section .results-grid:empty { margin-top: 0; }
+
+.live-search-cta { display: flex; flex-direction: column; gap: 0.5rem; }
+.live-search-cta :global(.empty) { padding: 0.4rem 0 0; }
+.live-search-btn {
+  min-height: 2.75rem; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+  background: var(--search-pill-bg); color: var(--search-pill-fg); font-weight: 700;
+}

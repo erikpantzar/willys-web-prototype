@@ -193,7 +193,7 @@ export async function resolve(query) {
   // should return this too so the confirmed-badge (issue #1) still works now
   // that search.js calls resolve() instead of search() (issue #5).
   const confirmedUrl = demoConfirmedByQuery.get(query.toLowerCase().trim()) || null;
-  return { cached: false, resolutionId, query, candidates, confirmedUrl };
+  return { cached: false, resolutionId, query, candidates, confirmedUrl, liveAvailable: true };
 }
 
 export async function confirm(resolutionId, choice) {

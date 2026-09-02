@@ -51,7 +51,8 @@ export const addCartToList = (id, addedBy, itemIds) =>
 
 // --- search / resolve (willys-item-matcher) ---
 export const search = (q, limit = 15) => request(`/matcher/search?q=${encodeURIComponent(q)}&limit=${limit}`);
-export const resolve = (query) => request('/matcher/resolve', { method: 'POST', body: { query } });
+export const resolve = (query, { live = false } = {}) =>
+  request('/matcher/resolve', { method: 'POST', body: live ? { query, live: true } : { query } });
 export const confirm = (resolutionId, choice) => request('/matcher/confirm', { method: 'POST', body: { resolutionId, choice } });
 export const reportProductIssue = (report) => request('/matcher/report-issue', { method: 'POST', body: report });
 
