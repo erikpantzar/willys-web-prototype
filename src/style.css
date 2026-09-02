@@ -161,6 +161,7 @@ button { transition: transform 0.1s ease; }
   gap: 0.35rem;
   transition: color 0.2s ease;
 }
+.tab[data-route="carts"] { color: color-mix(in oklch, var(--carts-pill-fg) 45%, var(--bg)); }
 .tab[data-route="list"] { color: color-mix(in oklch, var(--list-pill-fg) 45%, var(--bg)); }
 .tab[data-route="delivery"] { color: color-mix(in oklch, var(--delivery-pill-fg) 45%, var(--bg)); }
 /* The generic `button:active { transform: scale(0.96) }` press-feedback
@@ -178,6 +179,7 @@ button { transition: transform 0.1s ease; }
    own click target never moves. */
 .tab[data-route="list"]:active { transform-origin: right center; }
 .tab.active { font-weight: 800; }
+.tab[data-route="carts"].active { color: var(--carts-pill-fg); border-bottom-color: var(--carts-btn); }
 .tab[data-route="list"].active { color: var(--list-pill-fg); border-bottom-color: var(--list-btn); }
 .tab[data-route="delivery"].active { color: var(--delivery-pill-fg); border-bottom-color: var(--delivery-btn); }
 

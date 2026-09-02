@@ -29,6 +29,10 @@
   --delivery-pill-bg: oklch(93% 0.05 245);
   --delivery-pill-fg: oklch(45% 0.13 245);
 
+  --carts-btn: oklch(60% 0.14 305);
+  --carts-pill-bg: oklch(93% 0.05 305);
+  --carts-pill-fg: oklch(45% 0.14 305);
+
   --tab-inactive-bg: oklch(96% 0.01 85);
   --tab-inactive-fg: oklch(58% 0.02 50);
 
@@ -49,15 +53,19 @@
     --card: oklch(27% 0.015 85);
     --tab-inactive-bg: oklch(30% 0.01 85);
     --tab-inactive-fg: oklch(68% 0.02 85);
+    --carts-pill-bg: oklch(34% 0.06 305);
+    --carts-pill-fg: oklch(82% 0.1 305);
   }
 }
 :root[data-theme="dark"] {
   --bg: oklch(22% 0.015 85); --ink: oklch(92% 0.02 85); --ink-soft: oklch(80% 0.02 85);
   --muted: oklch(68% 0.02 85); --border: oklch(32% 0.01 85); --card: oklch(27% 0.015 85);
   --tab-inactive-bg: oklch(30% 0.01 85); --tab-inactive-fg: oklch(68% 0.02 85);
+  --carts-pill-bg: oklch(34% 0.06 305); --carts-pill-fg: oklch(82% 0.1 305);
 }
 :root[data-theme="light"] {
   --bg: oklch(96% 0.015 85); --ink: oklch(28% 0.03 50); --ink-soft: oklch(45% 0.03 50);
   --muted: oklch(55% 0.02 50); --border: oklch(90% 0.01 85); --card: #ffffff;
   --tab-inactive-bg: oklch(96% 0.01 85); --tab-inactive-fg: oklch(58% 0.02 50);
+  --carts-pill-bg: oklch(93% 0.05 305); --carts-pill-fg: oklch(45% 0.14 305);
 }

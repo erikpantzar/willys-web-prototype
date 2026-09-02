@@ -1,5 +1,6 @@
 'use strict';
 import { isConnectionVerified, isDemoMode } from './settings.js';
+import { renderCarts } from './views/carts.js';
 import { renderList } from './views/list.js';
 import { renderDelivery } from './views/delivery.js';
 import { renderSettings } from './views/settings.js';
@@ -15,8 +16,8 @@ const viewTrack = document.getElementById('view-track');
 // last index = swipe all the way left), top-nav left-to-right order, and
 // pane order in the DOM (index.html's .view-pane elements) — one array
 // drives all four.
-const ROUTE_ORDER = ['list', 'delivery', 'settings'];
-const ROUTES = { list: renderList, delivery: renderDelivery, settings: renderSettings };
+const ROUTE_ORDER = ['carts', 'list', 'delivery', 'settings'];
+const ROUTES = { carts: renderCarts, list: renderList, delivery: renderDelivery, settings: renderSettings };
 const panes = Object.fromEntries(ROUTE_ORDER.map((name) => [name, document.querySelector(`.view-pane[data-pane="${name}"]`)]));
 
 function currentRoute() {

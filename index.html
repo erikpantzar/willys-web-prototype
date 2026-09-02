@@ -17,6 +17,7 @@
        is just... visible, no separate indicator needed. Swipe left/right
        (see main.js) is the other way to move between them. -->
   <nav class="topnav">
+    <button data-route="carts" class="tab">Carts</button>
     <button data-route="list" class="tab active">
       <!-- "List" wrapped so it (not the whole button) can flex-grow and
            stay centered in the remaining space as the badge next to it
@@ -34,13 +35,14 @@
     <button data-route="settings" class="settings-gear-btn" title="Settings">⚙</button>
   </nav>
 
-  <!-- Views are three permanent panes side by side, not swapped in/out —
+  <!-- Views are four permanent panes side by side, not swapped in/out —
        #view-track slides horizontally (main.js sets its transform) so
        switching views is an actual slide, not a hard cut, and each pane
        keeps its own scroll position/content instead of being torn down. -->
   <main id="app">
     <div id="demo-banner" class="demo-banner" hidden>Demo mode — showing sample data, not your real list</div>
     <div id="view-track" class="view-track">
+      <div class="view-pane" data-pane="carts"></div>
       <div class="view-pane" data-pane="list"></div>
       <div class="view-pane" data-pane="delivery"></div>
       <div class="view-pane" data-pane="settings"></div>
