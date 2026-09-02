@@ -56,7 +56,7 @@ export function renderSettings(root) {
     root.querySelector('#save-url').addEventListener('click', () => {
       const hostValue = root.querySelector('#base-url').value.trim();
       // Prepend https:// when saving
-      const fullUrl = `https://${hostValue}`;
+      const fullUrl = /^https?:\/\//i.test(hostValue) ? hostValue : `https://${hostValue}`;
       setBaseUrl(fullUrl);
       root.querySelector('#health-result').textContent = 'Saved.';
     });

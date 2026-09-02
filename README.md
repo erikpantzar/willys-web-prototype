@@ -48,6 +48,41 @@ the whole app, on any machine, no Tailscale or backend reachable at all.
 Nothing under `src/` makes a real network call in that mode except to fetch
 its own JS/CSS.
 
+### Test carts locally
+
+Zero setup: `?demo=1` seeds one saved and two sent carts, and Add all / per-item
+add / rename / delete / save-as-cart all work against the in-memory fake.
+
+Against a real list API (the `willys-shopping-list-bot` carts branch) without
+touching the home server, run the API locally with a scratch DB and let Vite
+proxy `/list` to it (`/matcher` and `/agent` still go to the tailnet origin, so
+Tailscale needs to be up for search and delivery times):
+
+```
+# terminal 1 — list API with a scratch DB
+cd ~/dev/willys-shopping-list-bot
+LIST_DB_PATH=/tmp/list-dev.db WEB_ALLOWED_ORIGIN=http://localhost:5173 PORT=4310 npm start
+LIST_DB_PATH=/tmp/list-dev.db npm run seed:carts
+
+# terminal 2 — web app proxying /list to it
+cd ~/dev/willys-web-prototype
+VITE_LOCAL_LIST_API=http://localhost:4310 npm run dev
+```
+
+Then open `http://localhost:5173/willys-web-prototype/`, make sure demo mode is
+off in Settings (⚙), type `http://localhost:5173` as the backend base URL
+(an explicit `http://` is kept as-is instead of getting `https://` prepended),
+Save, then Test connection — the list check goes through the proxy to your
+local API. Once verified:
+
+- **Carts tab** (leftmost, or swipe right from List): the seeded carts appear
+  under Saved / Sent. Tap a card to expand it, then Add all — expect a toast
+  like "Added 8 · 2 already on list" and the List badge count going up.
+  Tap a row's + to add just that item; it turns into a check.
+- **List tab**: the cart-with-plus button in the toolbar saves the current
+  list as a cart (toast "Cart saved · View"). Reset the list and a "Start
+  from your last cart" card shows up under the empty state.
+
 `npm test` runs the unit tests (`src/format.test.js`) — also fully offline,
 no server, no tailnet, no database, works the same on any machine.
 
