@@ -14,5 +14,8 @@
   font-variant-numeric: tabular-nums;
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
 }
+.total .amount { white-space: nowrap; }
 .total .note { font-weight: normal; font-family: 'Nunito', sans-serif; font-size: 0.72rem; color: var(--muted); display: block; margin-top: 0.2rem; }

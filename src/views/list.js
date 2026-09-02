@@ -374,7 +374,7 @@ export async function renderList(root) {
 
     ${pricedTotal > 0 ? `
       <div class="${totalCardStyles['total']}">
-        Total: <span id="total-amount">${formatSum(pricedTotal)}</span> kr
+        <span class="${totalCardStyles['amount']}">Total: <span id="total-amount">${formatSum(pricedTotal)}</span> kr</span>
         ${missingPrice || anyVariable ? `<div class="${totalCardStyles['note']}">${[missingPrice && 'some items have no price on file', anyVariable && 'some prices are per kg — weight varies'].filter(Boolean).join('; ')}</div>` : ''}
       </div>
     ` : ''}
