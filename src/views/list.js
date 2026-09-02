@@ -1,6 +1,7 @@
 'use strict';
 import * as api from '../api.js';
-import { extractPrice, isVariableWeight, formatSum, parseQuantity, formatProduct } from '../format.js';
+import { extractPrice, isVariableWeight, formatSum, parseQuantity, formatProduct, cartTitle, addToListSummary } from '../format.js';
+import { saveListAsCart } from '../saveCart.js';
 import { showToast } from '../toast.js';
 import { confirmDialog } from '../dialog.js';
 import { getWho, getIdentity, setWho } from '../who.js';
@@ -17,6 +18,7 @@ import totalCardStyles from '../components/TotalCard.module.css';
 import emptyStateStyles from '../components/EmptyState.module.css';
 import iconButtonStyles from '../components/IconButton.module.css';
 import departmentGroupStyles from '../components/DepartmentGroup.module.css';
+import lastCartHintStyles from '../components/LastCartHint.module.css';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const SEARCH_RESULT_LIMIT = 15;
@@ -357,6 +359,9 @@ export async function renderList(root) {
 
     <div class="list-rail">
     <div class="${iconButtonStyles['view-toolbar']} list-toolbar">
+      <button type="button" class="${iconButtonStyles['toolbar-icon-btn']} save-cart-btn" id="save-cart-btn" title="${items.length === 0 ? 'Add something to the list first to save it as a cart' : 'Save list as cart'}" aria-label="Save list as cart" ${items.length === 0 ? 'disabled' : ''}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 4h2l2.4 11.2a2 2 0 002 1.6h8.4a2 2 0 002-1.6L21 8H6.2" stroke="var(--carts-pill-fg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M13 10v4M11 12h4" stroke="var(--carts-pill-fg)" stroke-width="2" stroke-linecap="round"></path><circle cx="9.5" cy="20" r="1.3" fill="var(--carts-pill-fg)"></circle><circle cx="17" cy="20" r="1.3" fill="var(--carts-pill-fg)"></circle></svg>
+      </button>
       <button type="button" class="${iconButtonStyles['toolbar-icon-btn']}" id="sort-btn" title="Sort: ${escapeHtml(activeSortMode.label)} (tap to cycle)">${escapeHtml(activeSortMode.glyph)}</button>
       <button type="button" class="${iconButtonStyles['toolbar-icon-btn']}${isFilterActive(filterState) ? ' active' : ''}" id="filter-btn" title="Filter list">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M8 12h8M11 18h2" stroke="var(--list-pill-fg)" stroke-width="2" stroke-linecap="round"></path></svg>
@@ -398,7 +403,11 @@ export async function renderList(root) {
 
   wireSortFilterToolbar(root, items);
 
+  root.querySelector('#save-cart-btn').addEventListener('click', () => saveListAsCart());
+
   root.querySelectorAll(`.${itemRowStyles['item-row']}`).forEach((li) => wireItemRow(li, root, items));
+
+  if (items.length === 0) showLastCartHint(root);
 
   root.querySelector('#reset-btn').addEventListener('click', async () => {
     const ok = await confirmDialog("Clear the whole list and start fresh? Can't be undone.", { confirmLabel: 'Clear list' });
@@ -1135,9 +1144,55 @@ function removeItemLocally(root, items, itemId) {
   root.querySelector(`[data-remove="${itemId}"]`)?.closest(`.${itemRowStyles['item-row']}`)?.remove();
 
   const list = root.querySelector('.item-list');
-  if (list && items.length === 0) list.innerHTML = emptyState();
+  if (list && items.length === 0) {
+    list.innerHTML = emptyState();
+    showLastCartHint(root);
+  }
+  root.querySelector('#save-cart-btn')?.toggleAttribute('disabled', items.length === 0);
 
   updateBadgeAndTotal(root, items);
+}
+
+async function showLastCartHint(root) {
+  let carts;
+  try {
+    carts = await api.getCarts();
+  } catch {
+    return;
+  }
+  const last = carts[0];
+  const wrap = root.querySelector('#item-list-wrap');
+  if (!last || !wrap || !wrap.querySelector(`.${emptyStateStyles['empty-state']}`)) return;
+  wrap.querySelector('#last-cart-hint')?.remove();
+
+  const hint = document.createElement('div');
+  hint.id = 'last-cart-hint';
+  hint.className = lastCartHintStyles.hint;
+  hint.innerHTML = `
+    <div class="${lastCartHintStyles.text}">
+      <div class="${lastCartHintStyles.title}">Start from your last cart</div>
+      <div class="${lastCartHintStyles.sub}">${escapeHtml(cartTitle(last))} · ${last.item_count} item${last.item_count === 1 ? '' : 's'}</div>
+    </div>
+    <button type="button" class="${lastCartHintStyles.btn}" id="last-cart-add-all">Add all</button>
+  `;
+  wrap.appendChild(hint);
+
+  const btn = hint.querySelector('#last-cart-add-all');
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    try {
+      const { added, skipped } = await api.addCartToList(last.id, getIdentity());
+      if (added.length > 0) {
+        playAddSound();
+        vibrateAdd();
+      }
+      showToast(addToListSummary(added.length, skipped.length), { type: 'success' });
+      renderList(root);
+    } catch (err) {
+      btn.disabled = false;
+      showToast(`Could not add: ${err.message}`);
+    }
+  });
 }
 
 // Rolls the displayed total from its current value to the new one over a

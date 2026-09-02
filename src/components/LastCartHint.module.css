@@ -1,0 +1,15 @@
+.hint {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0.25rem 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1.1rem;
+  background: var(--carts-pill-bg);
+  color: var(--ink);
+}
+.text { flex: 1; min-width: 0; }
+.title { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 0.9rem; color: var(--carts-pill-fg); }
+.sub { font-size: 0.8rem; font-weight: 700; color: var(--ink-soft); margin-top: 0.1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.btn { flex-shrink: 0; background: var(--carts-btn); color: #fff; font-weight: 800; padding: 0.6rem 0.9rem; }
+.btn:disabled { opacity: 0.6; }

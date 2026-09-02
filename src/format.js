@@ -49,8 +49,11 @@ export function formatSum(total) {
   return total.toFixed(2).replace('.', ',');
 }
 
+const SHORT_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 export function formatShortDate(date) {
-  return new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  const d = new Date(date);
+  return `${d.getDate()} ${SHORT_MONTHS[d.getMonth()]}`;
 }
 
 export function cartTitle(cart) {

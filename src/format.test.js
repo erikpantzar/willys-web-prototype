@@ -269,8 +269,8 @@ describe('formatSum', () => {
 
 describe('formatShortDate', () => {
   it('formats as day + short month', () => {
-    expect(formatShortDate('2026-08-20T10:00:00Z')).toBe('20 Aug');
-    expect(formatShortDate(new Date(2026, 8, 2))).toBe('2 Sept');
+    expect(formatShortDate(new Date(2026, 7, 20))).toBe('20 Aug');
+    expect(formatShortDate(new Date(2026, 8, 2))).toBe('2 Sep');
   });
 });
 
@@ -280,8 +280,9 @@ describe('cartTitle', () => {
   });
 
   it('falls back to kind + date for unnamed carts', () => {
-    expect(cartTitle({ name: null, kind: 'sent', created_at: '2026-08-20T10:00:00Z' })).toBe('Sent 20 Aug');
-    expect(cartTitle({ name: '', kind: 'saved', created_at: '2026-08-20T10:00:00Z' })).toBe('Saved 20 Aug');
+    const created_at = new Date(2026, 7, 20).toISOString();
+    expect(cartTitle({ name: null, kind: 'sent', created_at })).toBe('Sent 20 Aug');
+    expect(cartTitle({ name: '', kind: 'saved', created_at })).toBe('Saved 20 Aug');
   });
 });
 
