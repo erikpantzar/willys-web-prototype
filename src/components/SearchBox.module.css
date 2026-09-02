@@ -5,9 +5,18 @@
 .search-box {
   background: var(--card); border: 2px solid var(--search-pill-bg); border-radius: 1.1rem; padding: 0.65rem 0.9rem;
   display: flex; align-items: center; gap: 0.6rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+.search-box:focus-within {
+  border-color: var(--search-focus-border); background: var(--search-focus-bg);
+  box-shadow: 0 0 0 3px var(--search-focus-ring), 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+@media (prefers-reduced-motion: reduce) {
+  .search-box { transition: none; }
 }
 .search-box > :global(.icon) { color: var(--search-pill-fg); }
-.search-box input { border: none; outline: none; background: transparent; padding: 0; }
+.search-box input { border: none; outline: none; background: transparent; padding: 0; box-shadow: none; }
+.search-box input[type="text"]:focus-visible { outline: none; }
 .search-clear-btn[hidden] { display: none; }
 .search-clear-btn {
   flex-shrink: 0; width: 1.4rem; height: 1.4rem; padding: 0; border-radius: 50%;
