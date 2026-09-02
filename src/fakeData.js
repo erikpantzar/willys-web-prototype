@@ -89,6 +89,57 @@ export function seedListItems() {
   ];
 }
 
+function catalogItemText(url, quantity = 1) {
+  const c = CATALOG.find((x) => x.url === url);
+  const sizePart = c.size ? ` (${c.size})` : '';
+  const pricePart = c.price ? ` — ${c.price} kr${c.priceUnit === 'kg' ? '/kg' : ''}` : '';
+  const base = `${c.name}${sizePart}${pricePart}`;
+  return quantity > 1 ? `${quantity} ${base}` : base;
+}
+
+function cartItems(startId, addedBy, entries) {
+  return entries.map(([url, quantity = 1], i) => ({
+    id: startId + i,
+    position: i,
+    text: catalogItemText(url, quantity),
+    quantity,
+    product_url: url,
+    department_name: null,
+    department_code: null,
+    added_by: addedBy,
+  }));
+}
+
+export function seedCarts() {
+  const now = Date.now();
+  return [
+    {
+      id: 1,
+      name: 'Veckobasics',
+      kind: 'saved',
+      created_by: 'Pappa',
+      created_at: new Date(now - 3 * 86400e3).toISOString(),
+      items: cartItems(1, 'Pappa', [['/p/mjolk-3'], ['/p/agg'], ['/p/smor'], ['/p/brod'], ['/p/banan', 6], ['/p/kaffe']]),
+    },
+    {
+      id: 2,
+      name: null,
+      kind: 'sent',
+      created_by: 'Pappa',
+      created_at: new Date(now - 7 * 86400e3).toISOString(),
+      items: cartItems(101, 'Pappa', [['/p/mjolk-3', 2], ['/p/kyckling'], ['/p/ris'], ['/p/gurka'], ['/p/tomat'], ['/p/yoghurt'], ['/p/toapapper'], ['/p/choklad']]),
+    },
+    {
+      id: 3,
+      name: null,
+      kind: 'sent',
+      created_by: 'Leia',
+      created_at: new Date(now - 14 * 86400e3).toISOString(),
+      items: cartItems(201, 'Leia', [['/p/pasta', 2], ['/p/tomatkross', 3], ['/p/notfars'], ['/p/ost'], ['/p/lok'], ['/p/olivolja'], ['/p/kanelbullar'], ['/p/cola']]),
+    },
+  ];
+}
+
 export function seedListState() {
   return { id: 1, trigger_at: new Date(Date.now() + 2 * 86400e3).toISOString(), trigger_set_by: 'erik', trigger_set_at: new Date().toISOString(), status: 'open', sent_at: null, sent_by: null };
 }

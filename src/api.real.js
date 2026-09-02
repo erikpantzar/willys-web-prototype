@@ -13,7 +13,9 @@ async function request(path, { method = 'GET', body } = {}) {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || `${method} ${path} failed (${res.status})`);
+    const error = new Error(err.error || `${method} ${path} failed (${res.status})`);
+    error.status = res.status;
+    throw error;
   }
   if (res.status === 204) return null;
   return res.json();
@@ -21,13 +23,31 @@ async function request(path, { method = 'GET', body } = {}) {
 
 // --- list (willys-shopping-list-bot) ---
 export const getList = () => request('/list/list');
-export const addItem = (text, addedBy) => request('/list/items', { method: 'POST', body: { text, addedBy } });
+export const addItem = (text, addedBy, productUrl) =>
+  request('/list/items', { method: 'POST', body: { text, addedBy, ...(productUrl ? { productUrl } : {}) } });
 export const removeItem = (id) => request(`/list/items/${id}/done`, { method: 'PATCH', body: { done: true } });
 export const setQuantity = (id, quantity) => request(`/list/items/${id}/quantity`, { method: 'PATCH', body: { quantity } });
 export const setChecked = (id, checked) => request(`/list/items/${id}/checked`, { method: 'PATCH', body: { checked } });
 export const setTrigger = (triggerAt, setBy) => request('/list/list/trigger', { method: 'POST', body: { triggerAt, setBy } });
 export const fakeSend = (sentBy) => request('/list/list/fake-send', { method: 'POST', body: { sentBy } });
 export const resetList = () => request('/list/list/reset', { method: 'POST' });
+
+async function cartsRequest(path, options) {
+  try {
+    return await request(path, options);
+  } catch (err) {
+    if (err.status === 404) throw new Error('carts-unsupported');
+    throw err;
+  }
+}
+
+export const getCarts = () => cartsRequest('/list/carts');
+export const getCart = (id) => request(`/list/carts/${id}`);
+export const saveCart = (name, savedBy) => cartsRequest('/list/carts', { method: 'POST', body: { ...(name ? { name } : {}), savedBy } });
+export const renameCart = (id, name) => request(`/list/carts/${id}`, { method: 'PATCH', body: { name } });
+export const deleteCart = (id) => request(`/list/carts/${id}`, { method: 'DELETE' });
+export const addCartToList = (id, addedBy, itemIds) =>
+  request(`/list/carts/${id}/add-to-list`, { method: 'POST', body: { addedBy, ...(itemIds ? { itemIds } : {}) } });
 
 // --- search / resolve (willys-item-matcher) ---
 export const search = (q, limit = 15) => request(`/matcher/search?q=${encodeURIComponent(q)}&limit=${limit}`);
