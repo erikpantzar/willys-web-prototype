@@ -7,6 +7,9 @@ import {
   extractPrice,
   isVariableWeight,
   formatSum,
+  formatShortDate,
+  cartTitle,
+  addToListSummary,
 } from './format.js';
 
 describe('parseQuantity', () => {
@@ -261,5 +264,38 @@ describe('formatSum', () => {
   it('rounds to 2 decimal places', () => {
     expect(formatSum(15.999)).toBe('16,00');
     expect(formatSum(11.111)).toBe('11,11');
+  });
+});
+
+describe('formatShortDate', () => {
+  it('formats as day + short month', () => {
+    expect(formatShortDate('2026-08-20T10:00:00Z')).toBe('20 Aug');
+    expect(formatShortDate(new Date(2026, 8, 2))).toBe('2 Sept');
+  });
+});
+
+describe('cartTitle', () => {
+  it('uses the name when there is one', () => {
+    expect(cartTitle({ name: 'Veckobasics', kind: 'saved', created_at: '2026-08-20T10:00:00Z' })).toBe('Veckobasics');
+  });
+
+  it('falls back to kind + date for unnamed carts', () => {
+    expect(cartTitle({ name: null, kind: 'sent', created_at: '2026-08-20T10:00:00Z' })).toBe('Sent 20 Aug');
+    expect(cartTitle({ name: '', kind: 'saved', created_at: '2026-08-20T10:00:00Z' })).toBe('Saved 20 Aug');
+  });
+});
+
+describe('addToListSummary', () => {
+  it('reports both counts when both are non-zero', () => {
+    expect(addToListSummary(9, 3)).toBe('Added 9 · 3 already on list');
+  });
+
+  it('drops the zero half', () => {
+    expect(addToListSummary(9, 0)).toBe('Added 9');
+    expect(addToListSummary(0, 3)).toBe('3 already on list');
+  });
+
+  it('has a fallback when nothing happened', () => {
+    expect(addToListSummary(0, 0)).toBe('Nothing to add');
   });
 });

@@ -89,19 +89,18 @@ export function seedListItems() {
   ];
 }
 
-function catalogItemText(url, quantity = 1) {
+function catalogItemText(url) {
   const c = CATALOG.find((x) => x.url === url);
   const sizePart = c.size ? ` (${c.size})` : '';
   const pricePart = c.price ? ` — ${c.price} kr${c.priceUnit === 'kg' ? '/kg' : ''}` : '';
-  const base = `${c.name}${sizePart}${pricePart}`;
-  return quantity > 1 ? `${quantity} ${base}` : base;
+  return `${c.name}${sizePart}${pricePart}`;
 }
 
 function cartItems(startId, addedBy, entries) {
   return entries.map(([url, quantity = 1], i) => ({
     id: startId + i,
     position: i,
-    text: catalogItemText(url, quantity),
+    text: catalogItemText(url),
     quantity,
     product_url: url,
     department_name: null,

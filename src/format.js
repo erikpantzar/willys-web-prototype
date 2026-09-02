@@ -48,3 +48,19 @@ export function isVariableWeight(text) {
 export function formatSum(total) {
   return total.toFixed(2).replace('.', ',');
 }
+
+export function formatShortDate(date) {
+  return new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
+export function cartTitle(cart) {
+  if (cart.name) return cart.name;
+  return `${cart.kind === 'sent' ? 'Sent' : 'Saved'} ${formatShortDate(cart.created_at)}`;
+}
+
+export function addToListSummary(addedCount, skippedCount) {
+  const parts = [];
+  if (addedCount > 0) parts.push(`Added ${addedCount}`);
+  if (skippedCount > 0) parts.push(`${skippedCount} already on list`);
+  return parts.length ? parts.join(' · ') : 'Nothing to add';
+}

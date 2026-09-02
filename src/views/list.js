@@ -961,7 +961,7 @@ function resultCard(c, i, confirmedUrl) {
 // add/remove/qty change and every route switch back to List.
 let cartBadgeMode = 'count'; // 'count' | 'total'
 
-function updateCartBadge(totalQty, pricedTotal) {
+export function updateCartBadge(totalQty, pricedTotal) {
   const badge = document.getElementById('cart-badge');
   if (!badge) return;
 
