@@ -65,6 +65,15 @@
   touch-action: manipulation;
 }
 .report-btn:active { transform: scale(0.9); }
+.link-btn {
+  position: absolute;
+  bottom: 0.25rem;
+  right: 2.1rem;
+  width: 2rem;
+  height: 2rem;
+  margin: 0;
+  opacity: 0.6;
+}
 .result-img { width: 4rem; height: 4rem; flex-shrink: 0; object-fit: contain; background: white; border-radius: 0.9rem; }
 .result-img:global(.placeholder) { background: var(--tab-inactive-bg); }
 .result-info { flex: 1; min-width: 0; }

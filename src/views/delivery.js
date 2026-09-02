@@ -9,6 +9,7 @@ import { personaBadgeHtml } from '../personas.js';
 import { playOrderConfirmedSound, vibrateOrderConfirmed } from '../sound.js';
 import { burstConfetti } from '../confetti.js';
 import { icon } from '../icons.js';
+import { productLinkHtml } from '../components/ProductLink.js';
 import itemRowStyles from '../components/ItemRow.module.css';
 import iconButtonStyles from '../components/IconButton.module.css';
 import deliverySlotsStyles from '../components/DeliverySlots.module.css';
@@ -274,6 +275,7 @@ function itemSummaryRow(item) {
       <div class="${itemRowStyles['item-main']}">
         <div class="${itemRowStyles['item-text']}">${escapeHtml(item.text)}</div>
       </div>
+      ${productLinkHtml(item.product_url, { label: item.text })}
       <div class="item-qty-readonly">×${item.quantity}</div>
     </li>
   `;

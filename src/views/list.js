@@ -11,6 +11,7 @@ import { pixelLoaderHtml } from '../loader.js';
 import { playAddSound, playQtyUpSound, playQtyDownSound, playRemoveSound, vibrateAdd, vibrateRemove } from '../sound.js';
 import { isGroupByDepartment, setGroupByDepartment } from '../settings.js';
 import { icon } from '../icons.js';
+import { productLinkHtml, wireProductLinks } from '../components/ProductLink.js';
 import dialogStyles from '../dialog.module.css';
 import itemRowStyles from '../components/ItemRow.module.css';
 import searchBoxStyles from '../components/SearchBox.module.css';
@@ -550,6 +551,7 @@ function wireItemRow(li, root, items) {
     }
   }
   li.querySelectorAll('[data-qty-step]').forEach((btn) => wireQtyButton(btn, root, items));
+  wireProductLinks(li);
 }
 
 function wireRemoveButton(btn, root, items) {
@@ -859,6 +861,7 @@ function wireProductSearch(root, items) {
         e.stopPropagation();
         reportProblem(candidates[i]);
       });
+      wireProductLinks(card);
     });
   }
 
@@ -940,6 +943,7 @@ function resultCard(c, i, confirmedUrl) {
       ${img}
       ${isConfirmed ? `<div class="${resultCardStyles['result-confirmed-badge']}">${icon('check', { size: 12, strokeWidth: 3 })}</div>` : ''}
       <button type="button" class="${resultCardStyles['report-btn']}" data-report="${i}" title="Report a problem with this product" aria-label="Report a problem with this product">${icon('warning', { size: 14 })}</button>
+      ${productLinkHtml(c.url, { label: c.text || c.name, className: resultCardStyles['link-btn'] })}
       <div class="${resultCardStyles['result-info']}">
         <div class="${resultCardStyles['result-name']}">${escapeHtml(c.text || c.name)}</div>
         ${size}
@@ -1233,6 +1237,7 @@ function itemRow(item) {
       <div class="${itemRowStyles['item-main']}">
         <div class="${itemRowStyles['item-text']}">${escapeHtml(item.text)}</div>
       </div>
+      ${productLinkHtml(item.product_url, { label: item.text })}
       <div class="${itemRowStyles['qty-stepper']}">
         <button data-qty-step="-1" data-id="${item.id}" data-current="${item.quantity}" aria-label="Decrease quantity">${icon('minus', { size: 16, strokeWidth: 2.5 })}</button>
         <span>${item.quantity}</span>

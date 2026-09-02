@@ -29,6 +29,7 @@ const PATHS = {
   zap: '<path d="M13 3L5 13.5h6l-1 7.5 8-10.5h-6z"/>',
   wifi: '<path d="M2.5 9C7.5 4 16.5 4 21.5 9"/><path d="M6 12.5c3.5-3.3 8.5-3.3 12 0"/><path d="M9.3 16c1.6-1.5 3.8-1.5 5.4 0"/>' + dot(12, 19.5),
   list: '<path d="M9 6h11M9 12h11M9 18h11"/>' + dot(4.5, 6, 1.5) + dot(4.5, 12, 1.5) + dot(4.5, 18, 1.5),
+  'external-link': '<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 13.5V18a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h4.5"/>',
 };
 
 export const ICON_NAMES = Object.keys(PATHS);

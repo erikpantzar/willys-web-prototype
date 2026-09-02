@@ -4,6 +4,7 @@ import itemRowStyles from './ItemRow.module.css';
 import { personaBadgeHtml, personaFor } from '../personas.js';
 import { cartTitle } from '../format.js';
 import { icon } from '../icons.js';
+import { productLinkHtml, wireProductLinks } from './ProductLink.js';
 
 export function createCartCard(cart, { onToggle, onAddAll, onAddItem, onRename, onDelete }) {
   const el = document.createElement('li');
@@ -59,6 +60,7 @@ export function createCartCard(cart, { onToggle, onAddAll, onAddItem, onRename, 
           <div class="${itemRowStyles['item-text']}">${escapeHtml(item.text)}</div>
         </div>
         <div class="item-qty-readonly">×${item.quantity}</div>
+        ${productLinkHtml(item.product_url, { label: item.text })}
         <button type="button" class="${styles['item-add']}${done ? ` ${styles.done}` : ''}" data-add-item="${item.id}" ${done ? 'disabled' : ''} aria-label="${done ? 'Already on the list' : 'Add to list'}">${done ? icon('check', { size: 16, strokeWidth: 2.5 }) : icon('plus', { size: 18, strokeWidth: 2.5 })}</button>
       </li>
     `;
@@ -85,6 +87,7 @@ export function createCartCard(cart, { onToggle, onAddAll, onAddItem, onRename, 
         addAllBtn.disabled = false;
       }
     });
+    wireProductLinks(content);
     content.querySelector('[data-rename]').addEventListener('click', startRename);
     content.querySelector('[data-delete]').addEventListener('click', () => onDelete(current));
     content.querySelectorAll('[data-add-item]').forEach((btn) => {
