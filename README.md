@@ -59,10 +59,10 @@ proxy `/list` to it (`/matcher` and `/agent` still go to the tailnet origin, so
 Tailscale needs to be up for search and delivery times):
 
 ```
-# terminal 1 — list API with a scratch DB
+# terminal 1 — seed a scratch DB, then serve it (seed first: `npm start` blocks)
 cd ~/dev/willys-shopping-list-bot
-LIST_DB_PATH=/tmp/list-dev.db WEB_ALLOWED_ORIGIN=http://localhost:5173 PORT=4310 npm start
 LIST_DB_PATH=/tmp/list-dev.db npm run seed:carts
+LIST_DB_PATH=/tmp/list-dev.db WEB_ALLOWED_ORIGIN=http://localhost:5173 PORT=4310 npm start
 
 # terminal 2 — web app proxying /list to it
 cd ~/dev/willys-web-prototype
@@ -82,6 +82,15 @@ local API. Once verified:
 - **List tab**: the cart-with-plus button in the toolbar saves the current
   list as a cart (toast "Cart saved · View"). Reset the list and a "Start
   from your last cart" card shows up under the empty state.
+- **Sent carts**: sending lives in the Delivery tab (which also talks to
+  the real agent), so to produce a fresh sent cart without going there,
+  fake-send and reset straight against the API — the new cart shows up
+  under Sent, and the List tab offers it as "Start from your last cart":
+
+  ```
+  curl -X POST localhost:4310/list/fake-send -H 'content-type: application/json' -d '{"sentBy":"erik"}'
+  curl -X POST localhost:4310/list/reset
+  ```
 
 `npm test` runs the unit tests (`src/format.test.js`) — also fully offline,
 no server, no tailnet, no database, works the same on any machine.
