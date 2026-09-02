@@ -24,7 +24,15 @@ const BUILD_ID = '__BUILD_ID__';
 
 const SHELL_CACHE = 'willys-shell-v2';
 const IMAGE_CACHE = 'willys-images-v1';
-const SHELL_URLS = [self.registration.scope, `${self.registration.scope}manifest.json`, `${self.registration.scope}icon.svg`];
+const SHELL_URLS = [
+  self.registration.scope,
+  `${self.registration.scope}manifest.json`,
+  `${self.registration.scope}icon.svg`,
+  `${self.registration.scope}icons/icon-180.png`,
+  `${self.registration.scope}icons/icon-192.png`,
+  `${self.registration.scope}icons/icon-512.png`,
+  `${self.registration.scope}icons/icon-maskable-512.png`,
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(SHELL_CACHE).then((cache) => cache.addAll(SHELL_URLS)).catch(() => {}));
