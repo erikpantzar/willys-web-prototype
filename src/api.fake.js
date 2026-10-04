@@ -29,15 +29,15 @@ export async function getList() {
   return { state, items: activeItems() };
 }
 
-function newListItem(text, addedBy, { quantity = 1, productUrl = null } = {}) {
-  const item = { id: nextId++, text, added_by: addedBy, added_at: new Date().toISOString(), done: 0, checked: 0, quantity, product_url: productUrl };
+function newListItem(text, addedBy, { quantity = 1, productUrl = null, code = null } = {}) {
+  const item = { id: nextId++, text, added_by: addedBy, added_at: new Date().toISOString(), done: 0, checked: 0, quantity, product_url: productUrl, code };
   items.push(item);
   return item;
 }
 
-export async function addItem(text, addedBy, productUrl) {
+export async function addItem(text, addedBy, productUrl, code) {
   await delay();
-  return newListItem(text, addedBy, { productUrl });
+  return newListItem(text, addedBy, { productUrl, code: code || null });
 }
 
 export async function removeItem(id) {

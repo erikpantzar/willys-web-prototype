@@ -23,8 +23,11 @@ async function request(path, { method = 'GET', body } = {}) {
 
 // --- list (willys-shopping-list-bot) ---
 export const getList = () => request('/list/list');
-export const addItem = (text, addedBy, productUrl) =>
-  request('/list/items', { method: 'POST', body: { text, addedBy, ...(productUrl ? { productUrl } : {}) } });
+export const addItem = (text, addedBy, productUrl, code) =>
+  request('/list/items', {
+    method: 'POST',
+    body: { text, addedBy, ...(productUrl ? { productUrl } : {}), ...(code ? { code } : {}) },
+  });
 export const removeItem = (id) => request(`/list/items/${id}/done`, { method: 'PATCH', body: { done: true } });
 export const setQuantity = (id, quantity) => request(`/list/items/${id}/quantity`, { method: 'PATCH', body: { quantity } });
 export const setChecked = (id, checked) => request(`/list/items/${id}/checked`, { method: 'PATCH', body: { checked } });

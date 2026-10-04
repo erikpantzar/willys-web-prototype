@@ -926,7 +926,12 @@ function wireProductSearch(root, items) {
       // Call confirm() directly with the rank from the original resolve()
       // response — no second resolve() call, no identity re-matching race.
       const confirmed = await api.confirm(currentResolution.resolutionId, candidate.rank);
-      const added = await api.addItem(formatProduct(confirmed, quantity), who, confirmed.url || candidate.url || null);
+      const added = await api.addItem(
+        formatProduct(confirmed, quantity),
+        who,
+        confirmed.url || candidate.url || null,
+        confirmed.code || candidate.code || null
+      );
       recordAction({ type: 'add', itemId: added.id, text: added.text, who });
       playAddSound();
       vibrateAdd();
