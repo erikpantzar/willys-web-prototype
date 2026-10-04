@@ -1,3 +1,9 @@
+## HARD RULE: the store is always Willys Sköndal
+
+- The store is always **Willys Sköndal**, Erik's pickup store (click-and-collect, "Hämta").
+- Never use store **2110 / Willys Kungsbacka Hede**, not even as a default or fallback.
+- If the Sköndal store id isn't configured yet, stop and read it from the account's `homeStoreId` (willys-agent `getCustomer()`, logged in). Don't fall back to a default.
+
 # willys-web-prototype — Claude instructions
 
 Mobile-first PWA. See README.md for what this is and how to run it; this file is about
